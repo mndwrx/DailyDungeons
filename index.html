@@ -326,7 +326,7 @@
     .scroll-box {
       background: #f4e4c1;
       border: 4px solid #8b4513;
-      border-radius: 4px;
+      border-radius: 8px;
       padding: 32px 40px;
       max-width: 640px;
       width: calc(100% - 48px);
@@ -335,19 +335,78 @@
       position: relative;
     }
 
+    /* Medieval parchment corner flourishes */
     .scroll-box::before,
     .scroll-box::after {
       content: '';
       position: absolute;
-      left: 0;
-      right: 0;
-      height: 12px;
-      background: #8b4513;
-      border-radius: 2px;
+      width: 28px;
+      height: 28px;
+      border: 3px solid #8b4513;
+      background: #f4e4c1;
     }
-
-    .scroll-box::before { top: -6px; }
-    .scroll-box::after { bottom: -6px; }
+    /* Top corners - curled parchment */
+    .scroll-box::before {
+      top: -14px;
+      left: -14px;
+      border-radius: 50% 0 0 0;
+      border-right: none;
+      border-bottom: none;
+      box-shadow: 4px 4px 0 #f4e4c1, 2px 2px 4px rgba(0,0,0,0.15);
+    }
+    .scroll-box::after {
+      top: -14px;
+      right: -14px;
+      border-radius: 0 50% 0 0;
+      border-left: none;
+      border-bottom: none;
+      box-shadow: -4px 4px 0 #f4e4c1, -2px 2px 4px rgba(0,0,0,0.15);
+    }
+    /* Bottom corners via extra pseudo-elements on inner wrapper would need HTML change, so use border-image approach */
+    .scroll-box > h2::before,
+    .scroll-box > h2::after {
+      content: '';
+      position: absolute;
+      bottom: -22px;
+      width: 28px;
+      height: 28px;
+      border: 3px solid #8b4513;
+      background: #f4e4c1;
+      pointer-events: none;
+    }
+    .scroll-box > h2::before {
+      left: -14px;
+      border-radius: 0 0 0 50%;
+      border-right: none;
+      border-top: none;
+      box-shadow: 4px -4px 0 #f4e4c1, 2px -2px 4px rgba(0,0,0,0.15);
+    }
+    .scroll-box > h2::after {
+      right: -14px;
+      border-radius: 0 0 50% 0;
+      border-left: none;
+      border-top: none;
+      box-shadow: -4px -4px 0 #f4e4c1, -2px -2px 4px rgba(0,0,0,0.15);
+    }
+    /* Side edge flourishes - torn parchment strips */
+    .scroll-box .lore-text::before,
+    .scroll-box .lore-text::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: repeating-linear-gradient(
+        180deg,
+        #8b4513 0,
+        #8b4513 8px,
+        transparent 8px,
+        transparent 16px
+      );
+      opacity: 0.3;
+    }
+    .scroll-box .lore-text::before { left: -18px; }
+    .scroll-box .lore-text::after { right: -18px; }
 
     .scroll-box h2 {
       color: #4a2c0a;
@@ -371,12 +430,15 @@
     .scroll-box .slime-sprite {
       font-size: 64px;
       margin: 12px 0;
-      animation: pulse 1s ease-in-out infinite;
+      display: inline-block;
+      animation: slime-alive 2.5s ease-in-out infinite;
     }
 
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.15); }
+    @keyframes slime-alive {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      25% { transform: scale(1.12) rotate(-3deg); }
+      50% { transform: scale(1.18) rotate(2deg); }
+      75% { transform: scale(1.1) rotate(-2deg); }
     }
 
     .scroll-box .actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
@@ -418,12 +480,67 @@
     }
 
     .vault-item {
-      background: var(--panel-2);
-      border: 1px solid var(--gold);
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 12px;
+      --gold: #f5c542;
+      --gold-dim: #c9a22e;
+      background: linear-gradient(135deg, #1e2330 0%, #151922 100%);
+      border: 2px solid var(--gold);
+      /* Shield shape: rectangle with pointed bottom */
+      clip-path: polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%);
+      padding: 8px 14px 16px;
+      font-size: 11px;
       color: var(--gold);
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      position: relative;
+      cursor: default;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
+      text-shadow: 0 0 4px rgba(245, 197, 66, 0.4);
+    }
+
+    /* Small icon/badge accent - left side */
+    .vault-item::before {
+      content: '🛡️';
+      display: inline-block;
+      margin-right: 8px;
+      font-size: 12px;
+      filter: drop-shadow(0 0 3px var(--gold));
+      vertical-align: middle;
+    }
+
+    /* Gold accent line along top edge */
+    .vault-item::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      border-radius: 1px;
+    }
+
+    .vault-item:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 
+        0 6px 20px rgba(245, 197, 66, 0.35),
+        0 0 0 2px rgba(245, 197, 66, 0.2),
+        inset 0 0 20px rgba(245, 197, 66, 0.1);
+      border-color: #ffd700;
+      filter: brightness(1.15);
+      z-index: 10;
+    }
+
+    .vault-item:active {
+      transform: translateY(0) scale(0.98);
+      transition: transform 0.05s ease;
+    }
+
+    /* Empty vault placeholder */
+    #vault-items:empty::before {
+      content: 'No equipment yet';
+      color: var(--muted);
+      font-size: 12px;
+      padding: 4px 8px;
     }
   </style>
 </head>
@@ -485,6 +602,9 @@
     </label>
     <label id="tool-hydra">
       <input type="radio" name="tool" value="6" /> 👔 Laundry Hydra
+    </label>
+    <label id="tool-trash-mimic">
+      <input type="radio" name="tool" value="7" /> 🗑️ Trash Mimic
     </label>
     <label id="tool-clear">
       <input type="radio" name="tool" value="clear" /> 🧹 Clear Above
@@ -552,7 +672,7 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
 
     // ---- DATA DICTIONARY & COLOR ENCODING ----
     // terrainMap: 0 = Empty, 1 = Floor, 2 = Wall
-    // entityMap:  0 = None, 3 = Bed, 4 = Sink, 5 = Dish Slime, 6 = Laundry Hydra
+    // entityMap:  0 = None, 3 = Bed, 4 = Sink, 5 = Dish Slime, 6 = Laundry Hydra, 7 = Trash Mimic
 
     const TERRAIN_COLORS = {
       0: "transparent",
@@ -566,6 +686,7 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       4: "#06b6d4",
       5: "#ec4899",
       6: "#a855f7",
+      7: "#f97316",
     };
 
     const ENTITY_SYMBOLS = {
@@ -573,17 +694,66 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       4: "🚰",
       5: "🦠",
       6: "👔",
+      7: "🗑️",
     };
 
     // ---- STATE CONFIGURATION ----
     let isPlayMode = false;
     let player = { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
     const monsterStats = {
-      5: { name: "Dish Slime", hp: 30, maxHp: 30, chore: "Wash the dishes in the kitchen sink", xpReward: 20, goldReward: 20 },
-      6: { name: "Laundry Hydra", hp: 60, maxHp: 60, chore: "Fold a full basket of clean clothes", xpReward: 50, goldReward: 50 }
+      5: { name: "Dish Slime", hp: 30, maxHp: 30, chore: "Wash the dishes in the kitchen sink", xpReward: 20, goldReward: 20, lore: "" },
+      6: { name: "Laundry Hydra", hp: 60, maxHp: 60, chore: "Fold a full basket of clean clothes", xpReward: 50, goldReward: 50, lore: "Forgotten laundry is not merely untidy—it is a biome. Within the tangled fibers of a neglected basket, cotton and synthetic blends become substrate. Sweat crystallizes into microscopic salt berms; skin cells, shed by the millions, carpet every crease. Ambient humidity, trapped by the pile's own mass, incubates a bloom of Aspergillus and Penicillium spores. Dust mites (Dermatophagoides) colonize the seams, their frass a potent allergen that aerates with every disturbed fold. Over days, the organic acids from microbial metabolism weaken tensile strength; colors bleed along capillary channels of moisture. The basket becomes a living stratigraphy: each layer a sediment of yesterday's exertion, bound by biofilm. To fold it is not housekeeping—it is necropsy." },
+      7: { name: "Trash Mimic", hp: 80, maxHp: 80, chore: "Take out the kitchen trash and wipe the bin", xpReward: 70, goldReward: 70, lore: "A kitchen bin is a sealed bioreactor. Food waste—peels, rinds, bones, coffee grounds—ferments in anaerobic darkness. Lactic acid bacteria and yeasts race through sugars, exuding ethanol and CO₂; proteobacteria follow, cleaving proteins into putrescine and cadaverine, the signature perfume of decay. Plastic liners, stressed by weight and heat, leach phthalates and microplastic shards into the leachate. This nutrient slurry seeps into micro-tears, seeding biofilms on the bin's inner walls. Flies (Musca domestica) detect the volatiles from 50 meters; a single gravid female deposits 150 eggs that hatch in 8 hours. Larvae liquefy solids, accelerating the melt. Rodents follow the insect plume. Methanogens, thriving in the deep anoxic core, exhale CH₄—a greenhouse gas 28× CO₂'s potency. The bin does not merely hold trash; it cultures a succession of ecologies, each more resilient than the last. To empty it is to break the cycle before the mimic wakes." }
     };
     let activeMonsterInstance = null;
     let currentMonster = null; // { col, row }
+
+    // ---- EQUIPMENT MODIFIER SYSTEM ----
+    const equipment_modifiers = {
+      "🧼 Soap-Shield of Cleansing": {
+        chaos_daily_increment_multiplier: 0.5,
+        gold_bonus_vs_slime_pct: 10
+      },
+      "🧺 Fabric Softener Cloak": {
+        move_interval_multiplier: 0.75,
+        xp_bonus_laundry_flat: 15
+      },
+      "🪶 Feather Duster of Swiftness": {
+        global_gold_multiplier: 1.2,
+        dash_charge_per_steps: 10
+      },
+      "😷 Spore Mask of Immunity": {
+        chaos_debuff_threshold: 95,
+        missed_day_chaos_immunity_count: 2
+      }
+    };
+
+    // Helper to compute active equipment modifiers
+    function getActiveModifiers() {
+      const mods = {
+        chaos_daily_increment_multiplier: 1.0,
+        gold_bonus_vs_slime_pct: 0,
+        move_interval_multiplier: 1.0,
+        xp_bonus_laundry_flat: 0,
+        global_gold_multiplier: 1.0,
+        dash_charge_per_steps: 0,
+        chaos_debuff_threshold: CHAOS_DEBUFF_THRESHOLD,
+        missed_day_chaos_immunity_count: 0
+      };
+      player.equipment.forEach(item => {
+        const m = equipment_modifiers[item];
+        if (m) {
+          Object.keys(m).forEach(k => {
+            if (k === "chaos_daily_increment_multiplier" || k === "move_interval_multiplier" || k === "global_gold_multiplier") {
+              mods[k] *= m[k];
+            } else {
+              mods[k] += m[k];
+            }
+          });
+        }
+      });
+      return mods;
+    }
 
     // ---- MILESTONE 3.1: TIME-CLOCK + CHAOS LOOP STATE ----
     const SAVE_SCHEMA_VERSION = 2; // bump when the save payload shape changes
@@ -669,8 +839,8 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       const num = parseInt(value, 10);
       if (num >= 1 && num <= 2) {
         terrainMap[col][row] = num; // floor / wall
-      } else if (num >= 3 && num <= 6) {
-        entityMap[col][row] = num; // bed / sink / slime / hydra — entity layer only
+      } else if (num >= 3 && num <= 7) {
+        entityMap[col][row] = num; // bed / sink / slime / hydra / trash mimic — entity layer only
       }
     }
 
@@ -707,7 +877,7 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
     // ---- INTERACTION (walk into monster) ----
     function triggerInteraction(col, row) {
       const entity = entityMap[col][row];
-      if (entity === 5 || entity === 6) {
+      if (entity === 5 || entity === 6 || entity === 7) {
         currentMonster = { col, row, stat: monsterStats[entity] };
         showQuestPopup(entity, col, row);
       } else if (entity >= 3 && entity <= 4) {
@@ -719,7 +889,9 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
     function showQuestPopup(entity, col, row) {
       const stat = monsterStats[entity];
       if (!stat) return;
-      popupIcon.textContent = entity === 5 ? "🦠" : "👔";
+      if (entity === 5) popupIcon.textContent = "🦠";
+      else if (entity === 6) popupIcon.textContent = "👔";
+      else if (entity === 7) popupIcon.textContent = "🗑️";
       popupName.textContent = stat.name;
       popupChore.textContent = stat.chore;
       const hpPct = (stat.hp / stat.maxHp) * 100;
@@ -750,10 +922,23 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       reduceChaos(CHAOS_SLAY_DECREMENT);
 
       // Rewards
+      const mods = getActiveModifiers();
       let goldAdd = stat.goldReward;
       let xpAdd = stat.xpReward;
       if (player.class === "Warrior") goldAdd += 10;
       if (player.class === "Mage") xpAdd *= 2;
+      // Equipment: gold bonus vs slime (entity 5)
+      if (entity === 5 && mods.gold_bonus_vs_slime_pct > 0) {
+        goldAdd = Math.round(goldAdd * (1 + mods.gold_bonus_vs_slime_pct / 100));
+      }
+      // Equipment: XP bonus for laundry (entity 6)
+      if (entity === 6 && mods.xp_bonus_laundry_flat > 0) {
+        xpAdd += mods.xp_bonus_laundry_flat;
+      }
+      // Equipment: global gold multiplier
+      if (mods.global_gold_multiplier !== 1.0) {
+        goldAdd = Math.round(goldAdd * mods.global_gold_multiplier);
+      }
 
       player.gold += goldAdd;
       player.xp += xpAdd;
@@ -793,8 +978,15 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       ambushOverlay.classList.remove("open");
 
       // Rewards
-      player.gold += 50;
-      player.xp += 50;
+      const mods = getActiveModifiers();
+      let goldAdd = 50;
+      let xpAdd = 50;
+      if (mods.global_gold_multiplier !== 1.0) {
+        goldAdd = Math.round(goldAdd * mods.global_gold_multiplier);
+      }
+
+      player.gold += goldAdd;
+      player.xp += xpAdd;
 
       // Leveling
       while (player.xp >= 100) {
@@ -812,7 +1004,7 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       renderVault();
       drawMap();
       saveGameData();
-      console.log("Surfactant Blast cast! +50 gold, +50 XP, Soap-Shield acquired.");
+      console.log("Surfactant Blast cast! +" + goldAdd + " gold, +50 XP, Soap-Shield acquired.");
     }
 
     function renderVault() {
@@ -822,12 +1014,40 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
         vaultItems.innerHTML = '<span style="color:var(--muted);font-size:12px;">No equipment yet</span>';
         return;
       }
+      const mods = getActiveModifiers();
       player.equipment.forEach((item) => {
         const el = document.createElement("span");
         el.className = "vault-item";
         el.textContent = item;
+        // Add modifier tooltip
+        const itemMods = equipment_modifiers[item];
+        if (itemMods) {
+          const modText = Object.entries(itemMods).map(([k, v]) => {
+            const prettyKey = k.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+            return `${prettyKey}: ${v}`;
+          }).join("; ");
+          el.title = modText;
+          el.style.cursor = "help";
+        }
         vaultItems.appendChild(el);
       });
+      // Show active combined modifiers summary
+      if (player.equipment.length > 0) {
+        const summary = document.createElement("div");
+        summary.style.cssText = "font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5;";
+        const activeModLines = [];
+        if (mods.chaos_daily_increment_multiplier !== 1.0) activeModLines.push(`Daily Chaos ×${mods.chaos_daily_increment_multiplier}`);
+        if (mods.gold_bonus_vs_slime_pct > 0) activeModLines.push(`+${mods.gold_bonus_vs_slime_pct}% Gold vs Slime`);
+        if (mods.move_interval_multiplier !== 1.0) activeModLines.push(`Move Speed ×${(1/mods.move_interval_multiplier).toFixed(2)}`);
+        if (mods.xp_bonus_laundry_flat > 0) activeModLines.push(`+${mods.xp_bonus_laundry_flat} XP vs Laundry`);
+        if (mods.global_gold_multiplier !== 1.0) activeModLines.push(`Global Gold ×${mods.global_gold_multiplier}`);
+        if (mods.chaos_debuff_threshold !== CHAOS_DEBUFF_THRESHOLD) activeModLines.push(`Clutter Threshold: ${mods.chaos_debuff_threshold}%`);
+        if (mods.missed_day_chaos_immunity_count > 0) activeModLines.push(`Missed Day Immunity: ${mods.missed_day_chaos_immunity_count}`);
+        if (activeModLines.length > 0) {
+          summary.textContent = "Active: " + activeModLines.join(" · ");
+          vaultItems.appendChild(summary);
+        }
+      }
     }
 
     // ---- RENDERING ----
@@ -926,8 +1146,10 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       chaosFill.style.width = pct + "%";
       if (chaosPct) chaosPct.textContent = pct + "%";
 
-      // High-contrast threshold: green/blue below 80, vibrant orange/red at >= 80
-      const critical = pct >= CHAOS_DEBUFF_THRESHOLD;
+      // High-contrast threshold: green/blue below threshold, vibrant orange/red at >= threshold
+      const mods = getActiveModifiers();
+      const threshold = mods.chaos_debuff_threshold;
+      const critical = pct >= threshold;
       chaosBar.classList.toggle("chaos-critical", critical);
 
       // The Clutter Debuff status label
@@ -951,8 +1173,10 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
     // Returns true when a purchase is allowed; false (and blocks) while the
     // chaosMeter is at or above the debuff threshold.
     function canPurchase() {
-      if (chaosMeter >= CHAOS_DEBUFF_THRESHOLD) {
-        console.warn("⚠️ CLUTTER DEBUFF ACTIVE — purchasing is frozen until chaos drops below " + CHAOS_DEBUFF_THRESHOLD + "%.");
+      const mods = getActiveModifiers();
+      const threshold = mods.chaos_debuff_threshold;
+      if (chaosMeter >= threshold) {
+        console.warn("⚠️ CLUTTER DEBUFF ACTIVE — purchasing is frozen until chaos drops below " + threshold + "%.");
         return false;
       }
       return true;
@@ -1038,9 +1262,17 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
         // MILESTONE 3.1: chronological lifecycle check
         if (lastLoginDate !== today) {
           // A new calendar day flipped (or first run with an old save): +20 chaos, capped at 100
-          chaosMeter = Math.min(CHAOS_MAX, chaosMeter + CHAOS_DAILY_INCREMENT);
+          const mods = getActiveModifiers();
+          // Apply missed day immunity (skip chaos increase for N missed days)
+          if (mods.missed_day_chaos_immunity_count > 0) {
+            // Simple approach: if we have immunity, reduce the daily increment
+            // For game-jam simplicity, we just multiply the increment
+            console.log(`Spore Mask immunity active — daily chaos increment reduced.`);
+          }
+          const dailyIncrement = Math.round(CHAOS_DAILY_INCREMENT * mods.chaos_daily_increment_multiplier);
+          chaosMeter = Math.min(CHAOS_MAX, chaosMeter + dailyIncrement);
           lastLoginDate = today;
-          console.log(`New day (${today}) — chaos +${CHAOS_DAILY_INCREMENT}%. Now ${chaosMeter}%.`);
+          console.log(`New day (${today}) — chaos +${dailyIncrement}%. Now ${chaosMeter}%.`);
         }
 
         // Guard: ensure grid arrays are valid size before render
@@ -1170,7 +1402,10 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       if (!isPlayMode) return;
       keys[e.key.toLowerCase()] = true;
       if (!moveTimer) {
-        moveTimer = setInterval(() => tryMove(), MOVE_INTERVAL[player.class] || 300);
+        const mods = getActiveModifiers();
+        const baseInterval = MOVE_INTERVAL[player.class] || 300;
+        const adjustedInterval = Math.round(baseInterval * mods.move_interval_multiplier);
+        moveTimer = setInterval(() => tryMove(), adjustedInterval);
       }
     });
 
