@@ -542,6 +542,253 @@
       font-size: 12px;
       padding: 4px 8px;
     }
+    /* ---- REAL-CHORE LOG PANEL ---- */
+    #chore-log-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 320px;
+      max-width: 90vw;
+      height: 100vh;
+      z-index: 300;
+      background: var(--panel);
+      border-left: 1px solid #333;
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    #chore-log-panel.open {
+      transform: translateX(0);
+    }
+
+    #chore-log-panel .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #333;
+    }
+
+    #chore-log-panel .panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text);
+    }
+
+    #chore-log-panel .panel-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    #chore-log-panel .panel-close:hover {
+      color: var(--text);
+      background: var(--panel-2);
+    }
+
+    #chore-log-panel .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    #chore-log-panel .form-group label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+    }
+
+    #chore-log-panel select,
+    #chore-log-panel input[type="text"] {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    #chore-log-panel select:hover,
+    #chore-log-panel input[type="text"]:hover {
+      border-color: #4a4f5a;
+    }
+
+    #chore-log-panel select:focus,
+    #chore-log-panel input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+    }
+
+    #chore-log-panel .btn-complete {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid #22c55e;
+      background: #166534;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, filter 0.15s;
+    }
+
+    #chore-log-panel .btn-complete:hover {
+      background: #15803d;
+      border-color: #22c55e;
+      filter: brightness(1.1);
+    }
+
+    #chore-log-panel .btn-complete:active {
+      transform: scale(0.98);
+    }
+
+    #chore-log-panel .timer-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: var(--panel-2);
+      border-radius: 6px;
+      border: 1px solid #333;
+    }
+
+    #chore-log-panel .btn-timer {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--gold);
+      background: transparent;
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    #chore-log-panel .btn-timer:hover {
+      background: var(--gold);
+      color: #0a0c10;
+    }
+
+    #chore-log-panel .btn-timer.running {
+      background: var(--gold);
+      color: #0a0c10;
+    }
+
+    #chore-log-panel .timer-display {
+      font-family: 'Courier New', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 1px;
+      flex: 1;
+      text-align: center;
+    }
+
+    #chore-log-panel .log-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 0;
+    }
+
+    #chore-log-panel .log-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      padding-bottom: 4px;
+      border-bottom: 1px solid #333;
+    }
+
+    #chore-log-panel .log-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-right: 4px;
+    }
+
+    #chore-log-panel .log-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #chore-log-panel .log-list::-webkit-scrollbar-track {
+      background: var(--panel-2);
+      border-radius: 3px;
+    }
+
+    #chore-log-panel .log-list::-webkit-scrollbar-thumb {
+      background: #3a3f4a;
+      border-radius: 3px;
+    }
+
+    #chore-log-panel .log-list::-webkit-scrollbar-thumb:hover {
+      background: #4a4f5a;
+    }
+
+    #chore-log-panel .log-entry {
+      padding: 8px 10px;
+      background: var(--panel-2);
+      border-radius: 6px;
+      border: 1px solid #2a2f3a;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    #chore-log-panel .log-entry:hover {
+      border-color: #3a3f4a;
+      background: #262b36;
+    }
+
+    #chore-log-panel .log-entry .log-time {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: 'Courier New', monospace;
+    }
+
+    #chore-log-panel .log-entry .log-chore {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    #chore-log-panel .log-entry .log-rewards {
+      font-size: 11px;
+      color: var(--gold);
+    }
+
+    #chore-log-panel .log-empty {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      padding: 16px 8px;
+    }
+
+    /* Toggle button in header */
+    #chore-log-toggle {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
   </style>
 </head>
 <body>
@@ -551,8 +798,41 @@
     <div class="header-buttons">
       <button id="mode-toggle" class="primary">🔄 Switch to Play Mode</button>
       <button id="hero-toggle">⚔️ Hero: Rogue</button>
+      <button id="chore-log-toggle">📋 Real Chore Log</button>
     </div>
   </header>
+
+  <!-- Real Chore Log Panel -->
+  <div id="chore-log-panel">
+    <div class="panel-header">
+      <span class="panel-title">📋 Real Chore Log</span>
+      <button class="panel-close" id="chore-log-close">✕</button>
+    </div>
+    <div class="form-group">
+      <label for="chore-type">Chore Type</label>
+      <select id="chore-type">
+        <option value="Dishes">🍽️ Dishes</option>
+        <option value="Laundry">👕 Laundry</option>
+        <option value="Trash">🗑️ Trash</option>
+        <option value="Custom">✏️ Custom</option>
+      </select>
+    </div>
+    <div class="form-group" id="chore-custom-group" style="display:none;">
+      <label for="chore-custom">Custom Chore</label>
+      <input type="text" id="chore-custom" placeholder="Describe your chore..." />
+    </div>
+    <button class="btn-complete" id="chore-complete">✅ Mark Complete</button>
+    <div class="timer-section">
+      <button class="btn-timer" id="chore-timer-btn">⏱️ Start Timer</button>
+      <span class="timer-display" id="chore-timer-display">00:00</span>
+    </div>
+    <div class="log-section">
+      <div class="log-section-title">Recent Completions</div>
+      <div class="log-list" id="chore-log-list">
+        <div class="log-empty">No chores logged yet</div>
+      </div>
+    </div>
+  </div>
 
   <div id="hud">
     <div class="stat"><span class="label">Level</span><span class="value" id="hud-level">1</span></div>
@@ -1446,10 +1726,128 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       heroSelector.style.display = heroSelector.style.display === "none" ? "flex" : "none";
     });
 
+    // ---- REAL CHORE LOG SYSTEM ----
+    const CHORE_LOG_KEY = 'daily_haven_quest_chore_log';
+    let choreLogEntries = [];
+    let choreTimerStart = null;
+    let choreTimerInterval = null;
+
+    function loadChoreLog() {
+      try {
+        const raw = localStorage.getItem(CHORE_LOG_KEY);
+        if (raw) choreLogEntries = JSON.parse(raw);
+      } catch (e) { choreLogEntries = []; }
+    }
+
+    function saveChoreLog() {
+      localStorage.setItem(CHORE_LOG_KEY, JSON.stringify(choreLogEntries));
+    }
+
+    function toggleChoreLog() {
+      const panel = document.getElementById('chore-log-panel');
+      panel.classList.toggle('open');
+    }
+
+    function completeChore() {
+      const typeSelect = document.getElementById('chore-type');
+      const customInput = document.getElementById('chore-custom');
+      const choreType = typeSelect.value;
+      const choreText = choreType === 'Custom' ? customInput.value.trim() : choreType;
+      if (!choreText) { alert('Please enter a custom chore description.'); return; }
+
+      // Timer bonus
+      let timerBonus = 0;
+      if (choreTimerStart) {
+        const elapsedMs = Date.now() - choreTimerStart;
+        const elapsedMin = Math.floor(elapsedMs / 60000);
+        timerBonus = Math.min(elapsedMin * 2, 30);
+        stopTimer();
+      }
+
+      // Rewards
+      const goldReward = 10;
+      const xpReward = 10;
+      const chaosReduction = 25 + timerBonus;
+
+      reduceChaos(chaosReduction);
+      player.gold += goldReward;
+      player.xp += xpReward;
+      while (player.xp >= 100) { player.xp -= 100; player.level += 1; }
+
+      flashCanvas();
+      updateHUD();
+      saveGameData();
+
+      // Log entry
+      const entry = { type: choreType, text: choreText, timestamp: Date.now(), gold: goldReward, xp: xpReward };
+      choreLogEntries.unshift(entry);
+      if (choreLogEntries.length > 20) choreLogEntries = choreLogEntries.slice(0, 20);
+      saveChoreLog();
+      renderChoreLog();
+
+      // Reset custom input
+      customInput.value = '';
+    }
+
+    function startTimer() {
+      choreTimerStart = Date.now();
+      const btn = document.getElementById('chore-timer-btn');
+      const display = document.getElementById('chore-timer-display');
+      btn.textContent = '⏹️ Stop & Log';
+      btn.classList.add('running');
+      choreTimerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - choreTimerStart) / 1000);
+        const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const secs = String(elapsed % 60).padStart(2, '0');
+        display.textContent = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (choreTimerInterval) { clearInterval(choreTimerInterval); choreTimerInterval = null; }
+      choreTimerStart = null;
+      const btn = document.getElementById('chore-timer-btn');
+      const display = document.getElementById('chore-timer-display');
+      btn.textContent = '⏱️ Start Timer';
+      btn.classList.remove('running');
+      display.textContent = '00:00';
+    }
+
+    function renderChoreLog() {
+      const list = document.getElementById('chore-log-list');
+      if (choreLogEntries.length === 0) {
+        list.innerHTML = '<div class="log-empty">No chores logged yet</div>';
+        return;
+      }
+      list.innerHTML = '';
+      choreLogEntries.slice(0, 5).forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        const time = new Date(entry.timestamp);
+        const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const dateStr = time.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        div.innerHTML = `<span class="log-time">${dateStr} ${timeStr}</span><span class="log-chore">${entry.text}</span><span class="log-rewards">+${entry.gold}g +${entry.xp}xp</span>`;
+        list.appendChild(div);
+      });
+    }
+
+    // Chore log event listeners
+    document.getElementById('chore-log-toggle').addEventListener('click', toggleChoreLog);
+    document.getElementById('chore-log-close').addEventListener('click', toggleChoreLog);
+    document.getElementById('chore-complete').addEventListener('click', completeChore);
+    document.getElementById('chore-timer-btn').addEventListener('click', () => {
+      if (choreTimerStart) { stopTimer(); } else { startTimer(); }
+    });
+    document.getElementById('chore-type').addEventListener('change', (e) => {
+      document.getElementById('chore-custom-group').style.display = e.target.value === 'Custom' ? 'flex' : 'none';
+    });
+
     // ---- START ----
     // MILESTONE 3.1: loadGameData() now drives init (date check + chaos restore);
     // it falls back to a clean grid when no save exists.
     loadGameData();
+    loadChoreLog();
+    renderChoreLog();
     renderVault();
   </script>
 </body>
