@@ -789,6 +789,85 @@
       border-color: var(--accent);
       color: var(--accent);
     }
+
+    /* ---- ASSET PALETTE SIDEBAR ---- */
+    #asset-palette {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 200px;
+      height: 100vh;
+      z-index: 300;
+      background: var(--panel);
+      border-right: 1px solid #333;
+      box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    #asset-palette.open {
+      transform: translateX(0);
+    }
+
+    .palette-section {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .palette-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      padding-bottom: 4px;
+      border-bottom: 1px solid #333;
+      margin-bottom: 4px;
+    }
+
+    .palette-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .palette-item:hover {
+      background: var(--panel-2);
+      border-color: #333;
+    }
+
+    .palette-item.active {
+      border-color: var(--accent);
+      background: #1e3a4a;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+    }
+
+    .palette-swatch {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      flex-shrink: 0;
+    }
+
+    #asset-palette-toggle {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
   </style>
 </head>
 <body>
@@ -799,6 +878,7 @@
       <button id="mode-toggle" class="primary">🔄 Switch to Play Mode</button>
       <button id="hero-toggle">⚔️ Hero: Rogue</button>
       <button id="chore-log-toggle">📋 Real Chore Log</button>
+      <button id="asset-palette-toggle">🎨 Asset Palette</button>
     </div>
   </header>
 
@@ -893,6 +973,9 @@
       <button id="save-btn" style="background:#1e3a4a;border-color:var(--gold);color:var(--gold);">💾 Save Progress</button>
       <button id="reset-btn" style="background:#2a2f3a;border-color:#64748b;color:#8b8f98;">🔄 Reset Dungeon</button>
       <button id="ambush-btn" style="background:#2a2f3a;border-color:#ec4899;color:#ec4899;">☣️ Emulate Basin Decay (Trigger Ambush)</button>
+      <button id="save-custom-btn" style="background:#1e3a4a;border-color:var(--gold);color:var(--gold);">💾 Save Custom Map</button>
+      <button id="load-custom-btn" style="background:#2a2f3a;border-color:#38bdf8;color:#38bdf8;">📂 Load Custom Map</button>
+      <button id="clear-custom-btn" style="background:#2a2f3a;border-color:#ef4444;color:#ef4444;">🗑️ Clear Custom Map</button>
       <span id="save-status" style="color:var(--muted);font-size:12px;"></span>
     </div>
   </div>
@@ -931,6 +1014,44 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       <div class="actions">
         <button id="surfactant-btn">⚔️ Cast Surfactant Blast (Chore Completed)</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Asset Palette Sidebar -->
+  <div id="asset-palette">
+    <div class="palette-section">
+      <div class="palette-section-title">Floors & Walls</div>
+      <button class="palette-item active" data-tile-type="floor">
+        <span class="palette-swatch" style="background:#b45309;"></span>
+        Floor
+      </button>
+      <button class="palette-item" data-tile-type="wall">
+        <span class="palette-swatch" style="background:#64748b;"></span>
+        Wall
+      </button>
+    </div>
+    <div class="palette-section">
+      <div class="palette-section-title">Entities</div>
+      <button class="palette-item" data-tile-type="3">
+        <span class="palette-swatch" style="background:#38bdf8;"></span>
+        Bed
+      </button>
+      <button class="palette-item" data-tile-type="4">
+        <span class="palette-swatch" style="background:#06b6d4;"></span>
+        Sink
+      </button>
+      <button class="palette-item" data-tile-type="5">
+        <span class="palette-swatch" style="background:#ec4899;"></span>
+        Dish Slime
+      </button>
+      <button class="palette-item" data-tile-type="6">
+        <span class="palette-swatch" style="background:#a855f7;"></span>
+        Laundry Hydra
+      </button>
+      <button class="palette-item" data-tile-type="7">
+        <span class="palette-swatch" style="background:#f97316;"></span>
+        Trash Mimic
+      </button>
     </div>
   </div>
 
@@ -1050,6 +1171,7 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
     let terrainMap = [];
     let entityMap = [];
     let activeTool = "floor";
+    let selectedTileType = "floor";
 
     // ---- MOVEMENT / KEYS (play mode) ----
     const MOVE_INTERVAL = { "Rogue": 150, "Warrior": 300, "Mage": 300 };
@@ -1103,6 +1225,52 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
         document.querySelectorAll('.controls input[name="tool"]').forEach((el) => el.disabled = true);
       } else {
         document.querySelectorAll('.controls input[name="tool"]').forEach((el) => el.disabled = false);
+      }
+    }
+
+    // ---- ASSET PALETTE ----
+    function selectTile(type) {
+      selectedTileType = type;
+      setTool(type);
+      document.querySelectorAll('.palette-item').forEach((el) => {
+        el.classList.toggle('active', el.dataset.tileType === type);
+      });
+    }
+
+    // ---- CUSTOM MAP PERSISTENCE ----
+    const CUSTOM_MAP_KEY = 'daily_haven_custom_map';
+
+    function saveCustomMap() {
+      const payload = { terrainMap, entityMap, selectedTileType };
+      localStorage.setItem(CUSTOM_MAP_KEY, JSON.stringify(payload));
+      if (saveStatusEl) {
+        saveStatusEl.textContent = '💾 Custom Map Saved!';
+        saveStatusEl.classList.add('show');
+        setTimeout(() => saveStatusEl.classList.remove('show'), 1800);
+      }
+    }
+
+    function loadCustomMap() {
+      try {
+        const raw = localStorage.getItem(CUSTOM_MAP_KEY);
+        if (!raw) { alert('No custom map found.'); return; }
+        const data = JSON.parse(raw);
+        if (data.terrainMap && data.entityMap) {
+          terrainMap = data.terrainMap;
+          entityMap = data.entityMap;
+          if (data.selectedTileType) selectTile(data.selectedTileType);
+          drawMap();
+          updateHUD();
+        }
+      } catch (e) { alert('Failed to load custom map.'); }
+    }
+
+    function clearCustomMap() {
+      localStorage.removeItem(CUSTOM_MAP_KEY);
+      if (saveStatusEl) {
+        saveStatusEl.textContent = '🗑️ Custom Map Cleared!';
+        saveStatusEl.classList.add('show');
+        setTimeout(() => saveStatusEl.classList.remove('show'), 1800);
       }
     }
 
@@ -1710,6 +1878,26 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
     resetBtn.addEventListener("click", resetDungeon);
     ambushBtn.addEventListener("click", triggerAmbush);
     surfactantBtn.addEventListener("click", castSurfactantBlast);
+
+    // ---- ASSET PALETTE WIRING ----
+    document.querySelectorAll('.palette-item').forEach((el) => {
+      el.addEventListener('click', () => selectTile(el.dataset.tileType));
+    });
+    const assetPaletteToggle = document.getElementById('asset-palette-toggle');
+    const assetPalette = document.getElementById('asset-palette');
+    if (assetPaletteToggle && assetPalette) {
+      assetPaletteToggle.addEventListener('click', () => {
+        assetPalette.classList.toggle('open');
+      });
+    }
+
+    // ---- CUSTOM MAP WIRING ----
+    const saveCustomBtn = document.getElementById('save-custom-btn');
+    const loadCustomBtn = document.getElementById('load-custom-btn');
+    const clearCustomBtn = document.getElementById('clear-custom-btn');
+    if (saveCustomBtn) saveCustomBtn.addEventListener('click', saveCustomMap);
+    if (loadCustomBtn) loadCustomBtn.addEventListener('click', loadCustomMap);
+    if (clearCustomBtn) clearCustomBtn.addEventListener('click', clearCustomMap);
 
     heroSelect.addEventListener("change", () => {
       player.class = heroSelect.value;
