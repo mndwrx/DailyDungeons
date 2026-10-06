@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Haven Quest — Tilemap Editor</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #1a1d24;
+      --panel-2: #232732;
+      --text: #e8eaed;
+      --muted: #8b8f98;
+      --accent: #38bdf8;
+      --gold: #f5c542;
+      --floor: #b45309;
+      --wall: #64748b;
+      --bed: #38bdf8;
+      --sink: #06b6d4;
+      --slime: #ec4899;
+      --hydra: #a855f7;
+
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+    }
+
+    header {
+      padding: 12px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .controls {
+      padding: 12px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid #333;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .controls label {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .controls input[type="radio"] {
+      accent-color: var(--accent);
+    }
+
+    .controls button {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .controls button:hover { background: #2c313c; }
+
+    .controls button.active {
+      border-color: var(--accent);
+      background: #1e3a4a;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+    }
+
+    .header-buttons {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .header-buttons button {
+      padding: 6px 14px;
+      font-weight: 600;
+    }
+
+    .header-buttons button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0a0c10;
+    }
+
+    .header-buttons button.primary:hover { filter: brightness(1.1); }
+
+    /* HUD Panel — always visible */
+    #hud {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 100;
+      background: var(--panel);
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+
+    #hud .stat { display: flex; flex-direction: column; }
+
+    #hud .stat .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    #hud .stat .value { color: var(--text); font-weight: 600; }
+
+    #hud .stat .value.gold { color: var(--gold); }
+
+    /* ---- MILESTONE 3.1: CHAOS METER HUD ---- */
+    #chaos-wrap {
+      flex-basis: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    #chaos-wrap .chaos-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+    }
+
+    #chaos-wrap .chaos-head .chaos-pct {
+      color: var(--text);
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    #chaos-debuff {
+      color: #ff5c5c;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    #chaos-bar {
+      height: 12px;
+      width: 100%;
+      background: #2a2f3a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    #chaos-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #38bdf8);
+      transition: width 0.35s ease, background 0.35s ease;
+    }
+
+    /* Threshold breach: >= 80% chaos flips the bar to vibrant orange/red */
+    #chaos-bar.chaos-critical #chaos-fill {
+      background: linear-gradient(90deg, #f97316, #ef4444);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+    }
+
+    #save-status.show { color: var(--gold); }
+
+    /* Quest Popup Modal */
+    #quest-popup {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      display: none;
+    }
+
+    #quest-popup.open { display: flex; }
+
+    .popup-box {
+      background: var(--panel);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 20px 24px;
+      max-width: 420px;
+      width: calc(100% - 48px);
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    }
+
+    .popup-box .icon { font-size: 48px; }
+
+    .popup-box h2 { margin: 8px 0 4px; font-size: 22px; }
+
+    .popup-box .chore {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      margin: 8px 0;
+    }
+
+    .popup-box .hp-bar {
+      height: 8px;
+      background: #2a2f3a;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+
+    .popup-box .hp-bar > div {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s;
+    }
+
+    .popup-box .actions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
+
+    .popup-box .actions button {
+      padding: 8px 20px;
+      border-radius: 6px;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #0a0c10;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .popup-box .actions button:last-child {
+      background: transparent;
+      color: var(--text);
+      border-color: #333;
+    }
+
+    /* Hero class selector (edit mode only) */
+    #hero-selector {
+      padding: 12px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid #333;
+      flex-wrap: wrap;
+      gap: 8px;
+      display: none;
+    }
+
+    #hero-selector select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .hidden { display: none !important; }
+
+    .canvas-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    canvas {
+      background: #0a0c10;
+      border: 1px solid #2a2f3a;
+      border-radius: 8px;
+      cursor: crosshair;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      max-width: 100%;
+      height: auto;
+    }
+
+    footer {
+      padding: 8px 16px;
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+    /* ---- AMBUSH OVERLAY ---- */
+    #ambush-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #ambush-overlay.open { display: flex; }
+
+    .scroll-box {
+      background: #f4e4c1;
+      border: 4px solid #8b4513;
+      border-radius: 4px;
+      padding: 32px 40px;
+      max-width: 640px;
+      width: calc(100% - 48px);
+      text-align: center;
+      box-shadow: 0 0 40px rgba(139, 69, 19, 0.5), inset 0 0 60px rgba(139, 69, 19, 0.15);
+      position: relative;
+    }
+
+    .scroll-box::before,
+    .scroll-box::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 12px;
+      background: #8b4513;
+      border-radius: 2px;
+    }
+
+    .scroll-box::before { top: -6px; }
+    .scroll-box::after { bottom: -6px; }
+
+    .scroll-box h2 {
+      color: #4a2c0a;
+      font-size: 20px;
+      margin: 0 0 16px;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .scroll-box .lore-text {
+      color: #3d2200;
+      font-size: 14px;
+      line-height: 1.6;
+      text-align: left;
+      margin: 0 0 20px;
+      font-family: 'Courier New', monospace;
+      white-space: pre-line;
+    }
+
+    .scroll-box .slime-sprite {
+      font-size: 64px;
+      margin: 12px 0;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    .scroll-box .actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+
+    .scroll-box .actions button {
+      padding: 10px 24px;
+      border-radius: 6px;
+      border: 2px solid #4a2c0a;
+      background: #4a2c0a;
+      color: #f4e4c1;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+    }
+
+    .scroll-box .actions button:hover { background: #6b3a1a; }
+
+    /* Equipment Vault */
+    #equipment-vault {
+      flex-basis: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    #equipment-vault .vault-head {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+    }
+
+    #equipment-vault .vault-items {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .vault-item {
+      background: var(--panel-2);
+      border: 1px solid var(--gold);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--gold);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🏰 Daily Haven Quest</h1>
+    <span style="font-size:12px;color:#555;">Tilemap Editor</span>
+    <div class="header-buttons">
+      <button id="mode-toggle" class="primary">🔄 Switch to Play Mode</button>
+      <button id="hero-toggle">⚔️ Hero: Rogue</button>
+    </div>
+  </header>
+
+  <div id="hud">
+    <div class="stat"><span class="label">Level</span><span class="value" id="hud-level">1</span></div>
+    <div class="stat"><span class="label">XP</span><span class="value" id="hud-xp">0</span><span class="value" id="hud-xp-max" style="color:var(--muted);font-weight:400;">/ 100</span></div>
+    <div class="stat"><span class="label">Gold</span><span class="value gold" id="hud-gold">0</span></div>
+    <div class="stat"><span class="label">Class</span><span class="value" id="hud-class">Rogue</span></div>
+    <div id="chaos-wrap">
+      <div class="chaos-head">
+        <span>Chaos Meter</span>
+        <span class="chaos-pct" id="chaos-pct">0%</span>
+        <span id="chaos-debuff" class="hidden">⚠️ CLUTTER DEBUFF ACTIVE</span>
+      </div>
+      <div id="chaos-bar"><div id="chaos-fill"></div></div>
+    </div>
+    <div id="equipment-vault">
+      <span class="vault-head">Equipment Vault</span>
+      <div class="vault-items" id="vault-items"></div>
+    </div>
+  </div>
+
+  <div id="hero-selector">
+    <label style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;">
+      ⚔️ Hero Class
+      <select id="hero-select">
+        <option value="Rogue">Rogue — Faster moves</option>
+        <option value="Warrior">Warrior — +10 Gold on big tasks</option>
+        <option value="Mage">Mage — Double XP</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="controls">
+    <label id="tool-floor">
+      <input type="radio" name="tool" value="floor" checked /> 🛋️ Floor
+    </label>
+    <label id="tool-wall">
+      <input type="radio" name="tool" value="wall" /> 🧱 Wall
+    </label>
+    <label id="tool-bed">
+      <input type="radio" name="tool" value="3" /> 🛏️ Bed
+    </label>
+    <label id="tool-sink">
+      <input type="radio" name="tool" value="4" /> 🚰 Sink
+    </label>
+    <label id="tool-slime">
+      <input type="radio" name="tool" value="5" /> 🦠 Dish Slime
+    </label>
+    <label id="tool-hydra">
+      <input type="radio" name="tool" value="6" /> 👔 Laundry Hydra
+    </label>
+    <label id="tool-clear">
+      <input type="radio" name="tool" value="clear" /> 🧹 Clear Above
+    </label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-left:8px;">
+      <button id="save-btn" style="background:#1e3a4a;border-color:var(--gold);color:var(--gold);">💾 Save Progress</button>
+      <button id="reset-btn" style="background:#2a2f3a;border-color:#64748b;color:#8b8f98;">🔄 Reset Dungeon</button>
+      <button id="ambush-btn" style="background:#2a2f3a;border-color:#ec4899;color:#ec4899;">☣️ Emulate Basin Decay (Trigger Ambush)</button>
+      <span id="save-status" style="color:var(--muted);font-size:12px;"></span>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="map" width="640" height="640"></canvas>
+  </div>
+
+  <div id="quest-popup">
+    <div class="popup-box">
+      <div class="icon" id="popup-icon">🦠</div>
+      <h2 id="popup-name">Dish Slime</h2>
+      <div class="chore" id="popup-chore">Wash the dishes in the kitchen sink</div>
+      <div class="hp-bar"><div id="popup-hp" style="width:100%"></div></div>
+      <div class="actions">
+        <button id="slay-btn">⚔️ Slay Monster (Chore Done)</button>
+        <button id="cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AMBUSH OVERLAY -->
+  <div id="ambush-overlay">
+    <div class="scroll-box">
+      <h2>⚠️ Quest Log: The Kitchen Dungeon</h2>
+      <div class="lore-text">Adventurer, your procrastination has breached the seals of the Porcelain Domain.
+
+By abandoning the organic residue of your rations to the damp, room-temperature depths of the Basin, you have accidentally initiated a dark ritual. The local micro-fauna have feasted upon the fat and protein slurry, multiplying by the millions.
+
+As the oxygen in the stagnant water depleted, anaerobic decomposition took hold. The microscopic horrors began excreting volatile sulfur compounds and putrid fatty acids, weaving a miasma of rotten eggs and rancid dairy.
+
+This foul chemical reaction is no longer just a stench—the sheer density of the bacterial biomatter is coagulating. It is gaining sentience, feeding on the stuck-on gravy, and physically rising from the drain.
+
+Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</div>
+      <div class="slime-sprite">🦠</div>
+      <div class="actions">
+        <button id="surfactant-btn">⚔️ Cast Surfactant Blast (Chore Completed)</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Grid: 16 &times; 16</span>
+    <span>Click &amp; drag to paint &nbsp;·&nbsp; WASD / Arrows to move (Play Mode)</span>
+  </footer>
+
+  <script>
+    // ============================================================
+    //  DAILY HAVEN QUEST — TWO-TIERED MATRIX EDITOR + HERO / QUEST LOOP
+    // ============================================================
+
+    const GRID_SIZE = 16;
+    const TILE_SIZE = 40; // 16 * 40 = 640 (matches canvas)
+
+    const canvas = document.getElementById("map");
+    const ctx = canvas.getContext("2d");
+
+    // ---- DATA DICTIONARY & COLOR ENCODING ----
+    // terrainMap: 0 = Empty, 1 = Floor, 2 = Wall
+    // entityMap:  0 = None, 3 = Bed, 4 = Sink, 5 = Dish Slime, 6 = Laundry Hydra
+
+    const TERRAIN_COLORS = {
+      0: "transparent",
+      1: "#b45309",
+      2: "#64748b",
+    };
+
+    const ENTITY_COLORS = {
+      0: "transparent",
+      3: "#38bdf8",
+      4: "#06b6d4",
+      5: "#ec4899",
+      6: "#a855f7",
+    };
+
+    const ENTITY_SYMBOLS = {
+      3: "🛏️",
+      4: "🚰",
+      5: "🦠",
+      6: "👔",
+    };
+
+    // ---- STATE CONFIGURATION ----
+    let isPlayMode = false;
+    let player = { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
+    const monsterStats = {
+      5: { name: "Dish Slime", hp: 30, maxHp: 30, chore: "Wash the dishes in the kitchen sink", xpReward: 20, goldReward: 20 },
+      6: { name: "Laundry Hydra", hp: 60, maxHp: 60, chore: "Fold a full basket of clean clothes", xpReward: 50, goldReward: 50 }
+    };
+    let activeMonsterInstance = null;
+    let currentMonster = null; // { col, row }
+
+    // ---- MILESTONE 3.1: TIME-CLOCK + CHAOS LOOP STATE ----
+    const SAVE_SCHEMA_VERSION = 2; // bump when the save payload shape changes
+    const CHAOS_MAX = 100;
+    const CHAOS_DEBUFF_THRESHOLD = 80;
+    const CHAOS_DAILY_INCREMENT = 20;
+    const CHAOS_SLAY_DECREMENT = 25;
+
+    let chaosMeter = 0;
+    let lastLoginDate = null;
+    let clutterDebuffActive = false;
+
+    // ---- EDITOR / TOOL STATE ----
+    let terrainMap = [];
+    let entityMap = [];
+    let activeTool = "floor";
+
+    // ---- MOVEMENT / KEYS (play mode) ----
+    const MOVE_INTERVAL = { "Rogue": 150, "Warrior": 300, "Mage": 300 };
+    const keys = {};
+    let moveTimer = null;
+
+    // ---- DALLAS HUD / POPUP DOM REFERENCES ----
+    const hudLevel = document.getElementById("hud-level");
+    const hudXp = document.getElementById("hud-xp");
+    const hudXpMax = document.getElementById("hud-xp-max");
+    const hudGold = document.getElementById("hud-gold");
+    const hudClass = document.getElementById("hud-class");
+    const heroSelector = document.getElementById("hero-selector");
+    const heroToggle = document.getElementById("hero-toggle");
+    const heroSelect = document.getElementById("hero-select");
+    const modeToggle = document.getElementById("mode-toggle");
+    const questPopup = document.getElementById("quest-popup");
+    const popupIcon = document.getElementById("popup-icon");
+    const popupName = document.getElementById("popup-name");
+    const popupChore = document.getElementById("popup-chore");
+    const popupHp = document.getElementById("popup-hp");
+    const slayBtn = document.getElementById("slay-btn");
+    const cancelBtn = document.getElementById("cancel-btn");
+
+    // ---- MILESTONE 3.1: CHAOS HUD DOM REFS + SAVE/RESET BTN REFS (were undefined) ----
+    const chaosBar = document.getElementById("chaos-bar");
+    const chaosFill = document.getElementById("chaos-fill");
+    const chaosPct = document.getElementById("chaos-pct");
+    const chaosDebuff = document.getElementById("chaos-debuff");
+    const saveBtn = document.getElementById("save-btn");
+    const resetBtn = document.getElementById("reset-btn");
+    const saveStatusEl = document.getElementById("save-status");
+    const ambushBtn = document.getElementById("ambush-btn");
+    const ambushOverlay = document.getElementById("ambush-overlay");
+    const surfactantBtn = document.getElementById("surfactant-btn");
+    const vaultItems = document.getElementById("vault-items");
+
+    // ---- INIT ----
+    function initMaps() {
+      terrainMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+      entityMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+    }
+
+    // ---- TOOL LOGIC ----
+    function setTool(name) {
+      activeTool = name;
+      document.querySelectorAll('.controls input[name="tool"]')
+        .forEach((el) => el.closest("label").classList.toggle("active", el.value === name));
+      // Disable brush during play mode
+      if (isPlayMode) {
+        document.querySelectorAll('.controls input[name="tool"]').forEach((el) => el.disabled = true);
+      } else {
+        document.querySelectorAll('.controls input[name="tool"]').forEach((el) => el.disabled = false);
+      }
+    }
+
+    // ---- PAINTING (protected: play mode does not brush) ----
+    function paintTile(col, row, value) {
+      if (isPlayMode) return;
+
+      if (value === "clear") {
+        entityMap[col][row] = 0;
+        if (isEmptyEntityMap()) terrainMap[col][row] = 0;
+        return;
+      }
+
+      const num = parseInt(value, 10);
+      if (num >= 1 && num <= 2) {
+        terrainMap[col][row] = num; // floor / wall
+      } else if (num >= 3 && num <= 6) {
+        entityMap[col][row] = num; // bed / sink / slime / hydra — entity layer only
+      }
+    }
+
+    function isEmptyEntityMap() {
+      return entityMap.every((row) => row.every((v) => v === 0));
+    }
+
+    // ---- PLAYER MOVEMENT ----
+    function tryMove() {
+      const dirs = {
+        w: [0, -1], "arrowup": [0, -1],
+        s: [0, 1], "arrowdown": [0, 1],
+        a: [-1, 0], "arrowleft": [-1, 0],
+        d: [1, 0], "arrowright": [1, 0]
+      };
+      let moved = false;
+      for (const [key, dir] of Object.entries(dirs)) {
+        if (keys[key]) {
+          const nx = player.x + dir[0];
+          const ny = player.y + dir[1];
+          if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && terrainMap[nx][ny] !== 2) {
+            player.x = nx;
+            player.y = ny;
+            moved = true;
+            const ent = entityMap[nx][ny];
+            if (ent >= 3) triggerInteraction(nx, ny);
+          }
+        }
+      }
+      if (moved) drawMap();
+      return moved;
+    }
+
+    // ---- INTERACTION (walk into monster) ----
+    function triggerInteraction(col, row) {
+      const entity = entityMap[col][row];
+      if (entity === 5 || entity === 6) {
+        currentMonster = { col, row, stat: monsterStats[entity] };
+        showQuestPopup(entity, col, row);
+      } else if (entity >= 3 && entity <= 4) {
+        // Furniture: informational only
+        console.log("Furniture at " + col + "/" + row + " — place furniture or clear it.");
+      }
+    }
+
+    function showQuestPopup(entity, col, row) {
+      const stat = monsterStats[entity];
+      if (!stat) return;
+      popupIcon.textContent = entity === 5 ? "🦠" : "👔";
+      popupName.textContent = stat.name;
+      popupChore.textContent = stat.chore;
+      const hpPct = (stat.hp / stat.maxHp) * 100;
+      popupHp.style.width = hpPct + "%";
+      activeMonsterInstance = { col, row, stat, hp: stat.hp };
+      questPopup.classList.add("open");
+    }
+
+    function closeQuestPopup() {
+      questPopup.classList.remove("open");
+      activeMonsterInstance = null;
+      currentMonster = null;
+    }
+
+    // ---- COMBAT RESOLUTION ----
+    function resolveCombat() {
+      if (!activeMonsterInstance) return;
+      const { col, row, stat, hp } = activeMonsterInstance;
+      const entity = entityMap[col][row];
+
+      // Flash effect on canvas
+      flashCanvas();
+
+      // Clear the monster from the map
+      entityMap[col][row] = 0;
+
+      // MILESTONE 3.1: slaying a chore monster scrubs chaos (floor 0)
+      reduceChaos(CHAOS_SLAY_DECREMENT);
+
+      // Rewards
+      let goldAdd = stat.goldReward;
+      let xpAdd = stat.xpReward;
+      if (player.class === "Warrior") goldAdd += 10;
+      if (player.class === "Mage") xpAdd *= 2;
+
+      player.gold += goldAdd;
+      player.xp += xpAdd;
+
+      // Leveling
+      while (player.xp >= 100) {
+        player.xp -= 100;
+        player.level += 1;
+      }
+
+      activeMonsterInstance = null;
+      currentMonster = null;
+      closeQuestPopup();
+      updateHUD();
+      drawMap();
+      // ---- AUTO-SAVE on chore completion ----
+      saveGameData();
+      console.log("Chore cleared: " + stat.chore);
+    }
+
+    // ---- CANVAS FLASH ----
+    function flashCanvas() {
+      const overlay = document.createElement("div");
+      overlay.style.cssText =
+        "position:fixed;inset:0;z-index:9999;background:rgba(255,255,255,0.55);pointer-events:none;";
+      document.body.appendChild(overlay);
+      setTimeout(() => overlay.remove(), 250);
+    }
+
+    // ---- AMBUSH SYSTEM ----
+    function triggerAmbush() {
+      ambushOverlay.classList.add("open");
+    }
+
+    function castSurfactantBlast() {
+      flashCanvas();
+      ambushOverlay.classList.remove("open");
+
+      // Rewards
+      player.gold += 50;
+      player.xp += 50;
+
+      // Leveling
+      while (player.xp >= 100) {
+        player.xp -= 100;
+        player.level += 1;
+      }
+
+      // Permanent loot
+      const lootItem = "🧼 Soap-Shield of Cleansing";
+      if (!player.equipment.includes(lootItem)) {
+        player.equipment.push(lootItem);
+      }
+
+      updateHUD();
+      renderVault();
+      drawMap();
+      saveGameData();
+      console.log("Surfactant Blast cast! +50 gold, +50 XP, Soap-Shield acquired.");
+    }
+
+    function renderVault() {
+      if (!vaultItems) return;
+      vaultItems.innerHTML = "";
+      if (player.equipment.length === 0) {
+        vaultItems.innerHTML = '<span style="color:var(--muted);font-size:12px;">No equipment yet</span>';
+        return;
+      }
+      player.equipment.forEach((item) => {
+        const el = document.createElement("span");
+        el.className = "vault-item";
+        el.textContent = item;
+        vaultItems.appendChild(el);
+      });
+    }
+
+    // ---- RENDERING ----
+    function drawMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1. Terrain layer (background first)
+      for (let col = 0; col < GRID_SIZE; col++) {
+        for (let row = 0; row < GRID_SIZE; row++) {
+          const terrain = terrainMap[col][row];
+          const color = TERRAIN_COLORS[terrain] || "transparent";
+          if (color !== "transparent") {
+            ctx.fillStyle = color;
+            ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          }
+        }
+      }
+
+      // 2. Entity layer on top
+      for (let col = 0; col < GRID_SIZE; col++) {
+        for (let row = 0; row < GRID_SIZE; row++) {
+          const entity = entityMap[col][row];
+          const color = ENTITY_COLORS[entity] || "transparent";
+          if (color !== "transparent") {
+            const inset = 4;
+            ctx.fillStyle = color;
+            ctx.fillRect(
+              col * TILE_SIZE + inset,
+              row * TILE_SIZE + inset,
+              TILE_SIZE - inset * 2,
+              TILE_SIZE - inset * 2
+            );
+            ctx.fillStyle = "#0a0c10";
+            ctx.font = `${TILE_SIZE - 12}px sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            const symbol = ENTITY_SYMBOLS[entity];
+            if (symbol) {
+              ctx.fillText(symbol, col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2 + 3);
+            }
+          }
+        }
+      }
+
+      // 3. Player avatar (play mode only)
+      if (isPlayMode) {
+        const cls = player.class;
+        const symbol = cls === "Warrior" ? "⚔️" : cls === "Rogue" ? "🥷" : "🧙";
+        ctx.fillStyle = "#f5c542";
+        ctx.font = `${TILE_SIZE - 12}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(symbol, player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2 + 3);
+
+        // Gold ring around player
+        ctx.strokeStyle = "rgba(245, 197, 66, 0.4)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(
+          player.x * TILE_SIZE + TILE_SIZE / 2,
+          player.y * TILE_SIZE + TILE_SIZE / 2,
+          TILE_SIZE / 2 - 4,
+          0, Math.PI * 2
+        );
+        ctx.stroke();
+      }
+
+      // 4. Grid lines
+      ctx.strokeStyle = "#1e222b";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= GRID_SIZE; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * TILE_SIZE, 0);
+        ctx.lineTo(i * TILE_SIZE, canvas.height);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i * TILE_SIZE);
+        ctx.lineTo(canvas.width, i * TILE_SIZE);
+        ctx.stroke();
+      }
+    }
+
+    // ---- MILESTONE 3.1: DATE HELPER (local machine date, YYYY-MM-DD) ----
+    function todayDateString() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // ---- MILESTONE 3.1: CHAOS METER HUD ----
+    function updateChaosHUD() {
+      if (!chaosBar || !chaosFill) return;
+      const pct = Math.max(0, Math.min(CHAOS_MAX, chaosMeter));
+      chaosFill.style.width = pct + "%";
+      if (chaosPct) chaosPct.textContent = pct + "%";
+
+      // High-contrast threshold: green/blue below 80, vibrant orange/red at >= 80
+      const critical = pct >= CHAOS_DEBUFF_THRESHOLD;
+      chaosBar.classList.toggle("chaos-critical", critical);
+
+      // The Clutter Debuff status label
+      clutterDebuffActive = critical;
+      if (chaosDebuff) chaosDebuff.classList.toggle("hidden", !critical);
+    }
+
+    // ---- MILESTONE 3.1: CHAOS ADJUSTERS (clamped 0..100) ----
+    function addChaos(amount) {
+      chaosMeter = Math.max(0, Math.min(CHAOS_MAX, chaosMeter + amount));
+      updateChaosHUD();
+      return chaosMeter;
+    }
+
+    function reduceChaos(amount) {
+      return addChaos(-amount);
+    }
+
+    // ---- MILESTONE 3.1: PURCHASE GATE (The Clutter Debuff) ----
+    // Any future purchasing transaction MUST route through this gate first.
+    // Returns true when a purchase is allowed; false (and blocks) while the
+    // chaosMeter is at or above the debuff threshold.
+    function canPurchase() {
+      if (chaosMeter >= CHAOS_DEBUFF_THRESHOLD) {
+        console.warn("⚠️ CLUTTER DEBUFF ACTIVE — purchasing is frozen until chaos drops below " + CHAOS_DEBUFF_THRESHOLD + "%.");
+        return false;
+      }
+      return true;
+    }
+
+    // Example guarded purchase path (spends gold only if the gate allows it).
+    function tryPurchase(cost) {
+      if (!canPurchase()) return false;
+      if (player.gold < cost) return false;
+      player.gold -= cost;
+      updateHUD();
+      saveGameData();
+      return true;
+    }
+
+    // ---- UI BINDINGS ----
+    function updateHUD() {
+      hudLevel.textContent = player.level;
+      hudXp.textContent = player.xp;
+      hudXpMax.textContent = "/" + (player.level * 100);
+      hudGold.textContent = player.gold;
+      hudClass.textContent = player.class;
+      updateChaosHUD();
+    }
+
+
+    // ---- PERSISTENCE: LOCAL STORAGE ----
+    // opts.quiet suppresses the "💾 Game Saved!" toast (used on auto-load writes).
+    function saveGameData(opts) {
+      const quiet = opts && opts.quiet;
+      const payload = {
+        schemaVersion: SAVE_SCHEMA_VERSION,
+        terrainMap: terrainMap,
+        entityMap: entityMap,
+        player: player,
+        // MILESTONE 3.1: persisted chaos-loop schema
+        chaosMeter: chaosMeter,
+        lastLoginDate: lastLoginDate
+      };
+      // Equipment is nested inside player, so it persists automatically
+      const json = JSON.stringify(payload);
+      localStorage.setItem("daily_haven_quest_save", json);
+
+      // Ephemeral save confirmation (auto-fades) — suppressed on quiet auto-writes
+      if (!quiet && saveStatusEl) {
+        saveStatusEl.textContent = "💾 Game Saved!";
+        saveStatusEl.classList.add("show");
+        setTimeout(() => {
+          saveStatusEl.classList.remove("show");
+        }, 1800);
+      }
+      console.log("Game saved.");
+    }
+
+    function loadGameData() {
+      const today = todayDateString();
+      try {
+        const raw = localStorage.getItem("daily_haven_quest_save");
+        if (!raw) {
+          // No save file: gracefully fall back to a clean empty grid
+          initMaps();
+          player = { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
+          chaosMeter = 0;
+          lastLoginDate = today; // stamp the first-ever login
+          updateHUD();
+          drawMap();
+          saveGameData({ quiet: true }); // persist the fresh schema immediately (no toast)
+          console.log("No save found — starting fresh.");
+          return;
+        }
+        const data = JSON.parse(raw);
+
+        // Overwrite active states
+        terrainMap = data.terrainMap || [];
+        entityMap = data.entityMap || [];
+        player = data.player || { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
+        if (!Array.isArray(player.equipment)) player.equipment = [];
+
+        // MILESTONE 3.1: restore persisted chaos-loop schema
+        chaosMeter = typeof data.chaosMeter === "number" ? data.chaosMeter : 0;
+        lastLoginDate = typeof data.lastLoginDate === "string" ? data.lastLoginDate : null;
+
+        // MILESTONE 3.1: chronological lifecycle check
+        if (lastLoginDate !== today) {
+          // A new calendar day flipped (or first run with an old save): +20 chaos, capped at 100
+          chaosMeter = Math.min(CHAOS_MAX, chaosMeter + CHAOS_DAILY_INCREMENT);
+          lastLoginDate = today;
+          console.log(`New day (${today}) — chaos +${CHAOS_DAILY_INCREMENT}%. Now ${chaosMeter}%.`);
+        }
+
+        // Guard: ensure grid arrays are valid size before render
+        if (terrainMap.length !== GRID_SIZE || terrainMap.some(r => r.length !== GRID_SIZE)) {
+          initMaps();
+          player = { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
+          console.warn("Save grid invalid — resetting to empty.");
+        } else {
+          updateHUD();
+          drawMap();
+        }
+        // Persist the (possibly) bumped date + chaos so the next load is correct.
+        // Quiet: an auto-load write must not flash the "Game Saved!" toast.
+        saveGameData({ quiet: true });
+        console.log("Game loaded.");
+      } catch (err) {
+        // Corrupt or unreadable save: fall back to empty
+        console.warn("Save corrupt, resetting to empty —", err);
+        initMaps();
+        player = { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
+        chaosMeter = 0;
+        lastLoginDate = today;
+        updateHUD();
+        drawMap();
+      }
+    }
+
+    // ---- RESET / CLEAR SAVE ----
+    function resetDungeon() {
+      localStorage.removeItem("daily_haven_quest_save");
+      initMaps();
+      player = { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
+      // MILESTONE 3.1: reset the chaos-loop schema too
+      chaosMeter = 0;
+      lastLoginDate = todayDateString();
+      updateHUD();
+      drawMap();
+      // Re-save the wiped state so an immediate refresh doesn't reload a stale
+      // pre-reset save from another tab. Quiet: Reset must not show "Saved!".
+      saveGameData({ quiet: true });
+      console.log("Dungeon reset.");
+    }
+
+    function setMode(play) {
+      isPlayMode = play;
+      modeToggle.textContent = play ? "🛠️ Switch to Edit Mode" : "🔄 Switch to Play Mode";
+      modeToggle.style.background = play ? "#64748b" : "var(--accent)";
+      modeToggle.style.color = play ? "#e8eaed" : "#0a0c10";
+
+      // UI visibility
+      heroSelector.style.display = play ? "none" : "flex";
+      heroToggle.style.display = play ? "none" : "inline-block";
+      document.querySelectorAll('.controls input[name="tool"]').forEach((el) => {
+        el.disabled = play;
+      });
+
+      if (play) {
+        // Disable tools
+        document.querySelectorAll('.controls input[name="tool"]').forEach((el) => el.disabled = true);
+        // Move player to click target during play (handled in handlePaint)
+      } else {
+        document.querySelectorAll('.controls input[name="tool"]').forEach((el) => el.disabled = false);
+      }
+
+      drawMap();
+    }
+
+    function handlePaint(clientX, clientY) {
+      const pos = getGridPos(clientX, clientY);
+      if (pos.col < 0 || pos.col >= GRID_SIZE || pos.row < 0 || pos.row >= GRID_SIZE) return;
+
+      if (isPlayMode) {
+        // In play mode: clicking navigates the player avatar to that tile if walkable
+        if (terrainMap[pos.col][pos.row] !== 2) {
+          player.x = pos.col;
+          player.y = pos.row;
+          const ent = entityMap[pos.col][pos.row];
+          if (ent >= 3) triggerInteraction(pos.col, pos.row);
+          drawMap();
+        }
+        return;
+      }
+
+      paintTile(pos.col, pos.row, activeTool);
+      drawMap();
+    }
+
+    // ---- MOUSE / TOUCH ----
+    function getGridPos(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        col: Math.floor((clientX - rect.left) * scaleX / TILE_SIZE),
+        row: Math.floor((clientY - rect.top) * scaleY / TILE_SIZE),
+      };
+    }
+
+    function handleDown(e) {
+      handlePaint(e.clientX, e.clientY);
+      canvas.addEventListener("mousemove", handleMove);
+      canvas.addEventListener("mouseup", handleUp);
+      canvas.addEventListener("mouseleave", handleUp);
+    }
+
+    function handleMove(e) {
+      handlePaint(e.clientX, e.clientY);
+    }
+
+    function handleUp() {
+      canvas.removeEventListener("mousemove", handleMove);
+      canvas.removeEventListener("mouseup", handleUp);
+      canvas.removeEventListener("mouseleave", handleUp);
+    }
+
+    function handleTouch(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      handlePaint(touch.clientX, touch.clientY);
+    }
+
+    canvas.addEventListener("mousedown", handleDown);
+    canvas.addEventListener("touchstart", handleTouch, { passive: false });
+
+    // ---- KEYBOARD (play mode movement) ----
+    document.addEventListener("keydown", (e) => {
+      if (!isPlayMode) return;
+      keys[e.key.toLowerCase()] = true;
+      if (!moveTimer) {
+        moveTimer = setInterval(() => tryMove(), MOVE_INTERVAL[player.class] || 300);
+      }
+    });
+
+    document.addEventListener("keyup", (e) => {
+      delete keys[e.key.toLowerCase()];
+      if (Object.keys(keys).length === 0) {
+        clearInterval(moveTimer);
+        moveTimer = null;
+      }
+    });
+
+    // ---- BUTTON BINDINGS ----
+    document.querySelectorAll('.controls input[name="tool"]').forEach((el) => {
+      el.addEventListener("change", () => setTool(el.value));
+    });
+
+    slayBtn.addEventListener("click", resolveCombat);
+    cancelBtn.addEventListener("click", closeQuestPopup);
+    modeToggle.addEventListener("click", () => setMode(!isPlayMode));
+
+    saveBtn.addEventListener("click", saveGameData);
+    resetBtn.addEventListener("click", resetDungeon);
+    ambushBtn.addEventListener("click", triggerAmbush);
+    surfactantBtn.addEventListener("click", castSurfactantBlast);
+
+    heroSelect.addEventListener("change", () => {
+      player.class = heroSelect.value;
+      heroToggle.textContent = "⚔️ Hero: " + player.class;
+      // Reset player position nicely
+      player.x = 2;
+      player.y = 2;
+      drawMap();
+      updateHUD();
+    });
+
+    heroToggle.addEventListener("click", () => {
+      if (isPlayMode) return;
+      heroSelector.style.display = heroSelector.style.display === "none" ? "flex" : "none";
+    });
+
+    // ---- START ----
+    // MILESTONE 3.1: loadGameData() now drives init (date check + chaos restore);
+    // it falls back to a clean grid when no save exists.
+    loadGameData();
+    renderVault();
+  </script>
+</body>
+</html>
