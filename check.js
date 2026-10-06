@@ -4,7 +4,12 @@ const html = fs.readFileSync('index.html', 'utf8');
 // Check for balanced braces in script section
 const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
 if (scriptMatch) {
-  const script = scriptMatch[1];
+  const rawScript = scriptMatch[1];
+  let script = rawScript;
+  // Strip single-line comments
+  script = script.replace(/\/\/.*$/gm, '');
+  // Strip multi-line comments
+  script = script.replace(/\/\*[\s\S]*?\*\//g, '');
   let braceCount = 0;
   let parenCount = 0;
   let bracketCount = 0;
@@ -38,37 +43,37 @@ if (scriptMatch) {
     console.log('Syntax check: PASSED');
   }
   
-  // Check key functions exist
+  // Check key functions exist (use rawScript to avoid comment-stripping false negatives)
   const required = ['getActiveModifiers', 'equipment_modifiers', 'monsterStats', 'resolveCombat', 'tryMove', 'addChaos', 'loadGameData', 'renderVault', 'updateChaosHUD', 'canPurchase'];
   for (const fn of required) {
-    if (!script.includes(fn)) {
+    if (!rawScript.includes(fn)) {
       console.log('MISSING:', fn);
       process.exit(1);
     }
   }
   console.log('All required functions/structures present: PASSED');
-  
-  // Check entity 7 references
-  if (!script.includes('7:') || !script.includes('Trash Mimic') || !script.includes('tool-trash-mimic')) {
+
+  // Check entity 7 references (HTML elements checked against full html, JS against rawScript)
+  if (!html.includes('Trash Mimic') || !html.includes('tool-trash-mimic')) {
     console.log('MISSING: Trash Mimic references');
     process.exit(1);
   }
   console.log('Trash Mimic integration: PASSED');
-  
+
   // Check lore fields
-  const loreCount = (script.match(/lore:/g) || []).length;
+  const loreCount = (rawScript.match(/lore:/g) || []).length;
   if (loreCount < 3) {
     console.log('MISSING: lore fields (need 3: slime, hydra, trash mimic), found:', loreCount);
     process.exit(1);
   }
   console.log('Lore fields: PASSED (count:', loreCount + ')');
-  
+
   // Check ENTITY_COLORS and ENTITY_SYMBOLS have 7
-  if (!script.includes('7: "#f97316"') && !script.includes("7: '#f97316'")) {
+  if (!rawScript.includes('7: "#f97316"') && !rawScript.includes("7: '#f97316'")) {
     console.log('MISSING: ENTITY_COLORS[7]');
     process.exit(1);
   }
-  if (!script.includes('7:') || !script.includes('🗑️')) {
+  if (!rawScript.includes('7:') || !rawScript.includes('🗑️')) {
     console.log('MISSING: ENTITY_SYMBOLS[7]');
     process.exit(1);
   }
