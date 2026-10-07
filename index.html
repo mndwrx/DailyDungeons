@@ -910,7 +910,7 @@
 
     .kenny-asset.sky {
       background-image: url("../assets/rpg_urban_tilemap.png");
-      background-position: -16px -16px;
+      background-position: 0 -32px;
     }
   </style>
 </head>
@@ -1061,63 +1061,27 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
     </div>
   </div>
 
-  <!-- Asset Palette Sidebar -->
-  <div id="asset-palette">
-    <div class="palette-section">
-      <div class="palette-section-title">Floors & Walls</div>
-      <button class="palette-item active" data-tile-type="floor">
-        <span class="palette-swatch kenny-asset floor"></span>
-        Floor
-      </button>
-      <button class="palette-item" data-tile-type="wall">
-        <span class="palette-swatch kenny-asset wall"></span>
-        Wall
-      </button>
+  <!-- Asset Browser Window (full screen) -->
+  <div id="asset-browser">
+    <div class="browser-header">
+      <h2 id="browser-title">🎨 Asset Browser</h2>
+      <button id="browser-close" class="browser-close">✕</button>
     </div>
-    <div class="palette-section">
-      <div class="palette-section-title">Furniture</div>
-      <button class="palette-item" data-tile-type="3">
-        <span class="palette-swatch kenny-asset bed"></span>
-        Bed
-      </button>
-      <button class="palette-item" data-tile-type="4">
-        <span class="palette-swatch kenny-asset sink"></span>
-        Sink
-      </button>
-    </div>
-    <div class="palette-section">
-      <div class="palette-section-title">Monsters</div>
-      <button class="palette-item" data-tile-type="5">
-        <span class="palette-swatch" style="background:#ec4899;"></span>
-        Dish Slime
-      </button>
-      <button class="palette-item" data-tile-type="6">
-        <span class="palette-swatch" style="background:#a855f7;"></span>
-        Laundry Hydra
-      </button>
-      <button class="palette-item" data-tile-type="7">
-        <span class="palette-swatch" style="background:#f97316;"></span>
-        Trash Mimic
-      </button>
-    </div>
-    <div class="palette-section">
-      <div class="palette-section-title">Environment</div>
-      <button class="palette-item" data-tile-type="8">
-        <span class="palette-swatch kenny-asset tree"></span>
-        Tree
-      </button>
-      <button class="palette-item" data-tile-type="9">
-        <span class="palette-swatch kenny-asset rock"></span>
-        Rock
-      </button>
-      <button class="palette-item" data-tile-type="10">
-        <span class="palette-swatch kenny-asset grass"></span>
-        Grass
-      </button>
-      <button class="palette-item" data-tile-type="11">
-        <span class="palette-swatch kenny-asset sky"></span>
-        Sky
-      </button>
+    <div class="browser-body">
+      <div class="browser-tabs">
+        <button class="tab active" data-category="all">All</button>
+        <button class="tab" data-category="terrain">Terrain</button>
+        <button class="tab" data-category="furniture">Furniture</button>
+        <button class="tab" data-category="monsters">Monsters</button>
+        <button class="tab" data-category="environment">Environment</button>
+      </div>
+      <div class="asset-grid" id="asset-grid">
+        <div class="grid-loading">Loading Kenney assets...</div>
+      </div>
+      <div class="browser-info" id="browser-info">
+        <h3>Select a tile to add to the palette</h3>
+        <p>Click any tile to place it on the map. Click again to change your brush.</p>
+      </div>
     </div>
   </div>
 
@@ -2110,9 +2074,68 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       document.getElementById('chore-custom-group').style.display = e.target.value === 'Custom' ? 'flex' : 'none';
     });
 
+    // ---- ASSET BROWSER ----
+    const assetBrowser = document.getElementById('asset-browser');
+    const assetGrid = document.getElementById('asset-grid');
+    const browserInfo = document.getElementById('browser-info');
+    const browserTitle = document.getElementById('browser-title');
+    const tabs = document.querySelectorAll('.browser-tabs .tab');
+    const categoryMap = {
+      all: { label: 'All Tiles' },
+      terrain: { label: 'Terrain', tiles: ['floor', 'wall'] },
+      furniture: { label: 'Furniture', tiles: ['bed', 'sink'] },
+      monsters: { label: 'Monsters', tiles: ['dish_slime', 'laundry_hydra', 'trash_mimic'] },
+      environment: { label: 'Environment', tiles: ['tree', 'rock', 'grass', 'sky'] }
+    };
+
+    function openAssetBrowser() {
+      assetBrowser.classList.add('open');
+      loadAssetGrid();
+    }
+
+    function closeAssetBrowser() {
+      assetBrowser.classList.remove('open');
+      selectTile(currentTileType);
+    }
+
+    function loadAssetGrid() {
+      assetGrid.innerHTML = '';
+      const activeCategory = document.querySelector('.tab.active').dataset.category;
+      const tileIds = categoryMap[activeCategory]?.tiles || [];
+
+      for (const tileId of tileIds) {
+        const cell = document.createElement('div');
+        cell.className = 'asset-item';
+        cell.dataset.tile = tileId;
+        cell.dataset.category = activeCategory;
+        cell.innerHTML = `
+          <div class="swatch kenny-asset" style="background-image: url('../assets/roguelike_transparent.png');"></div>
+          <div class="label">${tileId}</div>
+        `;
+        cell.addEventListener('click', () => {
+          selectTile(tileId);
+          closeAssetBrowser();
+        });
+        assetGrid.appendChild(cell);
+      }
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        loadAssetGrid();
+      });
+    });
+
+    document.getElementById('asset-palette-toggle').addEventListener('click', openAssetBrowser);
+    document.getElementById('browser-close').addEventListener('click', closeAssetBrowser);
+
+    assetBrowser.addEventListener('click', (e) => {
+      if (e.target === assetBrowser) closeAssetBrowser();
+    });
+
     // ---- START ----
-    // MILESTONE 3.1: loadGameData() now drives init (date check + chaos restore);
-    // it falls back to a clean grid when no save exists.
     loadGameData();
     loadChoreLog();
     renderChoreLog();
