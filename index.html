@@ -467,7 +467,195 @@
       height: auto;
     }
 
-    /* ===== AMBUSH OVERLAY ===== */
+    /* ===== REAL CHORE LOG PANEL ===== */
+    #chore-log-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 320px;
+      max-width: 90vw;
+      height: 100vh;
+      z-index: 300;
+      background: #16161e;
+      border-left: 1px solid #2a2a35;
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.6);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 14px;
+      gap: 8px;
+    }
+
+    #chore-log-panel.open {
+      transform: translateX(0);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f0e68c;
+    }
+
+    .panel-close {
+      background: transparent;
+      border: 1px solid #3b3b4a;
+      color: #888;
+      border-radius: 3px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .panel-close:hover {
+      background: #2a2a35;
+      color: #f0e68c;
+    }
+
+    .form-group {
+      margin-bottom: 0;
+    }
+
+    .form-group label {
+      font-size: 10px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 5px 6px;
+      border: 1px solid #3b3b4a;
+      background: #1a1d24;
+      color: #e8eaed;
+      font-size: 11px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .form-group select:focus,
+    .form-group input:focus {
+      border-color: #f59e0b;
+      outline: none;
+    }
+
+    .btn-complete {
+      padding: 7px 12px;
+      border-radius: 4px;
+      border: 1px solid #3b3b4a;
+      background: #1a1d24;
+      color: #e8eaed;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      width: 100%;
+    }
+
+    .btn-complete:hover {
+      background: #2a2a3a;
+      border-color: #f59e0b;
+      color: #f0e68c;
+    }
+
+    .timer-section {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn-timer {
+      flex: 1;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #3b3b4a;
+      background: #1a1d24;
+      color: #e8eaed;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+    }
+
+    .btn-timer:hover {
+      background: #2a2a3a;
+      border-color: #f59e0b;
+      color: #f0e68c;
+    }
+
+    .timer-display {
+      font-size: 20px;
+      font-weight: 700;
+      color: #f59e0b;
+      font-family: 'Courier New', monospace;
+      min-width: 50px;
+    }
+
+    .log-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .log-section-title {
+      font-size: 10px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .log-entry {
+      background: #0a0a0f;
+      border: 1px solid #2a2a35;
+      border-radius: 3px;
+      padding: 6px 8px;
+      animation: slideIn 0.2s ease;
+    }
+
+    .log-entry .log-time {
+      font-size: 9px;
+      color: #666;
+    }
+
+    .log-entry .log-chore {
+      font-size: 11px;
+      color: #e8eaed;
+      font-weight: 600;
+    }
+
+    .log-entry .log-rewards {
+      font-size: 10px;
+      color: #7c3aed;
+    }
+
+    .log-empty {
+      text-align: center;
+      color: #666;
+      padding: 12px;
+      font-size: 11px;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
     #ambush-overlay {
       position: fixed;
       inset: 0;
@@ -600,12 +788,18 @@
       <div class="equip-row">
         <div class="equip-slot">
           <div class="equip-icon">🔪</div>
-          <div class="equip-label">Weapon</div>
+          <div class="equip-label">Equipped Weapon</div>
           <div class="equip-sub">Dagger</div>
         </div>
         <div class="equip-slot">
           <div class="equip-icon">🗝️</div>
+          <div class="equip-label">Consumable</div>
+          <div class="equip-sub">Red Potion 3</div>
+        </div>
+        <div class="equip-slot">
+          <div class="equip-icon">🗝️</div>
           <div class="equip-label">Key Item</div>
+          <div class="equip-sub">Subway Key</div>
         </div>
         <div class="equip-slot">
           <div class="equip-icon">🗑️</div>
@@ -632,6 +826,38 @@
         <canvas id="minimap" width="160" height="160"></canvas>
       </div>
     </footer>
+
+    <!-- REAL CHORE LOG DRAWER -->
+    <div id="chore-log-panel">
+      <div class="panel-header">
+        <span class="panel-title">📋 Real Chore Log</span>
+        <button class="panel-close" id="chore-log-close">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="chore-type">Chore Type</label>
+        <select id="chore-type">
+          <option value="Dishes">🍽️ Dishes</option>
+          <option value="Laundry">👕 Laundry</option>
+          <option value="Trash">🗑️ Trash</option>
+          <option value="Custom">✏️ Custom</option>
+        </select>
+      </div>
+      <div class="form-group" id="chore-custom-group" style="display:none;">
+        <label for="chore-custom">Custom Chore</label>
+        <input type="text" id="chore-custom" placeholder="Describe your chore..." />
+      </div>
+      <button class="btn-complete" id="chore-complete">✅ Mark Complete</button>
+      <div class="timer-section">
+        <button class="btn-timer" id="chore-timer-btn">⏱️ Start Timer</button>
+        <span class="timer-display" id="chore-timer-display">00:00</span>
+      </div>
+      <div class="log-section">
+        <div class="log-section-title">Recent Completions</div>
+        <div class="log-list" id="chore-log-list">
+          <div class="log-empty">No chores logged yet</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
