@@ -1,0 +1,117 @@
+{
+  "project": "Daily Haven Quest",
+  "assets": {
+    "roguelike_indoors": {
+      "file": "assets/roguelike_transparent.png",
+      "title": "Roguelike Indoor Pack",
+      "license": "CC0",
+      "tiles": 442,
+      "description": "Flooring, walls, standard furniture. 26x17 grid at 16px with 1px margin."
+    },
+    "rpg_urban_pack": {
+      "file": "assets/rpg_urban_tilemap.png",
+      "title": "RPG Urban Pack",
+      "license": "CC0",
+      "tiles": 400,
+      "description": "Appliances, electronics, trash bins. 25x16 grid at 16px with 1px spacing."
+    }
+  },
+  "tile_palette": {
+    "terrain": [
+      {
+        "id": "floor",
+        "label": "Floor",
+        "source": "roguelike_indoors",
+        "pos": "0,0",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "id": "wall",
+        "label": "Wall",
+        "source": "roguelike_indoors",
+        "pos": "26,0",
+        "width": 16,
+        "height": 16
+      }
+    ],
+    "furniture": [
+      {
+        "id": "bed",
+        "label": "Bed",
+        "source": "roguelike_indoors",
+        "pos": "0,26",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "id": "sink",
+        "label": "Sink",
+        "source": "roguelike_indoors",
+        "pos": "26,26",
+        "width": 16,
+        "height": 16
+      }
+    ],
+    "monsters": [
+      {
+        "id": "dish_slime",
+        "label": "Dish Slime",
+        "source": "roguelike_indoors",
+        "pos": "0,0",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "id": "laundry_hydra",
+        "label": "Laundry Hydra",
+        "source": "roguelike_indoors",
+        "pos": "26,0",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "id": "trash_mimic",
+        "label": "Trash Mimic",
+        "source": "roguelike_indoors",
+        "pos": "0,26",
+        "width": 16,
+        "height": 16
+      }
+    ],
+    "environment": [
+      {
+        "id": "tree",
+        "label": "Tree",
+        "source": "rpg_urban_pack",
+        "pos": "0,0",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "id": "rock",
+        "label": "Rock",
+        "source": "rpg_urban_pack",
+        "pos": "25,0",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "id": "grass",
+        "label": "Grass",
+        "source": "rpg_urban_pack",
+        "pos": "0,25",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "id": "sky",
+        "label": "Sky",
+        "source": "rpg_urban_pack",
+        "pos": "25,25",
+        "width": 16,
+        "height": 16
+      }
+    ]
+  }
+}

@@ -862,6 +862,56 @@
       border-color: var(--accent);
       color: var(--accent);
     }
+
+    /* ============================================================
+       KENNEY ASSET PACKS — CSS REFERENCE
+       License: CC0 (public domain), no attribution required
+       Source: kenney.nl/assets/roguelike-indoors
+       Source: kenney.nl/assets/rpg-urban-pack
+       ============================================================ */
+
+    .kenny-asset {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    /* Roguelike In/Outs (transparent bg), 458x305px, 26x17 grid, 1px margin */
+    /* Each tile is 16x16, spacing 17px, transparent background */
+    .kenny-asset.floor {
+      background-image: url("../assets/roguelike_transparent.png");
+      background-position: 0 0;
+    }
+
+    .kenny-asset.wall {
+      background-image: url("../assets/roguelike_transparent.png");
+      background-position: -16px 0;
+    }
+
+    /* RPG Urban Pack (packed tilemap) */
+    /* 432x288px, 25x16 grid, 16x16 with 1px spacing */
+    .kenny-asset.tree {
+      background-image: url("../assets/rpg_urban_tilemap.png");
+      background-position: 0 0;
+    }
+
+    .kenny-asset.rock {
+      background-image: url("../assets/rpg_urban_tilemap.png");
+      background-position: -16px 0;
+    }
+
+    .kenny-asset.grass {
+      background-image: url("../assets/rpg_urban_tilemap.png");
+      background-position: 0 -16px;
+    }
+
+    .kenny-asset.sky {
+      background-image: url("../assets/rpg_urban_tilemap.png");
+      background-position: -16px -16px;
+    }
   </style>
 </head>
 <body>
@@ -1016,24 +1066,27 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
     <div class="palette-section">
       <div class="palette-section-title">Floors & Walls</div>
       <button class="palette-item active" data-tile-type="floor">
-        <span class="palette-swatch" style="background:#b45309;"></span>
+        <span class="palette-swatch kenny-asset floor"></span>
         Floor
       </button>
       <button class="palette-item" data-tile-type="wall">
-        <span class="palette-swatch" style="background:#64748b;"></span>
+        <span class="palette-swatch kenny-asset wall"></span>
         Wall
       </button>
     </div>
     <div class="palette-section">
-      <div class="palette-section-title">Entities</div>
+      <div class="palette-section-title">Furniture</div>
       <button class="palette-item" data-tile-type="3">
-        <span class="palette-swatch" style="background:#38bdf8;"></span>
+        <span class="palette-swatch kenny-asset bed"></span>
         Bed
       </button>
       <button class="palette-item" data-tile-type="4">
-        <span class="palette-swatch" style="background:#06b6d4;"></span>
+        <span class="palette-swatch kenny-asset sink"></span>
         Sink
       </button>
+    </div>
+    <div class="palette-section">
+      <div class="palette-section-title">Monsters</div>
       <button class="palette-item" data-tile-type="5">
         <span class="palette-swatch" style="background:#ec4899;"></span>
         Dish Slime
@@ -1045,6 +1098,25 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       <button class="palette-item" data-tile-type="7">
         <span class="palette-swatch" style="background:#f97316;"></span>
         Trash Mimic
+      </button>
+    </div>
+    <div class="palette-section">
+      <div class="palette-section-title">Environment</div>
+      <button class="palette-item" data-tile-type="8">
+        <span class="palette-swatch kenny-asset tree"></span>
+        Tree
+      </button>
+      <button class="palette-item" data-tile-type="9">
+        <span class="palette-swatch kenny-asset rock"></span>
+        Rock
+      </button>
+      <button class="palette-item" data-tile-type="10">
+        <span class="palette-swatch kenny-asset grass"></span>
+        Grass
+      </button>
+      <button class="palette-item" data-tile-type="11">
+        <span class="palette-swatch kenny-asset sky"></span>
+        Sky
       </button>
     </div>
   </div>
@@ -1071,17 +1143,25 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
 
     const TERRAIN_COLORS = {
       0: "transparent",
-      1: "#b45309",
-      2: "#64748b",
+      1: "#b45309",   // floor
+      2: "#64748b",   // wall
+      8: "#2d6a4f",   // tree (RPG Urban)
+      9: "#4a5568",   // rock (RPG Urban)
+      10: "#8b9a3a",  // grass (RPG Urban)
+      11: "#bae6fd",  // sky (RPG Urban)
     };
 
     const ENTITY_COLORS = {
       0: "transparent",
-      3: "#38bdf8",
-      4: "#06b6d4",
-      5: "#ec4899",
-      6: "#a855f7",
-      7: "#f97316",
+      3: "#38bdf8",   // bed
+      4: "#06b6d4",   // sink
+      5: "#ec4899",   // dish slime
+      6: "#a855f7",   // laundry hydra
+      7: "#f97316",   // trash mimic
+      8: "#2d6a4f",   // tree (RPG Urban)
+      9: "#4a5568",   // rock (RPG Urban)
+      10: "#8b9a3a",  // grass (RPG Urban)
+      11: "#bae6fd",  // sky (RPG Urban)
     };
 
     const ENTITY_SYMBOLS = {
@@ -1090,6 +1170,10 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
       5: "🦠",
       6: "👔",
       7: "🗑️",
+      8: "🌳",
+      9: "🪨",
+      10: "🌿",
+      11: "🌤️",
     };
 
     // ---- STATE CONFIGURATION ----
@@ -1280,7 +1364,9 @@ Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</d
 
       const num = parseInt(value, 10);
       if (num >= 1 && num <= 2) {
-        terrainMap[col][row] = num; // floor / wall
+        terrainMap[col][row] = num; // floor / wall (Roguelike In/Outs)
+      } else if (num >= 8 && num <= 11) {
+        terrainMap[col][row] = num; // tree / rock / grass / sky (RPG Urban)
       } else if (num >= 3 && num <= 7) {
         entityMap[col][row] = num; // bed / sink / slime / hydra / trash mimic — entity layer only
       }
