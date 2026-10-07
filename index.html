@@ -11,18 +11,6 @@
       --panel-2: #232732;
       --text: #e8eaed;
       --muted: #8b8f98;
-      --accent: #38bdf8;
-      --gold: #f5c542;
-      --floor: #b45309;
-      --wall: #64748b;
-      --bed: #38bdf8;
-      --sink: #06b6d4;
-      --slime: #ec4899;
-      --hydra: #a855f7;
-
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
-      background: var(--bg);
-      color: var(--text);
     }
 
     * { box-sizing: border-box; }
@@ -30,852 +18,12 @@
     body {
       margin: 0;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
       background: var(--bg);
-    }
-
-    header {
-      padding: 12px 16px;
-      background: var(--panel);
-      border-bottom: 1px solid #333;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    header h1 {
-      font-size: 18px;
-      margin: 0;
-      font-weight: 600;
-    }
-
-    .controls {
-      padding: 12px 16px;
-      background: var(--panel);
-      border-bottom: 1px solid #333;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .controls label {
-      font-size: 13px;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .controls input[type="radio"] {
-      accent-color: var(--accent);
-    }
-
-    .controls button {
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: 1px solid #333;
-      background: var(--panel-2);
       color: var(--text);
-      font-size: 13px;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-    }
-
-    .controls button:hover { background: #2c313c; }
-
-    .controls button.active {
-      border-color: var(--accent);
-      background: #1e3a4a;
-      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
-    }
-
-    .header-buttons {
-      margin-left: auto;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .header-buttons button {
-      padding: 6px 14px;
-      font-weight: 600;
-    }
-
-    .header-buttons button.primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #0a0c10;
-    }
-
-    .header-buttons button.primary:hover { filter: brightness(1.1); }
-
-    /* HUD Panel — always visible */
-    #hud {
-      background: var(--panel);
-      border-bottom: 1px solid #333;
-      padding: 10px 16px;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      font-size: 13px;
-    }
-
-    #hud .stat { display: flex; flex-direction: column; }
-
-    #hud .stat .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-    #hud .stat .value { color: var(--text); font-weight: 600; }
-
-    #hud .stat .value.gold { color: var(--gold); }
-
-    /* ---- MILESTONE 3.1: CHAOS METER HUD ---- */
-    #chaos-wrap {
-      flex-basis: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-top: 2px;
-    }
-
-    #chaos-wrap .chaos-head {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--muted);
-    }
-
-    #chaos-wrap .chaos-head .chaos-pct {
-      color: var(--text);
-      font-weight: 600;
-      letter-spacing: 0;
-    }
-
-    #chaos-debuff {
-      color: #ff5c5c;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-
-    #chaos-bar {
-      height: 12px;
-      width: 100%;
-      background: #2a2f3a;
-      border: 1px solid #333;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    #chaos-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #22c55e, #38bdf8);
-      transition: width 0.35s ease, background 0.35s ease;
-    }
-
-    /* Threshold breach: >= 80% chaos flips the bar to vibrant orange/red */
-    #chaos-bar.chaos-critical #chaos-fill {
-      background: linear-gradient(90deg, #f97316, #ef4444);
-      box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
-    }
-
-    #save-status.show { color: var(--gold); }
-
-    /* Quest Popup Modal */
-    #quest-popup {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      display: none;
-    }
-
-    #quest-popup.open { display: flex; }
-
-    .popup-box {
-      background: var(--panel);
-      border: 1px solid var(--accent);
-      border-radius: 12px;
-      padding: 20px 24px;
-      max-width: 420px;
-      width: calc(100% - 48px);
-      text-align: center;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-    }
-
-    .popup-box .icon { font-size: 48px; }
-
-    .popup-box h2 { margin: 8px 0 4px; font-size: 22px; }
-
-    .popup-box .chore {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
-      margin: 8px 0;
-    }
-
-    .popup-box .hp-bar {
-      height: 8px;
-      background: #2a2f3a;
-      border-radius: 4px;
-      overflow: hidden;
-      margin: 8px 0;
-    }
-
-    .popup-box .hp-bar > div {
-      height: 100%;
-      background: var(--accent);
-      transition: width 0.3s;
-    }
-
-    .popup-box .actions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
-
-    .popup-box .actions button {
-      padding: 8px 20px;
-      border-radius: 6px;
-      border: 1px solid var(--accent);
-      background: var(--accent);
-      color: #0a0c10;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .popup-box .actions button:last-child {
-      background: transparent;
-      color: var(--text);
-      border-color: #333;
-    }
-
-    /* Hero class selector (edit mode only) */
-    #hero-selector {
-      padding: 12px 16px;
-      background: var(--panel);
-      border-bottom: 1px solid #333;
-      flex-wrap: wrap;
-      gap: 8px;
-      display: none;
-    }
-
-    #hero-selector select {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #333;
-      background: var(--panel-2);
-      color: var(--text);
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    .hidden { display: none !important; }
-
-    .canvas-wrap {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    canvas {
-      background: #0a0c10;
-      border: 1px solid #2a2f3a;
-      border-radius: 8px;
-      cursor: crosshair;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      max-width: 100%;
-      height: auto;
-    }
-
-    footer {
-      padding: 8px 16px;
-      color: var(--muted);
-      font-size: 12px;
-      display: flex;
-      justify-content: space-between;
-    }
-    /* ---- AMBUSH OVERLAY ---- */
-    #ambush-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 500;
-      background: rgba(0, 0, 0, 0.85);
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #ambush-overlay.open { display: flex; }
-
-    .scroll-box {
-      background: #f4e4c1;
-      border: 4px solid #8b4513;
-      border-radius: 8px;
-      padding: 32px 40px;
-      max-width: 640px;
-      width: calc(100% - 48px);
-      text-align: center;
-      box-shadow: 0 0 40px rgba(139, 69, 19, 0.5), inset 0 0 60px rgba(139, 69, 19, 0.15);
-      position: relative;
-    }
-
-    /* Medieval parchment corner flourishes */
-    .scroll-box::before,
-    .scroll-box::after {
-      content: '';
-      position: absolute;
-      width: 28px;
-      height: 28px;
-      border: 3px solid #8b4513;
-      background: #f4e4c1;
-    }
-    /* Top corners - curled parchment */
-    .scroll-box::before {
-      top: -14px;
-      left: -14px;
-      border-radius: 50% 0 0 0;
-      border-right: none;
-      border-bottom: none;
-      box-shadow: 4px 4px 0 #f4e4c1, 2px 2px 4px rgba(0,0,0,0.15);
-    }
-    .scroll-box::after {
-      top: -14px;
-      right: -14px;
-      border-radius: 0 50% 0 0;
-      border-left: none;
-      border-bottom: none;
-      box-shadow: -4px 4px 0 #f4e4c1, -2px 2px 4px rgba(0,0,0,0.15);
-    }
-    /* Bottom corners via extra pseudo-elements on inner wrapper would need HTML change, so use border-image approach */
-    .scroll-box > h2::before,
-    .scroll-box > h2::after {
-      content: '';
-      position: absolute;
-      bottom: -22px;
-      width: 28px;
-      height: 28px;
-      border: 3px solid #8b4513;
-      background: #f4e4c1;
-      pointer-events: none;
-    }
-    .scroll-box > h2::before {
-      left: -14px;
-      border-radius: 0 0 0 50%;
-      border-right: none;
-      border-top: none;
-      box-shadow: 4px -4px 0 #f4e4c1, 2px -2px 4px rgba(0,0,0,0.15);
-    }
-    .scroll-box > h2::after {
-      right: -14px;
-      border-radius: 0 0 50% 0;
-      border-left: none;
-      border-top: none;
-      box-shadow: -4px -4px 0 #f4e4c1, -2px -2px 4px rgba(0,0,0,0.15);
-    }
-    /* Side edge flourishes - torn parchment strips */
-    .scroll-box .lore-text::before,
-    .scroll-box .lore-text::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: repeating-linear-gradient(
-        180deg,
-        #8b4513 0,
-        #8b4513 8px,
-        transparent 8px,
-        transparent 16px
-      );
-      opacity: 0.3;
-    }
-    .scroll-box .lore-text::before { left: -18px; }
-    .scroll-box .lore-text::after { right: -18px; }
-
-    .scroll-box h2 {
-      color: #4a2c0a;
-      font-size: 20px;
-      margin: 0 0 16px;
-      font-family: 'Courier New', monospace;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .scroll-box .lore-text {
-      color: #3d2200;
-      font-size: 14px;
-      line-height: 1.6;
-      text-align: left;
-      margin: 0 0 20px;
-      font-family: 'Courier New', monospace;
-      white-space: pre-line;
-    }
-
-    .scroll-box .slime-sprite {
-      font-size: 64px;
-      margin: 12px 0;
-      display: inline-block;
-      animation: slime-alive 2.5s ease-in-out infinite;
-    }
-
-    @keyframes slime-alive {
-      0%, 100% { transform: scale(1) rotate(0deg); }
-      25% { transform: scale(1.12) rotate(-3deg); }
-      50% { transform: scale(1.18) rotate(2deg); }
-      75% { transform: scale(1.1) rotate(-2deg); }
-    }
-
-    .scroll-box .actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
-
-    .scroll-box .actions button {
-      padding: 10px 24px;
-      border-radius: 6px;
-      border: 2px solid #4a2c0a;
-      background: #4a2c0a;
-      color: #f4e4c1;
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-      font-family: 'Courier New', monospace;
-    }
-
-    .scroll-box .actions button:hover { background: #6b3a1a; }
-
-    /* Equipment Vault */
-    #equipment-vault {
-      flex-basis: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-top: 2px;
-    }
-
-    #equipment-vault .vault-head {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--muted);
-    }
-
-    #equipment-vault .vault-items {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .vault-item {
-      --gold: #f5c542;
-      --gold-dim: #c9a22e;
-      background: linear-gradient(135deg, #1e2330 0%, #151922 100%);
-      border: 2px solid var(--gold);
-      /* Shield shape: rectangle with pointed bottom */
-      clip-path: polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%);
-      padding: 8px 14px 16px;
-      font-size: 11px;
-      color: var(--gold);
-      font-weight: 600;
-      letter-spacing: 0.3px;
-      position: relative;
-      cursor: default;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
-      text-shadow: 0 0 4px rgba(245, 197, 66, 0.4);
-    }
-
-    /* Small icon/badge accent - left side */
-    .vault-item::before {
-      content: '🛡️';
-      display: inline-block;
-      margin-right: 8px;
-      font-size: 12px;
-      filter: drop-shadow(0 0 3px var(--gold));
-      vertical-align: middle;
-    }
-
-    /* Gold accent line along top edge */
-    .vault-item::after {
-      content: '';
-      position: absolute;
-      top: -2px;
-      left: 10%;
-      right: 10%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-      border-radius: 1px;
-    }
-
-    .vault-item:hover {
-      transform: translateY(-2px) scale(1.03);
-      box-shadow: 
-        0 6px 20px rgba(245, 197, 66, 0.35),
-        0 0 0 2px rgba(245, 197, 66, 0.2),
-        inset 0 0 20px rgba(245, 197, 66, 0.1);
-      border-color: #ffd700;
-      filter: brightness(1.15);
-      z-index: 10;
-    }
-
-    .vault-item:active {
-      transform: translateY(0) scale(0.98);
-      transition: transform 0.05s ease;
-    }
-
-    /* Empty vault placeholder */
-    #vault-items:empty::before {
-      content: 'No equipment yet';
-      color: var(--muted);
-      font-size: 12px;
-      padding: 4px 8px;
-    }
-    /* ---- REAL-CHORE LOG PANEL ---- */
-    #chore-log-panel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 320px;
-      max-width: 90vw;
-      height: 100vh;
-      z-index: 300;
-      background: var(--panel);
-      border-left: 1px solid #333;
-      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      padding: 16px;
-      gap: 12px;
-      overflow-y: auto;
-    }
-
-    #chore-log-panel.open {
-      transform: translateX(0);
-    }
-
-    #chore-log-panel .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #333;
-    }
-
-    #chore-log-panel .panel-title {
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text);
-    }
-
-    #chore-log-panel .panel-close {
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 4px;
-      transition: color 0.15s, background 0.15s;
-    }
-
-    #chore-log-panel .panel-close:hover {
-      color: var(--text);
-      background: var(--panel-2);
-    }
-
-    #chore-log-panel .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    #chore-log-panel .form-group label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--muted);
-    }
-
-    #chore-log-panel select,
-    #chore-log-panel input[type="text"] {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #333;
-      background: var(--panel-2);
-      color: var(--text);
-      font-size: 13px;
-      cursor: pointer;
-      transition: border-color 0.15s;
-    }
-
-    #chore-log-panel select:hover,
-    #chore-log-panel input[type="text"]:hover {
-      border-color: #4a4f5a;
-    }
-
-    #chore-log-panel select:focus,
-    #chore-log-panel input[type="text"]:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
-    }
-
-    #chore-log-panel .btn-complete {
-      padding: 8px 16px;
-      border-radius: 6px;
-      border: 1px solid #22c55e;
-      background: #166534;
-      color: #fff;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s, filter 0.15s;
-    }
-
-    #chore-log-panel .btn-complete:hover {
-      background: #15803d;
-      border-color: #22c55e;
-      filter: brightness(1.1);
-    }
-
-    #chore-log-panel .btn-complete:active {
-      transform: scale(0.98);
-    }
-
-    #chore-log-panel .timer-section {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px;
-      background: var(--panel-2);
-      border-radius: 6px;
-      border: 1px solid #333;
-    }
-
-    #chore-log-panel .btn-timer {
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: 1px solid var(--gold);
-      background: transparent;
-      color: var(--gold);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-    }
-
-    #chore-log-panel .btn-timer:hover {
-      background: var(--gold);
-      color: #0a0c10;
-    }
-
-    #chore-log-panel .btn-timer.running {
-      background: var(--gold);
-      color: #0a0c10;
-    }
-
-    #chore-log-panel .timer-display {
-      font-family: 'Courier New', monospace;
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--gold);
-      letter-spacing: 1px;
-      flex: 1;
-      text-align: center;
-    }
-
-    #chore-log-panel .log-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      min-height: 0;
-    }
-
-    #chore-log-panel .log-section-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--muted);
-      padding-bottom: 4px;
-      border-bottom: 1px solid #333;
-    }
-
-    #chore-log-panel .log-list {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding-right: 4px;
-    }
-
-    #chore-log-panel .log-list::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    #chore-log-panel .log-list::-webkit-scrollbar-track {
-      background: var(--panel-2);
-      border-radius: 3px;
-    }
-
-    #chore-log-panel .log-list::-webkit-scrollbar-thumb {
-      background: #3a3f4a;
-      border-radius: 3px;
-    }
-
-    #chore-log-panel .log-list::-webkit-scrollbar-thumb:hover {
-      background: #4a4f5a;
-    }
-
-    #chore-log-panel .log-entry {
-      padding: 8px 10px;
-      background: var(--panel-2);
-      border-radius: 6px;
-      border: 1px solid #2a2f3a;
-      font-size: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      transition: border-color 0.15s, background 0.15s;
-    }
-
-    #chore-log-panel .log-entry:hover {
-      border-color: #3a3f4a;
-      background: #262b36;
-    }
-
-    #chore-log-panel .log-entry .log-time {
-      font-size: 10px;
-      color: var(--muted);
-      font-family: 'Courier New', monospace;
-    }
-
-    #chore-log-panel .log-entry .log-chore {
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    #chore-log-panel .log-entry .log-rewards {
-      font-size: 11px;
-      color: var(--gold);
-    }
-
-    #chore-log-panel .log-empty {
-      color: var(--muted);
-      font-size: 12px;
-      text-align: center;
-      padding: 16px 8px;
-    }
-
-    /* Toggle button in header */
-    #chore-log-toggle {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    /* ---- ASSET PALETTE SIDEBAR ---- */
-    #asset-palette {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 200px;
-      height: 100vh;
-      z-index: 300;
-      background: #16162a;
-      border-right: 2px solid #3b3b6a;
-      box-shadow: 8px 0 32px rgba(0, 0, 0, 0.6);
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      padding: 16px;
-      gap: 12px;
-      overflow-y: auto;
-    }
-
-    #asset-palette.open {
-      transform: translateX(0);
-    }
-
-    .palette-section {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .palette-section-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #888;
-      padding-bottom: 4px;
-      border-bottom: 1px solid #3b3b6a;
-      margin-bottom: 4px;
-    }
-
-    .palette-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid transparent;
-      background: transparent;
-      color: #e8e8e8;
-      font-size: 13px;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-    }
-
-    .palette-item:hover {
-      background: #2a2a4a;
-      border-color: #f59e0b;
-    }
-
-    .palette-item.active {
-      border-color: #f59e0b;
-      background: #2d2d4a;
-      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
-    }
-
-    .palette-swatch {
-      display: inline-block;
-      width: 24px;
-      height: 24px;
-      border-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      flex-shrink: 0;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-    }
-
-    .palette-item .swatch {
-      border-color: rgba(255, 255, 255, 0.15);
-    }
-
-    /* ---- RETRO RPG UI OVERLAY (post-css injection) ---- */
-    * {
       font-family: 'Courier New', 'Consolas', monospace;
-      box-sizing: border-box;
     }
 
-    body, #app {
-      background: #0a0a0f;
-      color: #e8e8e8;
-    }
-
+    /* ===== DAILY DUNGEONS — PIXEL-ART ROGUELIKE UI ===== */
     #app {
       display: flex;
       flex-direction: column;
@@ -883,624 +31,443 @@
       overflow: hidden;
     }
 
-    .pixel-text {
-      font-family: 'Press Start 2P', 'Courier New', monospace;
-      letter-spacing: 0.5px;
-    }
-
-    .retro-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      background: #1a1a2e;
-      border-bottom: 2px solid #3b3b6a;
-    }
-
-    .retro-header h1 {
-      font-size: 16px;
-      margin: 0;
-      color: #f0e68c;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-
-    .retro-header .subtitle {
-      font-size: 11px;
-      color: #888;
-      letter-spacing: 2px;
-    }
-
-    #hud {
-      background: #16162a;
-      border-bottom: 2px solid #3b3b6a;
-      padding: 10px 12px;
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      font-size: 13px;
-      color: #e8e8e8;
-    }
-
-    #hud .stat {
+    /* TOP INFO PANEL */
+    .top-panel {
+      background: #16161e;
+      border-bottom: 1px solid #2a2a35;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      padding: 8px 10px;
+      gap: 4px;
+      min-height: 0;
     }
 
-    #hud .stat .label {
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .floor-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+
+    .floor-label {
       font-size: 10px;
       color: #888;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
-    #hud .stat .value {
-      font-size: 14px;
+    .floor-num {
+      font-size: 22px;
       font-weight: 700;
+      color: #e8eaed;
+    }
+
+    .sep {
+      color: #444;
+      font-size: 14px;
+    }
+
+    .location-box {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      text-align: right;
+      padding-top: 6px;
+    }
+
+    .loc-title {
+      font-size: 14px;
       color: #f0e68c;
+      font-weight: 700;
     }
 
-    #hud .stat .value.gold { color: #ffd700; }
-    #hud .stat .value.xp { color: #7c3aed; }
-    #hud .stat .value.level { color: #34d399; }
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 0;
+      border-top: 1px solid #2a2a35;
+      border-bottom: 1px solid #2a2a35;
+      margin: 4px 0;
+    }
 
-    #chaos-bar {
-      height: 6px;
+    .keystat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 12px;
+      background: #1a1d24;
+      border: 1px solid #2a2a35;
+      border-radius: 4px;
+    }
+
+    .ks-label {
+      font-size: 9px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .ks-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffd700;
+    }
+
+    .ks-value.gold { color: #ffd700; }
+    .ks-value.keys { color: #f0e68c; }
+
+    .bars-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 0;
+    }
+
+    .vital-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .bar-label {
+      font-size: 9px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .bar-track {
       width: 100%;
-      background: #2a2a4a;
-      border-radius: 3px;
+      height: 5px;
+      background: #2a2a35;
+      border-radius: 2px;
       overflow: hidden;
-      border: 1px solid #3b3b6a;
+      border: 1px solid #3a3a45;
     }
 
-    #chaos-fill {
+    .bar-fill {
       height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #22c55e, #f59e0b, #ef4444);
+      border-radius: 2px;
       transition: width 0.3s ease;
     }
 
-    #chaos-bar .chaos-pct {
+    .bar-value {
       font-size: 10px;
-      color: #888;
-    }
-
-    .controls-bar {
-      display: flex;
-      gap: 6px;
-      padding: 8px 12px;
-      background: #1a1a2e;
-      border-bottom: 2px solid #3b3b6a;
-      flex-wrap: wrap;
-    }
-
-    .controls-bar .controls button {
-      padding: 6px 12px;
-      font-size: 11px;
-      border-radius: 4px;
-      border: 1px solid #3b3b6a;
-      background: #1e1e38;
-      color: #e8e8e8;
-    }
-
-    .controls-bar .controls button:hover {
-      background: #2a2a4a;
-      border-color: #555;
-    }
-
-    .controls-bar .controls button.active {
-      border-color: #f59e0b;
-      background: #2d2d4a;
-      color: #f0e68c;
-      box-shadow: 0 0 4px rgba(245, 158, 11, 0.3);
-    }
-
-    .controls-bar .controls button.primary {
-      background: #f59e0b;
-      border-color: #f59e0b;
-      color: #0a0a0f;
       font-weight: 700;
+      color: #f0e68c;
     }
 
-    .controls-bar .controls button.primary:hover {
-      background: #f0b40a;
-      filter: brightness(1.1);
-    }
+    .bars-row .vital-bar:nth-child(1) .bar-fill { background: #ef4444; }
+    .bars-row .vital-bar:nth-child(2) .bar-fill { background: #3b82f6; }
 
-    .status-bars {
+    .level-row {
       display: flex;
-      gap: 20px;
+      justify-content: space-between;
       align-items: center;
+      gap: 10px;
+      padding-top: 6px;
     }
 
-    .status-bar {
-      flex: 1;
+    .level-disc {
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 2px;
     }
 
-    .status-bar .bar-label {
-      font-size: 10px;
-      color: #888;
-    }
-
-    .status-bar .bar-track {
-      width: 80px;
-      height: 6px;
-      background: #2a2a4a;
-      border-radius: 3px;
-      overflow: hidden;
-      border: 1px solid #3b3b6a;
-    }
-
-    .status-bar .bar-fill {
-      height: 100%;
-      border-radius: 3px;
-      transition: width 0.3s ease;
-    }
-
-    .status-bar .bar-value {
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    #asset-browser {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 300;
-      background: #0a0a0f;
-      display: none;
-      flex-direction: column;
-      border: 2px solid #3b3b6a;
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
-    }
-
-    #asset-browser.open {
-      display: flex;
-    }
-
-    .browser-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 16px;
-      background: #1a1a2e;
-      border-bottom: 2px solid #3b3b6a;
-    }
-
-    .browser-header h2 {
-      font-size: 14px;
-      margin: 0;
-      color: #f0e68c;
-      font-weight: 700;
-    }
-
-    .browser-close {
-      background: transparent;
-      border: 1px solid #3b3b6a;
-      color: #888;
+    .level-disc canvas {
+      border: 2px solid #3b3b4a;
       border-radius: 4px;
-      padding: 4px 8px;
+    }
+
+    .level-label {
+      font-size: 11px;
+      color: #e8eaed;
+      font-weight: 700;
+    }
+
+    .skill-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .skill-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 10px;
+      background: #1a1d24;
+      border: 1px solid #2a2a35;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
+      flex: 1;
+      text-align: center;
     }
 
-    .browser-close:hover {
-      background: #2a2a4a;
-      color: #f0e68c;
+    .skill-btn:hover {
+      border-color: #f59e0b;
+      background: #2a2a3a;
     }
 
-    .browser-body {
+    .skill-icon {
+      font-size: 20px;
+    }
+
+    .skill-label {
+      font-size: 9px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* MAP CANVAS */
+    .map-wrap {
       flex: 1;
       display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a0f;
       padding: 10px;
-    }
-
-    .browser-tabs {
-      display: flex;
-      gap: 4px;
-      border-bottom: 2px solid #3b3b6a;
-      padding-bottom: 8px;
-      flex-wrap: wrap;
-    }
-
-    .browser-tabs .tab {
-      padding: 6px 12px;
-      border: 2px solid #3b3b6a;
-      background: #16162a;
-      color: #888;
-      font-size: 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: 'Courier New', monospace;
-    }
-
-    .browser-tabs .tab.active {
-      background: #2d2d4a;
-      border-color: #f59e0b;
-      color: #f59e0b;
-      font-weight: 700;
-    }
-
-    .asset-grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-      gap: 8px;
-      overflow-y: auto;
-      padding: 8px;
-    }
-
-    .asset-grid .grid-loading {
-      grid-column: 1 / -1;
-      text-align: center;
-      color: #888;
-      font-size: 12px;
-      padding: 20px;
-    }
-
-    .asset-item {
-      background: #16162a;
-      border: 2px solid #3b3b6a;
-      border-radius: 8px;
-      padding: 8px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.15s, box-shadow 0.15s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .asset-item:hover {
-      border-color: #f59e0b;
-      box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
-    }
-
-    .asset-item .swatch {
-      width: 56px;
-      height: 56px;
-      border-radius: 6px;
-      border: 2px solid #3b3b6a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-    }
-
-    .asset-item .swatch img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    .asset-item .label {
-      font-size: 11px;
-      color: #e8e8e8;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .asset-item.selected {
-      border-color: #f59e0b;
-      box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
-    }
-
-    .browser-info {
-      padding: 10px 14px;
-      background: #16162a;
-      border-top: 2px solid #3b3b6a;
-      font-size: 12px;
-      color: #888;
-      display: none;
-    }
-
-    .browser-info.show {
-      display: block;
-    }
-
-    #chore-log-panel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 340px;
-      max-width: 90vw;
-      height: 100vh;
-      z-index: 300;
-      background: #16162a;
-      border-left: 2px solid #3b3b6a;
-      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.6);
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      padding: 16px;
-    }
-
-    #chore-log-panel.open {
-      transform: translateX(0);
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    .panel-title {
-      font-size: 18px;
-      color: #f0e68c;
-      font-weight: 700;
-    }
-
-    .panel-close {
-      background: transparent;
-      border: 1px solid #3b3b6a;
-      color: #888;
-      border-radius: 4px;
-      padding: 4px 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .panel-close:hover {
-      background: #2a2a4a;
-      color: #f0e68c;
-    }
-
-    .form-group {
-      margin-bottom: 10px;
-    }
-
-    .form-group label {
-      font-size: 11px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .form-group select,
-    .form-group input {
-      width: 100%;
-      padding: 6px 8px;
-      border: 1px solid #3b3b6a;
-      background: #0a0a0f;
-      color: #e8e8e8;
-      font-size: 12px;
-      border-radius: 4px;
-    }
-
-    .form-group select:focus,
-    .form-group input:focus {
-      border-color: #f59e0b;
-      outline: none;
-    }
-
-    .chore-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .chore-actions button {
-      flex: 1;
-      padding: 8px;
-      border: 1px solid #3b3b6a;
-      background: #1a1a2e;
-      color: #e8e8e8;
-      font-size: 12px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .chore-actions button:hover {
-      background: #2a2a4a;
-      border-color: #f59e0b;
-      color: #f0e68c;
-    }
-
-    .chore-actions .btn-primary {
-      background: #f59e0b;
-      border-color: #f59e0b;
-      color: #0a0a0f;
-      font-weight: 700;
-    }
-
-    .chore-actions .btn-primary:hover {
-      background: #f0b40a;
-    }
-
-    .timer-display {
-      font-size: 28px;
-      font-weight: 700;
-      color: #f59e0b;
-      font-family: 'Courier New', monospace;
-    }
-
-    .chore-log-list {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    .chore-log-entry {
-      background: #0a0a0f;
-      border: 1px solid #3b3b6a;
-      border-radius: 4px;
-      padding: 8px 10px;
-      animation: slideIn 0.2s ease;
-    }
-
-    .chore-log-entry .log-time {
-      font-size: 10px;
-      color: #666;
-    }
-
-    .chore-log-entry .log-chore {
-      font-size: 12px;
-      color: #e8e8e8;
-      font-weight: 600;
-    }
-
-    .chore-log-entry .log-rewards {
-      font-size: 10px;
-      color: #7c3aed;
-    }
-
-    .log-empty {
-      text-align: center;
-      color: #666;
-      padding: 20px;
-      font-size: 12px;
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(10px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    .canvas-wrap {
-      flex: 1;
       position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #0a0a0f;
-      padding: 12px;
       overflow: hidden;
     }
 
-    canvas {
+    #map {
       background: #0a0a0f;
-      border: 2px solid #3b3b6a;
-      border-radius: 8px;
+      border: 3px solid #3b3b4a;
+      border-radius: 6px;
       cursor: crosshair;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
       max-width: 100%;
       height: auto;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
     }
 
-    footer {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 12px;
-      background: #1a1a2e;
-      border-top: 2px solid #3b3b6a;
-      font-size: 10px;
-      color: #666;
-    }
-
-    #equipment-vault {
-      flex-basis: 100%;
+    /* BOTTOM INTERACTION PANEL */
+    .bottom-panel {
+      background: #16161e;
+      border-top: 1px solid #2a2a35;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      margin-top: 8px;
+      gap: 4px;
+      padding: 6px 8px;
+      min-height: 0;
     }
 
-    #equipment-vault .vault-head {
+    .inv-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .inv-slot {
+      background: #1a1d24;
+      border: 1px solid #2a2a35;
+      border-radius: 4px;
+      padding: 5px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .inv-slot .inv-label {
+      font-size: 8px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .inv-slot .inv-count {
+      position: absolute;
+      bottom: 3px;
+      right: 4px;
       font-size: 11px;
+      font-weight: 700;
+      color: #f0e68c;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 2px;
+      padding: 0 4px;
+    }
+
+    .inv-slot:nth-child(1) { border-color: #ef4444; }
+    .inv-slot:nth-child(2) { border-color: #3b82f6; }
+    .inv-slot:nth-child(3) { border-color: #f0e68c; }
+    .inv-slot:nth-child(4) { border-color: #ef4444; }
+    .inv-slot:nth-child(5) { border-color: #3b82f6; }
+    .inv-slot:nth-child(6) { border-color: #3b82f6; }
+    .inv-slot:nth-child(7) { border-color: #ef4444; }
+    .inv-slot:nth-child(8) { border-color: #3b82f6; }
+    .inv-slot:nth-child(9) { border-color: #3b82f6; }
+
+    .equip-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      padding: 4px 0;
+      border-top: 1px solid #2a2a35;
+      border-bottom: 1px solid #2a2a35;
+      margin: 4px 0;
+    }
+
+    .equip-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      padding: 6px 10px;
+      background: #1a1d24;
+      border: 1px solid #2a2a35;
+      border-radius: 4px;
+      flex: 1;
+      text-align: center;
+    }
+
+    .equip-slot .equip-label {
+      font-size: 9px;
+      color: #888;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #888;
     }
 
-    #equipment-vault .vault-items {
+    .equip-slot .equip-sub {
+      font-size: 9px;
+      color: #f0e68c;
+      font-weight: 700;
+    }
+
+    .equip-slot .equip-icon {
+      font-size: 22px;
+    }
+
+    .tools-row {
       display: flex;
-      gap: 8px;
+      gap: 4px;
       flex-wrap: wrap;
+      padding: 4px 0;
+      border-top: 1px solid #2a2a35;
+      border-bottom: 1px solid #2a2a35;
+      margin: 4px 0;
     }
 
-    .vault-item {
-      background: #0a0a0f;
-      border: 1px solid #3b3b6a;
-      border-radius: 4px;
-      padding: 6px 12px;
-      font-size: 11px;
-      color: #f59e0b;
-    }
-
-    .vault-item:hover {
-      border-color: #f59e0b;
-      background: #1a1a2e;
-    }
-
-    #quest-popup {
-      position: fixed;
-      inset: 0;
-      z-index: 400;
-      background: rgba(0, 0, 0, 0.8);
+    .tool-btn {
       display: flex;
       align-items: center;
-      justify-content: center;
-      display: none;
-    }
-
-    #quest-popup.open { display: flex; }
-
-    .popup-box {
-      background: #1a1a2e;
-      border: 2px solid #3b3b6a;
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 420px;
-      width: calc(100% - 48px);
-      text-align: center;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-    }
-
-    .popup-box .icon { font-size: 48px; }
-
-    .popup-box h2 { margin: 8px 0 4px; font-size: 22px; color: #f0e68c; }
-
-    .popup-box .chore { color: #888; font-size: 13px; margin: 8px 0; }
-
-    .popup-box .hp-bar { height: 8px; background: #2a2a4a; border-radius: 4px; overflow: hidden; }
-
-    .popup-box .hp-bar > div { height: 100%; background: #3b3b6a; }
-
-    .popup-box .actions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
-
-    .popup-box .actions button {
-      padding: 10px 20px;
-      border-radius: 6px;
-      border: 1px solid #3b3b6a;
-      background: #1a1a2e;
-      color: #e8e8e8;
-      font-weight: 700;
+      gap: 4px;
+      padding: 4px 8px;
+      background: #1a1d24;
+      border: 1px solid #2a2a35;
+      border-radius: 3px;
+      font-size: 10px;
+      color: #888;
       cursor: pointer;
       font-family: 'Courier New', monospace;
     }
 
-    .popup-box .actions button.primary {
-      background: #f59e0b;
-      border-color: #f59e0b;
+    .tool-btn input {
+      accent-color: #f59e0b;
+      margin: 0;
+    }
+
+    .tool-btn input:checked ~ * {
+      color: #f0e68c;
+      font-weight: 700;
+    }
+
+    .map-legend {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 4px 0;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: #1a1d24;
+      border: 1px solid #2a2a35;
+      border-radius: 4px;
+      font-size: 9px;
+      color: #888;
+    }
+
+    .legend-hex {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 700;
+      border: 1px solid #444;
+    }
+
+    .legend-hex.green { background: #22c55e; color: #0a0a0f; }
+    .legend-hex.gold { background: #f5c542; color: #0a0a0f; }
+    .legend-hex.blue { background: #3b82f6; color: #0a0a0f; }
+
+    .legend-red {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      background: #ef4444;
+      border: 1px solid #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
       color: #0a0a0f;
     }
 
-    .popup-box .actions button.primary:hover { background: #f0b40a; }
-
-    .popup-box .actions button:last-child {
-      background: transparent;
-      color: #e8e8e8;
-      border-color: #3b3b6a;
+    .minimap-title {
+      font-size: 9px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 2px 0;
     }
 
+    .minimap {
+      position: relative;
+      border: 2px solid #3b3b4a;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #0a0a0f;
+    }
+
+    .minimap canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      width: 100%;
+      height: auto;
+    }
+
+    /* ===== AMBUSH OVERLAY ===== */
     #ambush-overlay {
       position: fixed;
       inset: 0;
@@ -1514,11 +481,11 @@
     #ambush-overlay.open { display: flex; }
 
     .scroll-box {
-      background: #1a1a2e;
-      border: 3px solid #3b3b6a;
+      background: #16161e;
+      border: 3px solid #3b3b4a;
       border-radius: 8px;
-      padding: 32px 40px;
-      max-width: 640px;
+      padding: 24px 28px;
+      max-width: 600px;
       width: calc(100% - 48px);
       text-align: center;
       box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
@@ -1537,7 +504,7 @@
       color: #b8b8d4;
       font-size: 13px;
       line-height: 1.6;
-      text-align: left;
+      text-align: center;
       margin: 0 0 20px;
       font-family: 'Courier New', monospace;
     }
@@ -1560,182 +527,112 @@
 
     .scroll-box .actions button:hover { filter: brightness(1.1); }
   </style>
+
 </head>
 <body>
-  <header>
-    <h1>🏰 DailyDungeons</h1>
-    <span style="font-size:12px;color:#555;">Tilemap Editor</span>
-    <div class="header-buttons">
-      <button id="mode-toggle" class="primary">🔄 Switch to Play Mode</button>
-      <button id="hero-toggle">⚔️ Hero: Rogue</button>
-      <button id="chore-log-toggle">📋 Real Chore Log</button>
-      <button id="asset-palette-toggle">🎨 Asset Palette</button>
-    </div>
-  </header>
-
-  <!-- Real Chore Log Panel -->
-  <div id="chore-log-panel">
-    <div class="panel-header">
-      <span class="panel-title">📋 Real Chore Log</span>
-      <button class="panel-close" id="chore-log-close">✕</button>
-    </div>
-    <div class="form-group">
-      <label for="chore-type">Chore Type</label>
-      <select id="chore-type">
-        <option value="Dishes">🍽️ Dishes</option>
-        <option value="Laundry">👕 Laundry</option>
-        <option value="Trash">🗑️ Trash</option>
-        <option value="Custom">✏️ Custom</option>
-      </select>
-    </div>
-    <div class="form-group" id="chore-custom-group" style="display:none;">
-      <label for="chore-custom">Custom Chore</label>
-      <input type="text" id="chore-custom" placeholder="Describe your chore..." />
-    </div>
-    <button class="btn-complete" id="chore-complete">✅ Mark Complete</button>
-    <div class="timer-section">
-      <button class="btn-timer" id="chore-timer-btn">⏱️ Start Timer</button>
-      <span class="timer-display" id="chore-timer-display">00:00</span>
-    </div>
-    <div class="log-section">
-      <div class="log-section-title">Recent Completions</div>
-      <div class="log-list" id="chore-log-list">
-        <div class="log-empty">No chores logged yet</div>
+  <!-- ===== DAILY DUNGEONS — PIXEL-ART ROGUELIKE UI ===== -->
+  <div id="app">
+    <!-- TOP INFO PANEL (Level / Floor / Gold / Keys / HP / MP / Level) -->
+    <header class="top-panel">
+      <div class="top-bar">
+        <div class="floor-block">
+          <div class="floor-label">Floor</div>
+          <div class="floor-num"><span id="floor-display">07</span> <span class="sep">|</span> <span id="subfloor-display">B2</span></div>
+        </div>
+        <div class="location-box">
+          <div class="loc-title">7B-2 <span style="color:#888;font-size:11px;">(Subway Tunnels)</span></div>
+          <div style="color:#888;font-size:10px;">Nebula Station</div>
+        </div>
       </div>
-    </div>
-  </div>
-
-  <div id="hud">
-    <div class="stat"><span class="label">Level</span><span class="value" id="hud-level">1</span></div>
-    <div class="stat"><span class="label">XP</span><span class="value" id="hud-xp">0</span><span class="value" id="hud-xp-max" style="color:var(--muted);font-weight:400;">/ 100</span></div>
-    <div class="stat"><span class="label">Gold</span><span class="value gold" id="hud-gold">0</span></div>
-    <div class="stat"><span class="label">Class</span><span class="value" id="hud-class">Rogue</span></div>
-    <div id="chaos-wrap">
-      <div class="chaos-head">
-        <span>Chaos Meter</span>
-        <span class="chaos-pct" id="chaos-pct">0%</span>
-        <span id="chaos-debuff" class="hidden">⚠️ CLUTTER DEBUFF ACTIVE</span>
+      <div class="stats-row">
+        <div class="keystat">
+          <div class="ks-label">Gold</div>
+          <div class="ks-value gold"><span id="hud-gold">0</span></div>
+        </div>
+        <div class="keystat">
+          <div class="ks-label">Keys</div>
+          <div class="ks-value"><span id="hud-keys">2</span></div>
+        </div>
       </div>
-      <div id="chaos-bar"><div id="chaos-fill"></div></div>
-    </div>
-    <div id="equipment-vault">
-      <span class="vault-head">Equipment Vault</span>
-      <div class="vault-items" id="vault-items"></div>
-    </div>
-  </div>
-
-  <div id="hero-selector">
-    <label style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;">
-      ⚔️ Hero Class
-      <select id="hero-select">
-        <option value="Rogue">Rogue — Faster moves</option>
-        <option value="Warrior">Warrior — +10 Gold on big tasks</option>
-        <option value="Mage">Mage — Double XP</option>
-      </select>
-    </label>
-  </div>
-
-  <div class="controls">
-    <label id="tool-floor">
-      <input type="radio" name="tool" value="floor" checked /> 🛋️ Floor
-    </label>
-    <label id="tool-wall">
-      <input type="radio" name="tool" value="wall" /> 🧱 Wall
-    </label>
-    <label id="tool-bed">
-      <input type="radio" name="tool" value="3" /> 🛏️ Bed
-    </label>
-    <label id="tool-sink">
-      <input type="radio" name="tool" value="4" /> 🚰 Sink
-    </label>
-    <label id="tool-slime">
-      <input type="radio" name="tool" value="5" /> 🦠 Dish Slime
-    </label>
-    <label id="tool-hydra">
-      <input type="radio" name="tool" value="6" /> 👔 Laundry Hydra
-    </label>
-    <label id="tool-trash-mimic">
-      <input type="radio" name="tool" value="7" /> 🗑️ Trash Mimic
-    </label>
-    <label id="tool-clear">
-      <input type="radio" name="tool" value="clear" /> 🧹 Clear Above
-    </label>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-left:8px;">
-      <button id="save-btn" style="background:#1e3a4a;border-color:var(--gold);color:var(--gold);">💾 Save Progress</button>
-      <button id="reset-btn" style="background:#2a2f3a;border-color:#64748b;color:#8b8f98;">🔄 Reset Dungeon</button>
-      <button id="ambush-btn" style="background:#2a2f3a;border-color:#ec4899;color:#ec4899;">☣️ Emulate Basin Decay (Trigger Ambush)</button>
-      <button id="save-custom-btn" style="background:#1e3a4a;border-color:var(--gold);color:var(--gold);">💾 Save Custom Map</button>
-      <button id="load-custom-btn" style="background:#2a2f3a;border-color:#38bdf8;color:#38bdf8;">📂 Load Custom Map</button>
-      <button id="clear-custom-btn" style="background:#2a2f3a;border-color:#ef4444;color:#ef4444;">🗑️ Clear Custom Map</button>
-      <span id="save-status" style="color:var(--muted);font-size:12px;"></span>
-    </div>
-  </div>
-
-  <div class="canvas-wrap">
-    <canvas id="map" width="640" height="640"></canvas>
-  </div>
-
-  <div id="quest-popup">
-    <div class="popup-box">
-      <div class="icon" id="popup-icon">🦠</div>
-      <h2 id="popup-name">Dish Slime</h2>
-      <div class="chore" id="popup-chore">Wash the dishes in the kitchen sink</div>
-      <div class="hp-bar"><div id="popup-hp" style="width:100%"></div></div>
-      <div class="actions">
-        <button id="slay-btn">⚔️ Slay Monster (Chore Done)</button>
-        <button id="cancel-btn">Cancel</button>
+      <div class="bars-row">
+        <div class="vital-bar">
+          <div class="bar-label">HP</div>
+          <div class="bar-track"><div id="hud-hp" class="bar-fill" style="width:100%;background:#ef4444;"></div></div>
+          <div class="bar-value"><span id="hp-text">68/90</span></div>
+        </div>
+        <div class="vital-bar">
+          <div class="bar-label">MP</div>
+          <div class="bar-track"><div id="hud-mp" class="bar-fill" style="width:100%;background:#3b82f6;"></div></div>
+          <div class="bar-value"><span id="mp-text">42/50</span></div>
+        </div>
       </div>
+      <div class="level-row">
+        <div class="level-disc">
+          <canvas id="leveldisk" width="120" height="120"></canvas>
+          <div class="level-label">Level <span id="level-display">12</span></div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-btn"><div class="skill-icon">⚔️</div><div class="skill-label">Attack</div></div>
+          <div class="skill-btn"><div class="skill-icon">💨</div><div class="skill-label">Dodge</div></div>
+          <div class="skill-btn"><div class="skill-icon">🌀</div><div class="skill-label">Dash</div></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAP CANVAS -->
+    <div class="map-wrap">
+      <canvas id="map" width="640" height="640"></canvas>
     </div>
+
+    <!-- BOTTOM INTERACTION PANEL (Inventory Grid + Equipment + Minimap + Level Disk) -->
+    <footer class="bottom-panel">
+      <div class="inv-grid">
+        <div class="inv-slot">🧪<div class="inv-label">Red Potion</div><div class="inv-count">3</div></div>
+        <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div><div class="inv-count">1</div></div>
+        <div class="inv-slot">🗝️<div class="inv-label">Key</div><div class="inv-count">1</div></div>
+        <div class="inv-slot">🧪<div class="inv-label">Red Potion</div></div>
+        <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
+        <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
+        <div class="inv-slot">🧪<div class="inv-label">Red Potion</div></div>
+        <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
+        <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
+      </div>
+      <div class="equip-row">
+        <div class="equip-slot">
+          <div class="equip-icon">🔪</div>
+          <div class="equip-label">Weapon</div>
+          <div class="equip-sub">Dagger</div>
+        </div>
+        <div class="equip-slot">
+          <div class="equip-icon">🗝️</div>
+          <div class="equip-label">Key Item</div>
+        </div>
+        <div class="equip-slot">
+          <div class="equip-icon">🗑️</div>
+          <div class="equip-label">Discard</div>
+        </div>
+      </div>
+      <div class="tools-row">
+        <label class="tool-btn"><input type="radio" name="tool" value="1" checked /> 🛋️ Floor</label>
+        <label class="tool-btn"><input type="radio" name="tool" value="2" /> 🧱 Wall</label>
+        <label class="tool-btn"><input type="radio" name="tool" value="3" /> 🛏️ Bed</label>
+        <label class="tool-btn"><input type="radio" name="tool" value="4" /> 🚰 Sink</label>
+        <label class="tool-btn"><input type="radio" name="tool" value="5" /> 🦠 Dish Slime</label>
+        <label class="tool-btn"><input type="radio" name="tool" value="6" /> 👔 Laundry Hydra</label>
+        <label class="tool-btn" id="tool-trash-mimic"><input type="radio" name="tool" value="7" /> 🗑️ Trash Mimic</label>
+      </div>
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-hex green"></div><span>SAFE ZONE</span></div>
+        <div class="legend-item"><div class="legend-hex gold">▶</div><span>STAIRS UP</span></div>
+        <div class="legend-item"><div class="legend-hex blue">▼</div><span>STAIRS DOWN</span></div>
+        <div class="legend-item"><div class="legend-red"></div><span>Event DANGER</span></div>
+      </div>
+      <div class="minimap-title">Floor 7B-2 — Subway Tunnels</div>
+      <div class="minimap">
+        <canvas id="minimap" width="160" height="160"></canvas>
+      </div>
+    </footer>
   </div>
-
-  <!-- AMBUSH OVERLAY -->
-  <div id="ambush-overlay">
-    <div class="scroll-box">
-      <h2>⚠️ Quest Log: The Kitchen Dungeon</h2>
-      <div class="lore-text">Adventurer, your procrastination has breached the seals of the Porcelain Domain.
-
-By abandoning the organic residue of your rations to the damp, room-temperature depths of the Basin, you have accidentally initiated a dark ritual. The local micro-fauna have feasted upon the fat and protein slurry, multiplying by the millions.
-
-As the oxygen in the stagnant water depleted, anaerobic decomposition took hold. The microscopic horrors began excreting volatile sulfur compounds and putrid fatty acids, weaving a miasma of rotten eggs and rancid dairy.
-
-This foul chemical reaction is no longer just a stench—the sheer density of the bacterial biomatter is coagulating. It is gaining sentience, feeding on the stuck-on gravy, and physically rising from the drain.
-
-Prepare your sponge and unsheathe your dish soap. The Dish Slime has spawned!</div>
-      <div class="slime-sprite">🦠</div>
-      <div class="actions">
-        <button id="surfactant-btn">⚔️ Cast Surfactant Blast (Chore Completed)</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Asset Browser Window (full screen) -->
-  <div id="asset-browser">
-    <div class="browser-header">
-      <h2 id="browser-title">🎨 Asset Browser</h2>
-      <button id="browser-close" class="browser-close">✕</button>
-    </div>
-    <div class="browser-body">
-      <div class="browser-tabs">
-        <button class="tab active" data-category="all">All</button>
-        <button class="tab" data-category="terrain">Terrain</button>
-        <button class="tab" data-category="furniture">Furniture</button>
-        <button class="tab" data-category="monsters">Monsters</button>
-        <button class="tab" data-category="environment">Environment</button>
-      </div>
-      <div class="asset-grid" id="asset-grid">
-        <div class="grid-loading">Loading Kenney assets...</div>
-      </div>
-      <div class="browser-info" id="browser-info">
-        <h3>Select a tile to add to the palette</h3>
-        <p>Click any tile to place it on the map. Click again to change your brush.</p>
-      </div>
-    </div>
-  </div>
-
-  <footer>
-    <span>Grid: 16 &times; 16</span>
-    <span>Click &amp; drag to paint &nbsp;·&nbsp; WASD / Arrows to move (Play Mode)</span>
-  </footer>
 
   <script>
     // ============================================================
