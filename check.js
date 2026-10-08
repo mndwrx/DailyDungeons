@@ -75,7 +75,18 @@ ids.has('rect-size-label') ? pass('Rectangle size label element present') : fail
 /mapCanvas\.addEventListener\("click"/.test(script) ? fail('Old click painter still attached (would double-paint)') : pass('No duplicate click painter on the builder canvas');
 /#map\s*\{[^}]*touch-action:\s*none/.test(html) ? pass('#map has touch-action: none') : fail('#map missing touch-action: none');
 
-// 8. Design rules: no Tile Tokens, no blocking alerts
+// 8. Rotation + quick eraser
+const rotBits = ['let selectedRotation', 'terrainRot', 'entityRot', 'function rotateBrush', 'function rotateCell', 'function validRotGrid', 'function toggleEraser', 'function isTypingTarget'];
+const missingRot = rotBits.filter(b => !script.includes(b));
+missingRot.length ? fail('Rotation/eraser pieces missing: ' + missingRot.join(', ')) : pass('Rotation state per layer, rotate/validate helpers, quick eraser, typing guard defined');
+['builder-rotate-btn', 'builder-eraser-btn', 'builder-swatch'].every(id => ids.has(id)) ? pass('Toolbar has rotate button, eraser button and swatch') : fail('Toolbar rotate/eraser/swatch missing');
+/terrainRot = validRotGrid\(data\.terrainRot\)/.test(script) && /entityRot = validRotGrid\(data\.entityRot\)/.test(script) && /payload = \{[\s\S]*?terrainRot,[\s\S]*?entityRot,/.test(script)
+  ? pass('Rotation saved and loaded (old saves default to 0)') : fail('Rotation not persisted');
+/drawTiles\(roomCtx, room\.terrain, room\.entity, room\.terrainRot, room\.entityRot\)/.test(script) && /drawTiles\(mapCtx, terrainMap, entityMap, terrainRot, entityRot\)/.test(script)
+  ? pass('Builder map and play room both draw rotations') : fail('Rotation not drawn in builder and play');
+/function isWalkable[^}]*Rot/.test(script) || /function triggerAt[^}]*Rot/.test(script) ? fail('Rotation leaks into gameplay rules') : pass('Blocking/triggers ignore rotation');
+
+// 9. Design rules: no Tile Tokens, no blocking alerts
 /token/i.test(html) ? fail('Tile Token references remain') : pass('No Tile Token references');
 /\balert\s*\(/.test(script) ? fail('alert() still used') : pass('No blocking alert() calls');
 
