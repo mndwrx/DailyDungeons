@@ -1778,6 +1778,52 @@
   ::-webkit-scrollbar-thumb { background: #a0703a; border: 2px solid #3b2614; box-shadow: inset 2px 2px 0 #c89058, inset -2px -2px 0 #6e4b2c; }
   ::-webkit-scrollbar-thumb:hover { background: #b07a3f; }
   ::-webkit-scrollbar-corner { background: #2a1a0c; }
+
+  /* ===== IDLE LOOP: hero stat box, auto battle screen, loot popup ===== */
+  .hero-statbox { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; align-content: center; font: 11px var(--fx-font); color: var(--wood-text);
+    border: 6px solid; border-image: url("assets/9-Slice/Ancient/brown_inlay.png") 12 fill / 6px; background: #4a3019; padding: 6px; }
+  .hero-statbox b { color: #f0c860; font-weight: normal; }
+  #ambush-overlay { z-index: 900; background: #120b06; }
+  .battle-screen { width: min(720px, 96vw); height: min(560px, 92vh); display: flex; flex-direction: column; gap: 8px; }
+  .battle-field { position: relative; flex: 1; overflow: hidden; border: 10px solid; border-image: url("assets/9-Slice/Ancient/brown.png") 16 fill / 10px;
+    background: linear-gradient(#f3e2b8 0 58%, #e2c98f 58% 100%); image-rendering: pixelated; }
+  .b-mon { position: absolute; width: 30%; aspect-ratio: 1; display: flex; align-items: flex-end; justify-content: center; }
+  .b-enemy { right: 7%; top: 6%; }
+  .b-hero { left: 6%; bottom: 4%; }
+  .b-pad { position: absolute; left: -12%; right: -12%; bottom: 0; height: 26%; border-radius: 50%; background: #b7925a; box-shadow: inset 0 -4px 0 #8a6a3e; }
+  .b-mon canvas { position: relative; width: 82%; height: auto; aspect-ratio: 1; image-rendering: pixelated; margin-bottom: 6%; transition: transform 0.15s; }
+  .b-plate { position: absolute; width: 44%; padding: 6px 10px; font-family: var(--fx-font); color: var(--ink);
+    border: 6px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 6px; background: #f3e2b8; }
+  .b-enemy-plate { left: 4%; top: 6%; }
+  .b-hero-plate { right: 4%; bottom: 8%; }
+  .b-name { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 4px; }
+  .b-lv { font-size: 12px; } .b-lv b { font-weight: normal; margin-left: 2px; }
+  .b-hp { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #8b1a1a; margin-top: 3px; }
+  .b-mp { color: #1d6b7a; }
+  .b-track { flex: 1; height: 8px; background: #3b2614; border: 2px solid #3b2614; }
+  .b-fill { height: 100%; width: 100%; background: #3fbf4f; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3); transition: width 0.5s linear, background-color 0.3s; }
+  .b-fill.mid { background: #e8b931; } .b-fill.low { background: #d8432f; }
+  .b-mp .b-fill { background: #2f9fbf; }
+  .b-hpnum { text-align: right; font-size: 13px; margin-top: 4px; }
+  .battle-text { position: relative; min-height: 96px; padding: 12px 16px; border: 10px solid; border-image: url("assets/9-Slice/Ancient/tan.png") 16 fill / 10px; background: #f3e2b8;
+    font: 16px/1.5 var(--fx-font); color: var(--ink); }
+  .battle-text p { margin: 0; white-space: pre-line; padding-right: 110px; }
+  #battle-speed { position: absolute; right: 8px; bottom: 8px; font-size: 12px; padding: 4px 10px; }
+  #battle-speed.on { border-image-source: url("assets/PNG/buttonLong_beige.png"); color: var(--ink); text-shadow: none; }
+  .b-lunge-r { transform: translate(18%, -12%); } .b-lunge-l { transform: translate(-18%, 12%); }
+  .b-hit { animation: b-hit 0.36s steps(2, end) 2; }
+  @keyframes b-hit { 0% { transform: translateX(-6%); filter: brightness(2.2); } 50% { transform: translateX(6%); filter: none; } 100% { transform: none; } }
+  .b-faint { transition: transform 0.5s, opacity 0.5s; transform: translateY(40%); opacity: 0; }
+  #loot-popup { position: fixed; inset: 0; z-index: 950; display: none; align-items: flex-start; justify-content: center; padding-top: 18vh; pointer-events: none; }
+  #loot-popup.open { display: flex; }
+  .loot-box { pointer-events: auto; min-width: 260px; padding: 12px 18px; text-align: center; color: var(--ink); border: 12px solid;
+    border-image: url("assets/9-Slice/Ancient/tan.png") 16 fill / 12px; background: #f3e2b8; animation: loot-in 0.25s steps(4, end); }
+  @keyframes loot-in { from { transform: scale(0.6); opacity: 0; } }
+  .loot-title { margin: 0 0 8px; font: 20px var(--fx-font); color: #8b1a1a; }
+  .loot-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; text-align: left; }
+  .loot-row { display: flex; align-items: center; gap: 10px; font: 14px var(--fx-font); }
+  .loot-row .ico { flex: none; }
+  .loot-row.rare { color: #8a3fbf; }
 </style>
 </head>
 <body>
@@ -1902,11 +1948,7 @@
         <canvas id="leveldisk" width="120" height="120"></canvas>
         <div class="level-label">Level <span id="level-label-text">1</span></div>
       </div>
-      <div class="skill-row">
-        <div class="skill-btn"><div class="skill-icon"><i class="ico ico-sword"></i></div><div class="skill-label">Attack</div></div>
-        <div class="skill-btn"><div class="skill-icon"><i class="ico ico-prev"></i></div><div class="skill-label">Dodge</div></div>
-        <div class="skill-btn"><div class="skill-icon"><i class="ico ico-next"></i></div><div class="skill-label">Dash</div></div>
-      </div>
+      <div class="hero-statbox" id="hud-stats"><span>ATK <b id="hud-atk">10</b></span><span>DEF <b id="hud-def">5</b></span><span>SPD <b id="hud-spd">6</b></span><span>Potions <b id="hud-potions">2</b></span></div>
     </div>
   </header>
 
@@ -2049,6 +2091,14 @@
           <div class="label">HP</div>
           <div class="value" id="game-hp">100/100</div>
         </div>
+        <div class="stat">
+          <div class="label">ATK/DEF/SPD</div>
+          <div class="value" id="game-stats">10/5/6</div>
+        </div>
+        <div class="stat">
+          <div class="label">Potions</div>
+          <div class="value" id="game-potions">2</div>
+        </div>
       </div>
     </div>
     <div class="game-hud-bars">
@@ -2067,7 +2117,6 @@
       <button id="toggle-edit"><i class="ico ico-pick"></i>Edit Dungeon</button>
       <button id="hud-hero-btn"><i class="ico ico-helmet"></i>Hero</button>
       <button id="shop-btn"><i class="ico ico-gold"></i>Shop</button>
-      <button id="surfactant-btn"><i class="ico ico-staff"></i>Surfactant Blast</button>
     </div>
   </div>
   <div class="game-play-area">
@@ -2077,18 +2126,25 @@
   </div>
 </div>
 
-<!-- ===== AMBUSH POPUP ===== -->
+<!-- ===== AUTO BATTLE (GBC-style; an ambush opens it, the fight plays itself) ===== -->
 <div id="ambush-overlay">
-  <div class="ambush-box">
-    <h2 class="ambush-title">AMBUSH!</h2>
-    <p class="ambush-text">A monster appeared!</p>
-    <div class="ambush-actions">
-      <button id="ambush-fight"><i class="ico ico-sword"></i>Fight</button>
-      <button id="ambush-run"><i class="ico ico-prev"></i>Run</button>
-      <button id="ambush-hide"><i class="ico ico-crate"></i>Hide</button>
+  <div class="battle-screen">
+    <div class="battle-field">
+      <div class="b-plate b-enemy-plate"><div class="b-name"><span id="b-enemy-name">Monster</span><span class="b-lv">Lv<b id="b-enemy-lv">1</b></span></div>
+        <div class="b-hp"><span>HP</span><div class="b-track"><div class="b-fill" id="b-enemy-hp"></div></div></div></div>
+      <div class="b-mon b-enemy"><div class="b-pad"></div><canvas id="b-enemy-sprite" width="96" height="96"></canvas></div>
+      <div class="b-mon b-hero"><div class="b-pad"></div><canvas id="b-hero-sprite" width="96" height="96"></canvas></div>
+      <div class="b-plate b-hero-plate"><div class="b-name"><span id="b-hero-name">Hero</span><span class="b-lv">Lv<b id="b-hero-lv">1</b></span></div>
+        <div class="b-hp"><span>HP</span><div class="b-track"><div class="b-fill" id="b-hero-hp"></div></div></div>
+        <div class="b-hp b-mp"><span>MP</span><div class="b-track"><div class="b-fill" id="b-hero-mp"></div></div></div>
+        <div class="b-hpnum" id="b-hero-hpnum">100/100</div></div>
     </div>
+    <div class="battle-text"><p id="battle-text">A wild monster appeared!</p><button class="hero-btn" id="battle-speed">Speed 1x</button></div>
   </div>
 </div>
+
+<!-- ===== CHORE LOOT POPUP ===== -->
+<div id="loot-popup"><div class="loot-box"><h2 class="loot-title">Loot!</h2><div class="loot-list" id="loot-list"></div><button class="hero-btn" id="loot-ok">Nice!</button></div></div>
 
 <!-- ===== TOAST ===== -->
 <div id="toast"></div>
@@ -2976,7 +3032,7 @@ function stopWalking() {
   document.getElementById("move-indicator").style.display = "none";
 }
 
-// Step one tile (arrow keys / WASD and each click-to-move step); walls and furniture block
+// Step one tile (each click-to-move step); walls and furniture block
 function tryMove(dx, dy) {
   if (!isPlayMode || activeAmbush) return false;
   const nx = player.x + dx, ny = player.y + dy;
@@ -3064,15 +3120,17 @@ function addRewards(gold, xp) {
   playerGold += gold;
   playerXp += xp;
   let leveled = false;
+  const was = heroStats();
   while (playerXp >= 100) {
     playerXp -= 100;
     playerLevel += 1;
     leveled = true;
   }
   if (leveled) {
-    playerHp = 100;
-    playerMp = 100;
-    setTimeout(() => showToast(`Level up! You are now level ${playerLevel}.`), 1200);
+    const now = heroStats();
+    playerHp = now.maxHp;
+    playerMp = now.maxMp;
+    setTimeout(() => showToast(`Level up! You are now level ${playerLevel}. HP ${now.maxHp}, ATK ${now.atk} (+${now.atk - was.atk}), DEF ${now.def} (+${now.def - was.def}), SPD ${now.spd}`, 3200), 1200);
   }
   if (isPlayMode) {
     roomRewards.gold += gold;
@@ -3082,18 +3140,24 @@ function addRewards(gold, xp) {
   updateGameHUD();
 }
 
+// ---- HERO STATS ----
+// Level sets the base; shop gear feeds ATK (weapon) and DEF (shield): +1 per 5 power
+let rng = Math.random; // loot + battle rolls (the harness swaps in a fixed roll)
+let potions = { health: 2, mana: 0 };
+function gearPower(kind) { const w = WEAPON_BY_ID[((typeof hero !== "undefined" && hero && hero.equip) || {})[kind]]; return w ? w.power : 0; }
+function heroStats(level = playerLevel) {
+  const L = level - 1;
+  return { maxHp: 100 + 10 * L, maxMp: 100 + 5 * L, atk: 10 + 2 * L + Math.round(gearPower("weapon") / 5),
+    def: 5 + L + Math.round(gearPower("shield") / 5), spd: 6 + Math.floor(L / 2) };
+}
+
 // ---- COMBAT ----
-// Resolves one fight: the monster is defeated, rewards are granted exactly once here (never in showLevelClear)
-function resolveCombat(monster, opts = {}) {
+// Win bookkeeping after an auto battle: the monster leaves, rewards are granted exactly once here (never in showLevelClear)
+function resolveCombat(monster) {
   if (!monsters.includes(monster)) return;
   monsters = monsters.filter(m => m !== monster);
-  if (!opts.noDamage) playerHp = Math.max(0, playerHp - Math.max(1, Math.round(monster.maxHp / 4) - gearBonus())); // equipped shop gear softens the hit
   addRewards(monster.goldReward, monster.xpReward);
   showToast(`${monster.name} defeated! +${monster.goldReward} Gold, +${monster.xpReward} XP`);
-  if (playerHp <= 0) {
-    playerHp = 50;
-    showToast("You fainted... a real chore break restores you. HP 50.");
-  }
   updateGameHUD();
   saveGameData();
   drawRoom();
@@ -3120,14 +3184,8 @@ function triggerAmbush(monster) {
   if (!monster) return;
   stopWalking();
   activeAmbush = monster;
-  const chore = CHORES[monster.type] || {};
-  document.querySelector("#ambush-overlay .ambush-title").textContent = `AMBUSH! ${monster.name}`;
-  document.querySelector("#ambush-overlay .ambush-text").textContent =
-    `A ${monster.name} (HP ${monster.hp}) bursts out! Real chore: ${chore.chore || "clean up"}. Reward: +${monster.goldReward} Gold, +${monster.xpReward} XP.`;
-  const spawn = document.getElementById("monster-spawn");
-  spawn.replaceChildren(spriteSpan(monster.icon || (CHORES[monster.type] || {}).icon, 2));
   placeSpawnMarker(monster.col, monster.row);
-  document.getElementById("ambush-overlay").classList.add("open");
+  startBattle(monster);
 }
 
 function placeSpawnMarker(col, row) {
@@ -3137,52 +3195,164 @@ function placeSpawnMarker(col, row) {
   const scale = roomCanvas.clientWidth / roomCanvas.width;
   spawn.style.left = (rect.left - area.left + roomCanvas.clientLeft + (col + 0.5) * TILE_SIZE * scale) + "px";
   spawn.style.top = (rect.top - area.top + roomCanvas.clientTop + (row + 0.5) * TILE_SIZE * scale) + "px";
+  spawn.replaceChildren(spriteSpan(monsterIcon(activeAmbush), 2));
   spawn.style.display = "none";
   void spawn.offsetWidth; // restart the flash animation
   spawn.style.display = "block";
   setTimeout(() => { spawn.style.display = "none"; }, 1500);
 }
+const monsterIcon = m => m && (m.icon || (CHORES[m.type] || {}).icon);
 
+// Closing the battle screen (also used on every screen change) stops its timers
 function closeAmbush() {
+  if (battle) clearTimeout(battle.timer);
+  battle = null;
   document.getElementById("ambush-overlay").classList.remove("open");
   activeAmbush = null;
 }
 
-function ambushFight() {
-  const monster = activeAmbush;
-  closeAmbush();
-  if (monster) resolveCombat(monster);
+// ---- AUTO BATTLE (Game Boy Color style) ----
+// Turns run on a timer (~1 s per action, 2x toggle). SPD picks who goes first each round; damage is ATK vs DEF
+// with a little randomness; the hero opens with Surfactant Blast if it has 20 MP and auto-drinks a Health Potion
+// below 30% HP. A win pays the monster's gold/XP plus a battle loot roll; a loss is a faint (lose some gold, full heal).
+const ENEMY_STATS = { dishes: [7, 3, 5, "Grease Splash"], laundry: [8, 4, 7, "Sock Whip"], trash: [10, 4, 3, "Garbage Chomp"], mow: [9, 4, 4, "Grass Lash"] };
+let battle = null, battleSpeed = 1;
+function enemyStats(monster) {
+  const L = playerLevel - 1, [atk, def, spd, move] = ENEMY_STATS[monster.type] || [8, 4, 4, "Tackle"], hp = Math.round(monster.maxHp * (1 + 0.2 * L));
+  return { name: monster.name, hp, maxHp: hp, atk: atk + 2 * L, def: def + L, spd: spd + Math.floor(L / 2), move, level: playerLevel };
+}
+function battleDamage(atk, def, mult = 1) { return Math.max(1, Math.round(atk * atk / (atk + def) * 1.6 * mult * (0.85 + rng() * 0.3))); }
+function setBattleBar(id, value, max) {
+  const el = document.getElementById(id), pct = Math.max(0, Math.min(100, 100 * value / max));
+  el.style.transitionDuration = (0.5 / battleSpeed) + "s";
+  el.style.width = pct + "%";
+  if (id !== "b-hero-mp") { el.classList.toggle("mid", pct <= 50 && pct > 20); el.classList.toggle("low", pct <= 20); }
+}
+function battleSay(line, line2) {
+  const t = document.getElementById("battle-text");
+  t.textContent = line;
+  if (line2 && battle) { const b = battle; setTimeout(() => { if (battle === b) t.textContent = line + "\n" + line2; }, 420 / battleSpeed); }
+}
+function battleAnim(id, cls, ms) {
+  const el = document.getElementById(id);
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), ms / battleSpeed);
+}
+function battleWait(ms, fn) { if (battle) battle.timer = setTimeout(fn, ms / battleSpeed); }
+function updateBattleHero() {
+  const st = battle.st;
+  setBattleBar("b-hero-hp", playerHp, st.maxHp);
+  setBattleBar("b-hero-mp", playerMp, st.maxMp);
+  document.getElementById("b-hero-hpnum").textContent = `${Math.max(0, playerHp)}/${st.maxHp}`;
 }
 
-function ambushRun() {
-  const monster = activeAmbush;
-  closeAmbush();
-  if (!monster) return;
-  ambushSuppressed.add(monster.type);
-  player.x = prevPos.x;
-  player.y = prevPos.y;
-  drawRoom();
-  checkAmbush();
-  showToast(`You ran from the ${monster.name}. It's still lurking.`);
+function startBattle(monster) {
+  const st = heroStats(), en = enemyStats(monster);
+  if (battle) clearTimeout(battle.timer);
+  battle = { monster, st, en, queue: [], usedSkill: false, timer: null };
+  document.getElementById("b-enemy-name").textContent = en.name;
+  document.getElementById("b-enemy-lv").textContent = en.level;
+  document.getElementById("b-hero-name").textContent = hero.name;
+  document.getElementById("b-hero-lv").textContent = playerLevel;
+  for (const id of ["b-enemy-hp", "b-hero-hp", "b-hero-mp"]) document.getElementById(id).style.transitionDuration = "0s";
+  setBattleBar("b-enemy-hp", en.hp, en.maxHp);
+  updateBattleHero();
+  const ec = document.getElementById("b-enemy-sprite"), ex = ec.getContext("2d");
+  ex.clearRect(0, 0, 96, 96); drawIconCanvas(ex, monsterIcon(monster), 0, 0, 96);
+  composeHero(hero, document.getElementById("b-hero-sprite"));
+  for (const id of ["b-enemy-sprite", "b-hero-sprite"]) document.getElementById(id).className = "";
+  document.getElementById("battle-speed").textContent = `Speed ${battleSpeed}x`;
+  document.getElementById("battle-speed").classList.toggle("on", battleSpeed > 1);
+  document.getElementById("ambush-overlay").classList.add("open");
+  battleSay(`A wild ${en.name} appeared!`, `Real chore: ${(CHORES[monster.type] || {}).chore || "clean up"}.`);
+  battleWait(1400, battleStep);
 }
 
-function ambushHide() {
-  const monster = activeAmbush;
-  closeAmbush();
-  if (!monster) return;
-  ambushSuppressed.add(monster.type);
-  showToast(`You hide. The ${monster.name} loses track of you... for now.`);
+function battleStep() {
+  if (!battle) return;
+  const b = battle;
+  if (!b.queue.length) b.queue = b.st.spd >= b.en.spd ? ["hero", "enemy"] : ["enemy", "hero"];
+  const who = b.queue.shift();
+  if (who === "hero") heroTurn(b); else enemyTurn(b);
+  if (b.en.hp <= 0) return battleWait(1100, () => battleEnd(true));
+  if (playerHp <= 0) return battleWait(1100, () => battleEnd(false));
+  battleWait(1000, battleStep);
 }
 
-// Spends MP to defeat the monster you're facing (or one within 2 tiles) without taking damage
-function castSurfactantBlast() {
-  if (!isPlayMode) return;
-  const target = activeAmbush || monsters.find(m => Math.max(Math.abs(m.col - player.x), Math.abs(m.row - player.y)) <= 2);
-  if (!target) { showToast("No chore monster in range."); return; }
-  if (playerMp < 25) { showToast("Not enough MP. Log a real chore to recharge."); return; }
-  playerMp -= 25;
-  closeAmbush();
-  resolveCombat(target, { noDamage: true });
+function heroTurn(b) {
+  const name = hero.name;
+  if (playerHp < 0.3 * b.st.maxHp && potions.health > 0) {
+    potions.health--;
+    const heal = Math.min(b.st.maxHp - playerHp, 50 + 5 * (playerLevel - 1));
+    playerHp += heal;
+    b.potionsUsed = (b.potionsUsed || 0) + 1;
+    battleSay(`${name} drank a Health Potion!`, `Recovered ${heal} HP.`);
+    updateBattleHero();
+    return;
+  }
+  let dmg, line, line2;
+  if (!b.usedSkill && playerMp >= 20) {
+    b.usedSkill = true;
+    playerMp -= 20;
+    dmg = battleDamage(b.st.atk, b.en.def, 1.5);
+    line = `${name} cast Surfactant Blast!`; line2 = "It's super effective!";
+  } else {
+    const crit = rng() < 0.1, weapon = WEAPON_BY_ID[hero.equip && hero.equip.weapon];
+    dmg = battleDamage(b.st.atk, b.en.def, crit ? 1.5 : 1);
+    line = `${name} used ${weapon ? weapon.name : "Mop Swing"}!`; line2 = crit ? "A critical hit!" : "";
+  }
+  b.en.hp = Math.max(0, b.en.hp - dmg);
+  battleAnim("b-hero-sprite", "b-lunge-r", 260);
+  setTimeout(() => { if (battle !== b) return; battleAnim("b-enemy-sprite", "b-hit", 720); setBattleBar("b-enemy-hp", b.en.hp, b.en.maxHp); }, 200 / battleSpeed);
+  battleSay(line, line2);
+  updateBattleHero();
+}
+
+function enemyTurn(b) {
+  const dmg = battleDamage(b.en.atk, b.st.def);
+  playerHp = Math.max(0, playerHp - dmg);
+  battleAnim("b-enemy-sprite", "b-lunge-l", 260);
+  setTimeout(() => { if (battle !== b) return; battleAnim("b-hero-sprite", "b-hit", 720); updateBattleHero(); }, 200 / battleSpeed);
+  battleSay(`${b.en.name} used ${b.en.move}!`, `${hero.name} took ${dmg} damage.`);
+}
+
+function battleEnd(won) {
+  if (!battle) return;
+  const b = battle, m = b.monster;
+  if (won) {
+    document.getElementById("b-enemy-sprite").className = "b-faint";
+    const loot = rng() < 0.3 ? "Health Potion" : "";
+    if (loot) potions.health++;
+    b.result = "win";
+    battleSay(`${b.en.name} fainted!`, `Won ${m.xpReward} XP and ${m.goldReward} Gold!${loot ? " Found a " + loot + "!" : ""}`);
+  } else {
+    document.getElementById("b-hero-sprite").className = "b-faint";
+    const lost = Math.min(playerGold, Math.max(5, Math.round(playerGold * 0.1)));
+    b.result = "faint"; b.lost = lost;
+    battleSay(`${hero.name} fainted!`, `Dropped ${lost} Gold... Do a chore to heal up!`);
+  }
+  battleWait(2200, () => {
+    if (battle !== b) return;
+    closeAmbush();
+    lastBattle = { result: b.result, potionsUsed: b.potionsUsed || 0, lost: b.lost || 0, monster: m.name };
+    if (b.result === "win") resolveCombat(m);
+    else {
+      playerGold -= b.lost;
+      playerHp = b.st.maxHp;
+      ambushSuppressed.add(m.type);
+      player.x = prevPos.x; player.y = prevPos.y;
+      showToast(`${hero.name} fainted and woke up healed. Do a chore to heal up!`, 3000);
+      updateHUD(); updateGameHUD(); saveGameData(); drawRoom();
+    }
+  });
+}
+let lastBattle = null;
+
+function toggleBattleSpeed() {
+  battleSpeed = battleSpeed > 1 ? 1 : 2;
+  const btn = document.getElementById("battle-speed");
+  btn.textContent = `Speed ${battleSpeed}x`;
+  btn.classList.toggle("on", battleSpeed > 1);
 }
 
 // ---- LEVEL CLEAR ----
@@ -3355,11 +3525,17 @@ function updateHUD() {
   document.getElementById("hud-chores").textContent = chores.length;
   document.getElementById("hud-xp").style.width = Math.min(100, playerXp) + "%";
   document.getElementById("hud-xp-max").textContent = `${playerXp}/100`;
-  document.getElementById("hud-hp").style.width = playerHp + "%";
-  document.getElementById("hud-mp").style.width = playerMp + "%";
-  document.getElementById("mp-text").textContent = `${playerMp}/100`;
+  const st = heroStats();
+  document.getElementById("hud-hp").style.width = (100 * playerHp / st.maxHp) + "%";
+  document.getElementById("hud-mp").style.width = (100 * playerMp / st.maxMp) + "%";
+  document.getElementById("mp-text").textContent = `${playerMp}/${st.maxMp}`;
   document.getElementById("hud-class").textContent = playerClass;
-  document.getElementById("hp-text").textContent = `${playerHp}/100`;
+  document.getElementById("hp-text").textContent = `${playerHp}/${st.maxHp}`;
+  document.getElementById("hud-atk").textContent = st.atk;
+  document.getElementById("hud-def").textContent = st.def;
+  document.getElementById("hud-spd").textContent = st.spd;
+  document.getElementById("hud-potions").textContent = `${potions.health}+${potions.mana}`;
+  renderInventory();
   document.getElementById("level-display").textContent = playerLevel;
   document.getElementById("level-label-text").textContent = playerLevel;
   // floor-display contains the subfloor span, so only update the span (setting its textContent removed the span)
@@ -3372,9 +3548,12 @@ function updateGameHUD() {
   document.getElementById("game-gold").textContent = playerGold;
   document.getElementById("game-xp").textContent = playerXp;
   document.getElementById("game-level").textContent = playerLevel;
-  document.getElementById("game-hp").textContent = `${playerHp}/100`;
-  document.getElementById("game-hp-fill").style.width = playerHp + "%";
-  document.getElementById("game-mp-fill").style.width = playerMp + "%";
+  const st = heroStats();
+  document.getElementById("game-hp").textContent = `${playerHp}/${st.maxHp}`;
+  document.getElementById("game-hp-fill").style.width = (100 * playerHp / st.maxHp) + "%";
+  document.getElementById("game-mp-fill").style.width = (100 * playerMp / st.maxMp) + "%";
+  document.getElementById("game-stats").textContent = `${st.atk}/${st.def}/${st.spd}`;
+  document.getElementById("game-potions").textContent = `${potions.health}+${potions.mana}`;
 }
 
 // ---- BUILDING MODE (TILE EDITOR) ----
@@ -3507,11 +3686,14 @@ function completeChore(type, customText) {
   chores.unshift({ time, type, label: type === "Custom" ? text : (chore ? `${type}: ${chore.chore}` : type), gold, xp, timed });
   chores = chores.slice(0, 30);
 
-  playerHp = Math.min(100, playerHp + 20);
-  playerMp = Math.min(100, playerMp + 25);
+  const stats = heroStats();
+  playerHp = Math.min(stats.maxHp, playerHp + 20);
+  playerMp = Math.min(stats.maxMp, playerMp + 25);
   addRewards(gold, xp);
+  const loot = rollChoreLoot();
   renderChoreLog();
   showToast(`Real chore logged: +${gold} Gold, +${xp} XP`);
+  showLoot(gold, xp, loot);
 
   if (isPlayMode && chore) {
     const monster = monsters.find(m => m.type === key);
@@ -3526,6 +3708,51 @@ function completeChore(type, customText) {
   updateGameHUD();
   saveGameData();
   return true;
+}
+
+// Chore loot table: Health Potion 45%, Mana Potion 30%, bonus gold 15% (+10-25), and a 5% chance of a free shop
+// weapon or shield the hero doesn't own yet (price up to 60 + 40 per level)
+const POTION_ICONS = { health: ["R", 55, 11], mana: ["R", 54, 12] };
+function rollChoreLoot() {
+  const loot = [];
+  if (rng() < 0.45) { potions.health++; loot.push({ icon: POTION_ICONS.health, text: "Health Potion" }); }
+  if (rng() < 0.30) { potions.mana++; loot.push({ icon: POTION_ICONS.mana, text: "Mana Potion" }); }
+  if (rng() < 0.15) { const g = 10 + Math.floor(rng() * 16); addRewards(g, 0); loot.push({ icon: ["R", 45, 10], text: `Bonus ${g} Gold` }); }
+  if (rng() < 0.05) {
+    const pool = WEAPONS.filter(w => !hero.owned.includes(w.id) && w.price <= 60 + 40 * playerLevel);
+    const w = pool[Math.floor(rng() * pool.length)];
+    if (w) { hero.owned.push(w.id); persistHero(); loot.push({ icon: w.kind === "shield" ? ["C", 34, 0] : ["C", 44, 6], text: `${w.name} (free!)`, rare: true }); }
+  }
+  return loot;
+}
+
+let lootTimer = null;
+function showLoot(gold, xp, items) {
+  const list = document.getElementById("loot-list");
+  const row = (icon, text, rare) => { const r = document.createElement("div"); r.className = "loot-row" + (rare ? " rare" : ""); r.append(spriteSpan(icon, 2), text); return r; };
+  list.replaceChildren(row(["R", 45, 10], `+${gold} Gold`), row(["R", 44, 15], `+${xp} XP`), ...items.map(i => row(i.icon, i.text, i.rare)));
+  document.getElementById("loot-popup").classList.add("open");
+  clearTimeout(lootTimer);
+  lootTimer = setTimeout(hideLoot, 3500);
+}
+function hideLoot() { document.getElementById("loot-popup").classList.remove("open"); }
+
+// ---- INVENTORY (builder sidebar) ----
+function renderInventory() {
+  const grid = document.querySelector(".inv-grid");
+  if (!grid) return;
+  const slot = (icon, label, count) => { const d = document.createElement("div"); d.className = "inv-slot";
+    d.append(icon ? spriteSpan(icon, 1) : "", Object.assign(document.createElement("div"), { className: "inv-label", textContent: label }));
+    if (count) d.append(Object.assign(document.createElement("div"), { className: "inv-count", textContent: count }));
+    return d; };
+  const items = [slot(POTION_ICONS.health, "Health Potion", potions.health), slot(POTION_ICONS.mana, "Mana Potion", potions.mana),
+    ...hero.owned.map(id => WEAPON_BY_ID[id]).filter(Boolean).map(w => slot(w.kind === "shield" ? ["C", 34, 0] : ["C", 44, 6], w.name))];
+  while (items.length < 9) items.push(slot(null, "Empty"));
+  grid.replaceChildren(...items.slice(0, 9));
+  const subs = document.querySelectorAll(".equip-row .equip-sub");
+  const w = WEAPON_BY_ID[hero.equip && hero.equip.weapon];
+  if (subs[0]) subs[0].textContent = w ? w.name : "Mop";
+  if (subs[1]) subs[1].textContent = `Health Potion ${potions.health}`;
 }
 
 // ---- PERSISTENCE ----
@@ -3549,6 +3776,7 @@ function saveGameData() {
     playerGold,
     playerXp,
     playerLevel,
+    potions,
     doors
   };
   try {
@@ -3582,6 +3810,7 @@ function loadGameData() {
       playerGold = data.playerGold || playerGold;
       playerXp = data.playerXp || playerXp;
       playerLevel = data.playerLevel || playerLevel;
+      potions = { health: 2, mana: 0, ...(data.potions && typeof data.potions === "object" ? data.potions : {}) }; // older saves start with 2 Health Potions
       doors = data.doors || doors;
       isPlayMode = data.isPlayMode || false;
       return true;
@@ -3610,6 +3839,7 @@ function newMap() {
   playerGold = 0;
   playerXp = 0;
   playerLevel = 1;
+  potions = { health: 2, mana: 0 };
   playerClass = "Rogue";
   currentRoom = { x: 0, y: 0 };
   currentRoomName = "Living Room";
@@ -3838,11 +4068,6 @@ function drawShopItem(ctx, w, box, scale) {
   ctx.drawImage(weaponSheet, sx, sy, sw, sh, bx + (bw - dw) / 2, by + bh - dh, dw, dh);
 }
 
-function gearBonus() {
-  const eq = hero && hero.equip ? hero.equip : {};
-  return Math.floor(((WEAPON_BY_ID[eq.weapon] || {}).power || 0) / 10 + ((WEAPON_BY_ID[eq.shield] || {}).power || 0) / 10);
-}
-
 function persistHero() {
   try { localStorage.setItem(HERO_KEY, JSON.stringify(hero)); } catch (e) { console.warn("Hero not saved:", e); }
 }
@@ -3955,10 +4180,8 @@ document.getElementById('edit-map-btn').addEventListener('click', enterEditMode)
 document.getElementById('play-map-btn').addEventListener('click', enterPlayMode);
 document.getElementById('chore-log-btn').addEventListener('click', openChoreLog);
 document.getElementById('toggle-edit').addEventListener('click', enterEditMode);
-document.getElementById('surfactant-btn').addEventListener('click', castSurfactantBlast);
-document.getElementById('ambush-fight').addEventListener('click', ambushFight);
-document.getElementById('ambush-run').addEventListener('click', ambushRun);
-document.getElementById('ambush-hide').addEventListener('click', ambushHide);
+document.getElementById('battle-speed').addEventListener('click', toggleBattleSpeed); // the only button mid-battle
+document.getElementById('loot-ok').addEventListener('click', hideLoot);
 document.getElementById('chore-log-close').addEventListener('click', closeChoreLog);
 document.getElementById('level-continue').addEventListener('click', hideLevelClear);
 document.getElementById('level-menu').addEventListener('click', () => showScreen('menu'));
@@ -4121,18 +4344,7 @@ roomCanvas.addEventListener("click", (e) => {
   if (cell) handleRoomClick(cell.col, cell.row);
 });
 
-// Optional keyboard: arrows / WASD step one tile
-const MOVE_KEYS = { arrowup: [0, -1], w: [0, -1], arrowdown: [0, 1], s: [0, 1], arrowleft: [-1, 0], a: [-1, 0], arrowright: [1, 0], d: [1, 0] };
-document.addEventListener("keydown", (e) => {
-  if (!isPlayMode) return;
-  if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
-  const dir = MOVE_KEYS[e.key.toLowerCase()];
-  if (dir) {
-    e.preventDefault();
-    stopWalking();
-    tryMove(dir[0], dir[1]);
-  }
-});
+// Movement is click-to-move only (no arrow keys / WASD); combat plays itself in the auto battle screen
 
 // ---- BUILD ----
 init();

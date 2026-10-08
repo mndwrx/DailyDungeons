@@ -19,7 +19,7 @@ const required = [
   'showScreen', 'loadAssetGrid', 'selectTile', 'paintTile', 'showToast',
   'completeChore', 'toggleChoreTimer', 'renderChoreLog', 'addRewards',
   'tryMove', 'findPath', 'handleRoomClick', 'isWalkable', 'triggerAt', 'spawnRandomMonsters',
-  'checkAmbush', 'triggerAmbush', 'ambushFight', 'ambushRun', 'ambushHide', 'resolveCombat', 'showLevelClear',
+  'checkAmbush', 'triggerAmbush', 'startBattle', 'battleStep', 'battleEnd', 'heroStats', 'rollChoreLoot', 'resolveCombat', 'showLevelClear',
   'drawMap', 'drawRoom', 'drawMinimap', 'drawLevelDisc', 'saveGameData', 'loadGameData', 'newMap'
 ];
 const missingFns = required.filter(fn => !new RegExp(`function\\s+${fn}\\s*\\(`).test(script));
@@ -34,7 +34,7 @@ missingIds.length ? fail('Script references missing ids: ' + missingIds.join(', 
 // 4. UI controls the loop needs
 const controls = ['new-map-btn', 'edit-map-btn', 'play-map-btn', 'builder-menu-btn', 'builder-palette-btn', 'builder-chores-btn',
   'builder-play-btn', 'browser-close', 'chore-type', 'chore-custom', 'chore-complete', 'chore-timer-btn', 'chore-log-list',
-  'ambush-fight', 'ambush-run', 'ambush-hide', 'level-continue', 'level-menu', 'menu-btn', 'chore-log-btn', 'toggle-edit', 'toast'];
+  'battle-speed', 'battle-text', 'loot-popup', 'level-continue', 'level-menu', 'menu-btn', 'chore-log-btn', 'toggle-edit', 'toast'];
 const missingCtl = controls.filter(id => !ids.has(id));
 missingCtl.length ? fail('Missing controls: ' + missingCtl.join(', ')) : pass(`${controls.length} loop controls present`);
 
