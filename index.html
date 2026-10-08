@@ -334,6 +334,11 @@
     border: 3px solid #3b3b4a;
     border-radius: 6px;
     cursor: crosshair;
+    touch-action: none; /* dragging paints instead of scrolling */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     max-width: 100%;
@@ -3159,15 +3164,79 @@ function canvasCell(canvas, e) {
   return (col >= 0 && col < GRID_SIZE && row >= 0 && row < GRID_SIZE) ? { col, row } : null;
 }
 
-// Builder: placing tiles is free
-mapCanvas.addEventListener("click", (e) => {
-  const cell = canvasCell(mapCanvas, e);
-  if (!cell || isPlayMode) return;
-  if (paintTile(cell.col, cell.row, selectedTileType)) {
+// Builder: placing tiles is free. Tap/click places one tile; press, hold and drag paints every cell passed over.
+// Pointer Events cover mouse, touch and pen. One save per stroke; redraws are batched to one per frame.
+let paintStroke = null;
+let paintFrame = 0;
+function rawCanvasCell(canvas, e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    col: Math.floor((e.clientX - rect.left - canvas.clientLeft) * (canvas.width / canvas.clientWidth) / TILE_SIZE),
+    row: Math.floor((e.clientY - rect.top - canvas.clientTop) * (canvas.height / canvas.clientHeight) / TILE_SIZE)
+  };
+}
+function strokePaintCell(col, row) {
+  if (col < 0 || row < 0 || col >= GRID_SIZE || row >= GRID_SIZE) return;
+  const key = col + "," + row;
+  if (paintStroke.done.has(key)) return; // never repaint a cell twice in one stroke
+  paintStroke.done.add(key);
+  if (paintTile(col, row, selectedTileType)) paintStroke.changed = true;
+}
+// Bresenham line so fast moves leave no gaps
+function strokePaintLine(from, to) {
+  let x = from.col, y = from.row;
+  const dx = Math.abs(to.col - x), dy = -Math.abs(to.row - y);
+  const sx = x < to.col ? 1 : -1, sy = y < to.row ? 1 : -1;
+  let err = dx + dy;
+  for (let guard = 0; guard < 4 * GRID_SIZE * GRID_SIZE; guard++) {
+    strokePaintCell(x, y);
+    if (x === to.col && y === to.row) break;
+    const e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x += sx; }
+    if (e2 <= dx) { err += dx; y += sy; }
+  }
+}
+function scheduleMapRedraw() {
+  if (paintFrame) return;
+  paintFrame = requestAnimationFrame(() => { paintFrame = 0; drawMap(); });
+}
+function endPaintStroke(e) {
+  if (!paintStroke || (e && e.pointerId !== paintStroke.id)) return;
+  const stroke = paintStroke;
+  paintStroke = null;
+  if (mapCanvas.hasPointerCapture && mapCanvas.hasPointerCapture(stroke.id)) mapCanvas.releasePointerCapture(stroke.id);
+  if (stroke.changed) {
+    if (paintFrame) { cancelAnimationFrame(paintFrame); paintFrame = 0; }
     drawMap();
     saveGameData();
   }
+}
+mapCanvas.addEventListener("pointerdown", (e) => {
+  if (isPlayMode || paintStroke) return;
+  if (e.pointerType === "mouse" && e.button !== 0) return; // right/middle click never paints
+  const cell = canvasCell(mapCanvas, e);
+  if (!cell) return;
+  e.preventDefault(); // no text selection / ghost drag image
+  try { mapCanvas.setPointerCapture(e.pointerId); } catch (err) {}
+  paintStroke = { id: e.pointerId, done: new Set(), last: cell, changed: false };
+  strokePaintCell(cell.col, cell.row);
+  if (paintStroke.changed) scheduleMapRedraw();
 });
+mapCanvas.addEventListener("pointermove", (e) => {
+  if (!paintStroke || e.pointerId !== paintStroke.id) return;
+  e.preventDefault();
+  const points = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+  for (const p of (points.length ? points : [e])) {
+    const cell = rawCanvasCell(mapCanvas, p);
+    if (cell.col === paintStroke.last.col && cell.row === paintStroke.last.row) continue;
+    strokePaintLine(paintStroke.last, cell);
+    paintStroke.last = cell;
+  }
+  if (paintStroke.changed) scheduleMapRedraw();
+});
+["pointerup", "pointercancel", "lostpointercapture", "pointerleave"].forEach(type => mapCanvas.addEventListener(type, endPaintStroke));
+mapCanvas.addEventListener("contextmenu", (e) => e.preventDefault());
+mapCanvas.addEventListener("dragstart", (e) => e.preventDefault());
 
 // Play: click anywhere in the house to walk there (BFS around walls/furniture)
 roomCanvas.addEventListener("click", (e) => {

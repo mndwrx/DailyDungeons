@@ -64,7 +64,14 @@ const sheetSrcs = [...script.matchAll(/src:\s*"(assets\/[^"]+\.png)"/g)].map(m =
 const missingSheets = sheetSrcs.filter(f => !fs.existsSync(f));
 sheetSrcs.length >= 3 && !missingSheets.length ? pass(`${sheetSrcs.length} sprite sheets exist (${sheetSrcs.join(', ')})`) : fail('Missing sprite sheets: ' + missingSheets.join(', '));
 
-// 7. Design rules: no Tile Tokens, no blocking alerts
+// 7. Builder drag painting uses Pointer Events (mouse, touch, pen)
+const dragBits = ['mapCanvas.addEventListener("pointerdown"', 'mapCanvas.addEventListener("pointermove"', 'setPointerCapture', 'pointercancel', 'function strokePaintLine'];
+const missingDrag = dragBits.filter(b => !script.includes(b));
+missingDrag.length ? fail('Drag painting missing: ' + missingDrag.join(', ')) : pass('Builder paints with Pointer Events (down/move/capture/cancel + line fill)');
+/mapCanvas\.addEventListener\("click"/.test(script) ? fail('Old click painter still attached (would double-paint)') : pass('No duplicate click painter on the builder canvas');
+/#map\s*\{[^}]*touch-action:\s*none/.test(html) ? pass('#map has touch-action: none') : fail('#map missing touch-action: none');
+
+// 8. Design rules: no Tile Tokens, no blocking alerts
 /token/i.test(html) ? fail('Tile Token references remain') : pass('No Tile Token references');
 /\balert\s*\(/.test(script) ? fail('alert() still used') : pass('No blocking alert() calls');
 
