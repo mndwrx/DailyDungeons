@@ -1559,23 +1559,99 @@
     color: var(--gold);
     min-width: 24px;
   }
+  /* ===== FANTASY SKIN: Kenney UI Pack RPG Expansion + Fantasy UI Borders (CSS only, no logic) ===== */
+  @font-face { font-family: "KenneyMini"; src: url("assets/Fonts/Kenney Mini Square.ttf") format("truetype"); font-display: swap; }
+  :root { --ink: #3b2614; --wood-text: #fbeed2; --fx-font: "KenneyMini", 'Courier New', monospace; }
+  body { background: #1d140c; }
+  canvas, .kenny-asset, .hero-arrow { image-rendering: pixelated; }
+  h1, h2, .panel-title, .loc-title, .floor-num, .room-name, .ks-value, .game-hud-stats .stat .value, .start-stats .stat .value { font-family: var(--fx-font); letter-spacing: 0.5px; }
+  /* buttons: Kenney RPG long buttons as 9-slice */
+  .start-btn, .game-hud-actions button, .ambush-box .ambush-actions button, .level-clear-box .actions button,
+  .chore-btn, .browser-tabs .tab, .panel-close, .browser-close, .hero-btn {
+    font-family: var(--fx-font); border-radius: 0; border-style: solid; border-width: 6px 8px 9px;
+    border-image: url("assets/PNG/buttonLong_brown.png") 12 14 16 14 fill / 6px 8px 9px;
+    background: transparent; color: var(--wood-text); text-shadow: 1px 1px 0 #2a1a0c; box-shadow: none;
+  }
+  .start-btn:active, .game-hud-actions button:active, .ambush-box .ambush-actions button:active, .level-clear-box .actions button:active,
+  .chore-btn:active, .browser-tabs .tab:active, .hero-btn:active { border-image-source: url("assets/PNG/buttonLong_brown_pressed.png"); }
+  .start-btn, .browser-tabs .tab.active, .builder-tool-btn.active, .hero-btn.primary {
+    border-image-source: url("assets/PNG/buttonLong_beige.png"); color: var(--ink); text-shadow: none;
+  }
+  .start-btn.secondary { border-image-source: url("assets/PNG/buttonLong_brown.png"); color: var(--wood-text); text-shadow: 1px 1px 0 #2a1a0c; }
+  .start-btn { border-width: 8px 12px 11px; border-image-width: 8px 12px 11px; padding: 8px 26px; min-width: 260px; }
+  /* wooden panels for HUDs + side panels (light text stays readable) */
+  .top-panel, .game-hud, #chore-log-panel, #asset-browser {
+    border-style: solid; border-width: 10px; border-image: url("assets/9-Slice/Ancient/brown.png") 16 fill / 10px;
+    background: #6e4b2c;
+  }
+  .asset-item, .chore-log-entry, .keystat, .game-hud-stats .stat { background: #3a2716; border-color: #8a6a3e; }
+  /* parchment scrolls for menus + dialogs (dark ink text) */
+  .scroll-card, .ambush-box, .level-clear-box, .hero-card {
+    border-style: solid; border-width: 14px; border-image: url("assets/9-Slice/Ancient/tan.png") 16 fill / 14px;
+    background: #d9c193; color: var(--ink); border-radius: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  }
+  .scroll-card { display: flex; flex-direction: column; align-items: center; padding: 18px 28px; }
+  #start-page { background: #1d140c radial-gradient(circle at 50% 40%, #3a2716 0%, #1d140c 70%); }
+  #start-page h1 { color: #6b2d0f; text-shadow: 1px 1px 0 #f3e2b8; margin: 0 0 4px; }
+  #start-page .subtitle, .ambush-box .ambush-text, .level-clear-box .sub, .level-clear-box .loot { color: var(--ink); }
+  .ambush-box .ambush-title, .level-clear-box .title { color: #8b1a1a; text-shadow: none; font-family: var(--fx-font); }
+  #toast { font-family: var(--fx-font); border: 8px solid; border-image: url("assets/9-Slice/Ancient/tan.png") 16 fill / 8px; background: #d9c193; color: var(--ink); }
+
+  /* ===== HERO BUILDER SCREEN ===== */
+  #hero-page { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center;
+    background: #1d140c radial-gradient(circle at 50% 40%, #3a2716 0%, #1d140c 70%); }
+  #hero-page.open { display: flex; }
+  .hero-card { display: flex; gap: 22px; padding: 18px 22px; max-width: 94vw; flex-wrap: wrap; justify-content: center; }
+  .hero-card h2 { margin: 0 0 8px; color: #6b2d0f; font-size: 22px; }
+  .hero-left { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  #hero-preview { width: 192px; height: 192px; background: #b99a68; border: 4px solid #6e4b2c; image-rendering: pixelated; }
+  .hero-left label { font-family: var(--fx-font); font-size: 14px; }
+  #hero-name { width: 192px; padding: 6px 8px; font: 16px var(--fx-font); color: var(--ink); background: #f3e2b8; border: 2px solid #6e4b2c; }
+  #hero-slots { display: grid; grid-template-columns: auto 30px 150px 30px; gap: 6px 8px; align-items: center; }
+  #hero-slots .slot-label { font-family: var(--fx-font); font-size: 15px; }
+  #hero-slots .slot-value { text-align: center; font-size: 13px; background: #f3e2b8; border: 2px solid #b99a68; padding: 4px 2px; white-space: nowrap; overflow: hidden; }
+  .hero-arrow { width: 30px; height: 30px; border: none; cursor: pointer; font-size: 0; background: center / 22px 22px no-repeat url("assets/PNG/arrowBrown_left.png"); }
+  .hero-arrow.next { background-image: url("assets/PNG/arrowBrown_right.png"); }
+  .hero-arrow:hover { filter: brightness(1.2); }
+  .hero-actions { display: flex; gap: 10px; margin-top: 6px; }
+  .hero-btn { padding: 6px 16px; font-size: 15px; cursor: pointer; }
 </style>
 </head>
 <body>
 
 <!-- ===== START PAGE ===== -->
 <div id="start-page">
+  <div class="scroll-card">
   <h1>🏰 DailyDungeons</h1>
   <div class="subtitle">Build your home. Make it a dungeon.</div>
   <button class="start-btn" id="new-map-btn">✨ New Map</button>
   <button class="start-btn secondary" id="edit-map-btn">🛠️ Edit Dungeon</button>
   <button class="start-btn secondary" id="asset-palette-toggle">🎨 Asset Palette</button>
+  <button class="start-btn secondary" id="hero-btn">🧙 Create Hero</button>
   <button class="start-btn" id="play-map-btn">▶️ Play</button>
+  </div>
   <div class="start-stats">
     <div class="stat"><span>Gold</span><div class="value" id="menu-gold">0</div></div>
     <div class="stat"><span>XP</span><div class="value" id="menu-xp">0</div></div>
     <div class="stat"><span>Level</span><div class="value" id="menu-level">1</div></div>
     <div class="stat"><span>Rooms</span><div class="value" id="menu-rooms">0</div></div>
+  </div>
+</div>
+
+<!-- ===== HERO BUILDER ===== -->
+<div id="hero-page">
+  <div class="hero-card">
+    <div class="hero-left">
+      <h2>Create Hero</h2>
+      <canvas id="hero-preview" width="192" height="192"></canvas>
+      <label for="hero-name">Name</label>
+      <input id="hero-name" maxlength="18" placeholder="Hero" autocomplete="off" />
+      <div class="hero-actions">
+        <button class="hero-btn primary" id="hero-save">💾 Save Hero</button>
+        <button class="hero-btn" id="hero-back">↩ Back</button>
+      </div>
+    </div>
+    <div id="hero-slots"></div>
   </div>
 </div>
 
@@ -1806,6 +1882,7 @@
       <button id="menu-btn">🏠 Menu</button>
       <button id="chore-log-btn">📋 Chores</button>
       <button id="toggle-edit">🛠️ Edit Dungeon</button>
+      <button id="hud-hero-btn">🧙 Hero</button>
       <button id="surfactant-btn">⚔️ Surfactant Blast</button>
     </div>
   </div>
@@ -1934,6 +2011,7 @@ function validRotGrid(grid) {
 
 function init() {
   loadKenneySprites();
+  loadHeroSheet();
   parseManifest();
   initMaps();
   if (!loadGameData()) seedStarterRoom();
@@ -2627,18 +2705,24 @@ function drawRoom() {
 
   // Player
   if (isPlayMode) {
-    const cls = playerClass;
-    const symbol = cls === "Warrior" ? "⚔️" : cls === "Rogue" ? "🥷" : "🧙";
-    roomCtx.fillStyle = "#f5c542";
-    roomCtx.font = `${TILE_SIZE - 12}px sans-serif`;
-    roomCtx.textAlign = "center";
-    roomCtx.textBaseline = "middle";
-    roomCtx.fillText(symbol, player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2 + 3);
-    roomCtx.strokeStyle = "rgba(245, 197, 66, 0.4)";
+    roomCtx.strokeStyle = "rgba(245, 197, 66, 0.4)"; // glow ring under the hero
     roomCtx.lineWidth = 3;
     roomCtx.beginPath();
     roomCtx.arc(player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 2 - 4, 0, Math.PI * 2);
     roomCtx.stroke();
+    if (heroSheet) {
+      // the player's own hero (layered from the Roguelike Characters sheet), pixel-crisp
+      roomCtx.imageSmoothingEnabled = false;
+      roomCtx.drawImage(heroCanvas, player.x * TILE_SIZE + 2, player.y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+    } else {
+      const cls = playerClass;
+      const symbol = cls === "Warrior" ? "⚔️" : cls === "Rogue" ? "🥷" : "🧙";
+      roomCtx.fillStyle = "#f5c542";
+      roomCtx.font = `${TILE_SIZE - 12}px sans-serif`;
+      roomCtx.textAlign = "center";
+      roomCtx.textBaseline = "middle";
+      roomCtx.fillText(symbol, player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2 + 3);
+    }
   }
   drawGrid(roomCtx, roomCanvas);
 }
@@ -2948,6 +3032,7 @@ function showScreen(name) {
   document.getElementById("start-page").classList.toggle("open", name === "menu");
   document.getElementById("app").style.display = name === "build" ? "" : "none";
   document.getElementById("gameplay-overlay").classList.toggle("open", name === "play");
+  document.getElementById("hero-page").classList.toggle("open", name === "hero");
   isPlayMode = name === "play";
   currentMode = name === "play" ? "play" : "building";
   if (name === "menu") {
@@ -2959,6 +3044,8 @@ function showScreen(name) {
     prepareCurrentRoom();
     updateGameHUD();
     drawRoom();
+  } else if (name === "hero") {
+    openHeroScreen();
   }
 }
 
@@ -3305,7 +3392,154 @@ function enterPlayMode() {
   showScreen("play");
 }
 
+// ---- HERO BUILDER ----
+// Kenney Roguelike Characters: 16px tiles, 1px gap (stride 17). Layers are stacked on a 16x16 canvas.
+const HERO_SHEET_SRC = "assets/Spritesheet/roguelikeChar_transparent.png";
+const HERO_KEY = "daily_dungeons_hero";
+const tileRange = (c0, c1, r0, r1) => { const out = []; for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) out.push([c, r]); return out; };
+const HAIR_COLORS = [["Brown", 19, 0], ["Ginger", 23, 0], ["Blonde", 19, 4], ["Black", 23, 4], ["White", 19, 8]];
+// [key, label, candidate tiles, can be empty]; draw order is bottom to top
+const HERO_SLOTS = [
+  ["body", "Body / Skin", tileRange(0, 1, 0, 3), false],
+  ["pants", "Pants", [0, 1, 2, 3, 5, 6, 7, 8].map(r => [3, r]), true],
+  ["shoes", "Shoes / Boots", [[4, 0], [4, 1], [4, 2], [4, 3], [4, 5], [4, 6], [4, 7], [4, 8], [3, 4], [4, 4], [3, 9], [4, 9]], true],
+  ["shirt", "Shirt / Armor", tileRange(6, 17, 0, 9), true],
+  ["hairStyle", "Hair Style", null, true],
+  ["hairColor", "Hair Color", null, false],
+  ["hat", "Hat / Helmet", tileRange(28, 31, 0, 8), true],
+  ["shield", "Shield", tileRange(33, 40, 0, 9), true],
+  ["weapon", "Weapon", tileRange(42, 53, 0, 9), true]
+];
+const DEFAULT_HERO = { name: "Hero", body: [0, 0], pants: [3, 1], shoes: [4, 1], shirt: [6, 4], hairStyle: 0, hairColor: 0, hat: null, shield: [34, 0], weapon: [44, 6] };
+let heroSheet = null;
+let heroOptions = {};
+let hero = loadHero();
+let heroDraft = null;
+let heroReturn = "menu";
+const heroCanvas = document.createElement("canvas");
+heroCanvas.width = heroCanvas.height = 16;
+
+function hairTile(h) {
+  if (h.hairStyle < 0) return null;
+  const [, gc, gr] = HAIR_COLORS[h.hairColor] || HAIR_COLORS[0];
+  return [gc + (h.hairStyle % 4), gr + Math.floor(h.hairStyle / 4)];
+}
+
+function loadHero() {
+  const h = { ...DEFAULT_HERO };
+  try {
+    const d = JSON.parse(localStorage.getItem(HERO_KEY) || "null");
+    if (d && typeof d === "object") {
+      if (typeof d.name === "string") h.name = d.name.slice(0, 18);
+      for (const [key] of HERO_SLOTS) {
+        const v = d[key];
+        if (key === "hairStyle" || key === "hairColor") { if (Number.isInteger(v)) h[key] = v; }
+        else if (v === null || (Array.isArray(v) && v.length === 2 && v.every(Number.isInteger))) h[key] = v;
+      }
+    }
+  } catch (e) { /* bad save: keep the default hero */ }
+  if (h.hairColor < 0 || h.hairColor >= HAIR_COLORS.length) h.hairColor = 0;
+  if (h.hairStyle < -1 || h.hairStyle > 15) h.hairStyle = 0;
+  if (!h.body) h.body = DEFAULT_HERO.body;
+  return h;
+}
+
+function loadHeroSheet() {
+  const img = new Image();
+  img.onload = () => {
+    heroSheet = img;
+    // keep only tiles that actually have pixels
+    const c = document.createElement("canvas"); c.width = img.width; c.height = img.height;
+    const x = c.getContext("2d"); x.drawImage(img, 0, 0);
+    const filled = ([col, row]) => { const d = x.getImageData(col * 17, row * 17, 16, 16).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return true; return false; };
+    for (const [key, , tiles, canBeEmpty] of HERO_SLOTS) {
+      if (key === "hairColor") heroOptions[key] = HAIR_COLORS.map((_, i) => i);
+      else if (key === "hairStyle") heroOptions[key] = [-1, ...Array.from({ length: 16 }, (_, i) => i).filter(i => filled(hairTile({ hairStyle: i, hairColor: 0 })))];
+      else heroOptions[key] = [...(canBeEmpty ? [null] : []), ...tiles.filter(filled)];
+    }
+    composeHero(hero, heroCanvas);
+    if (currentScreen === "play") drawRoom();
+    if (currentScreen === "hero") renderHeroScreen();
+  };
+  img.src = HERO_SHEET_SRC;
+}
+
+function composeHero(h, canvas) {
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!heroSheet) return;
+  const scale = canvas.width / 16;
+  for (const [key] of HERO_SLOTS) {
+    if (key === "hairColor") continue;
+    const t = key === "hairStyle" ? hairTile(h) : h[key];
+    if (t) ctx.drawImage(heroSheet, t[0] * 17, t[1] * 17, 16, 16, 0, 0, 16 * scale, 16 * scale);
+  }
+}
+
+function heroSlotIndex(key, h) {
+  const opts = heroOptions[key] || [];
+  const v = h[key];
+  return opts.findIndex(o => o === v || (Array.isArray(o) && Array.isArray(v) && o[0] === v[0] && o[1] === v[1]));
+}
+
+function cycleHeroSlot(key, dir) {
+  const opts = heroOptions[key];
+  if (!heroDraft || !opts || !opts.length) return;
+  const i = heroSlotIndex(key, heroDraft);
+  heroDraft[key] = opts[((i < 0 ? 0 : i + dir) % opts.length + opts.length) % opts.length];
+  renderHeroScreen();
+}
+
+function openHeroScreen() {
+  heroDraft = JSON.parse(JSON.stringify(hero));
+  document.getElementById("hero-name").value = heroDraft.name;
+  const slots = document.getElementById("hero-slots");
+  if (!slots.childElementCount) {
+    slots.innerHTML = HERO_SLOTS.map(([key, label]) =>
+      `<span class="slot-label">${label}</span>` +
+      `<button class="hero-arrow prev" data-slot="${key}" data-dir="-1" aria-label="Previous ${label}">◀</button>` +
+      `<span class="slot-value" id="hero-val-${key}"></span>` +
+      `<button class="hero-arrow next" data-slot="${key}" data-dir="1" aria-label="Next ${label}">▶</button>`).join("");
+    slots.addEventListener("click", e => { const b = e.target.closest(".hero-arrow"); if (b) cycleHeroSlot(b.dataset.slot, +b.dataset.dir); });
+  }
+  renderHeroScreen();
+}
+
+function renderHeroScreen() {
+  if (!heroDraft) return;
+  for (const [key] of HERO_SLOTS) {
+    const el = document.getElementById("hero-val-" + key);
+    if (!el) continue;
+    const opts = heroOptions[key] || [];
+    const i = heroSlotIndex(key, heroDraft);
+    const v = heroDraft[key];
+    el.textContent = key === "hairColor" ? HAIR_COLORS[v][0] : (v === null || v === -1) ? "None" : `${i + 1 - (opts[0] === null || opts[0] === -1 ? 1 : 0)} / ${opts.filter(o => o !== null && o !== -1).length || "?"}`;
+  }
+  const pv = document.getElementById("hero-preview");
+  composeHero(heroDraft, pv);
+}
+
+function saveHero() {
+  if (!heroDraft) return;
+  heroDraft.name = (document.getElementById("hero-name").value || "").trim().slice(0, 18) || "Hero";
+  hero = heroDraft;
+  try { localStorage.setItem(HERO_KEY, JSON.stringify(hero)); } catch (e) { console.warn("Hero not saved:", e); }
+  composeHero(hero, heroCanvas);
+  showToast(`🧙 ${hero.name} is ready!`);
+  showScreen(heroReturn);
+}
+
+function openHero(from) {
+  heroReturn = from === "play" ? "play" : "menu";
+  showScreen("hero");
+}
+
 // ---- BINDINGS ----
+document.getElementById('hero-btn').addEventListener('click', () => openHero('menu'));
+document.getElementById('hud-hero-btn').addEventListener('click', () => openHero('play'));
+document.getElementById('hero-save').addEventListener('click', saveHero);
+document.getElementById('hero-back').addEventListener('click', () => showScreen(heroReturn));
 document.getElementById('asset-palette-toggle').addEventListener('click', startBuilding);
 document.getElementById('menu-btn').addEventListener('click', () => showScreen('menu'));
 document.getElementById('builder-menu-btn').addEventListener('click', () => showScreen('menu'));
