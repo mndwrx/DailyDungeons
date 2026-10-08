@@ -1683,8 +1683,8 @@
   .shop-bar { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; }
   .shop-bar h2 { margin: 0; color: #f3e2b8; font-size: 20px; }
   #shop-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 10px; padding: 12px; border-style: solid; border-width: 14px; border-image: url("assets/9-Slice/Ancient/tan.png") 16 fill / 14px; background: #d9c193; }
-  .shop-card { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 4px; color: var(--ink); border: 8px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 8px; background: #e8d4a8; }
-  .shop-card.owned { border-image-source: url("assets/9-Slice/Ancient/brown_inlay.png"); color: var(--wood-text); background: #8a6a3e; }
+  .shop-card, .charm-card { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 4px; color: var(--ink); border: 8px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 8px; background: #e8d4a8; }
+  .shop-card.owned, .charm-card.owned { border-image-source: url("assets/9-Slice/Ancient/brown_inlay.png"); color: var(--wood-text); background: #8a6a3e; }
   .shop-art { width: 64px; height: 64px; background: url("assets/weapons/weapons_kenney16.png") no-repeat; background-size: 512px 320px; image-rendering: pixelated; }
   .shop-name { font: 12px var(--fx-font); text-align: center; min-height: 15px; }
   .shop-stat { font-size: 12px; white-space: nowrap; }
@@ -1832,6 +1832,14 @@
   .battle-text { position: relative; min-height: 96px; padding: 12px 16px; border: 10px solid; border-image: url("assets/9-Slice/Ancient/tan.png") 16 fill / 10px; background: #f3e2b8;
     font: 16px/1.5 var(--fx-font); color: var(--ink); }
   .battle-text p { margin: 0; white-space: pre-line; padding-right: 110px; }
+  #b-cmds { position: absolute; right: 8px; top: 8px; bottom: 8px; width: 50%; display: none; grid-template-columns: 1fr 1fr; gap: 4px; }
+  #ambush-overlay.boss-mode #b-cmds { display: grid; }
+  #ambush-overlay.boss-mode #battle-speed { display: none; }
+  #ambush-overlay.boss-mode #battle-text { width: 46%; }
+  #b-cmds .hero-btn { font-size: 12px; padding: 2px 6px; text-align: left; }
+  #b-cmds .hero-btn:disabled { opacity: .45; }
+  #shop-charms { display: grid; grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 10px; padding: 12px; margin-top: 8px; border: 14px solid; border-image: url("assets/9-Slice/Ancient/tan.png") 16 fill / 14px; }
+  .charm-card .ico { margin: 8px 0; }
   #battle-speed { position: absolute; right: 8px; bottom: 8px; font-size: 12px; padding: 4px 10px; }
   #battle-speed.on { border-image-source: url("assets/PNG/buttonLong_beige.png"); color: var(--ink); text-shadow: none; }
   .b-lunge-r { transform: translate(18%, -12%); } .b-lunge-l { transform: translate(-18%, 12%); }
@@ -1905,6 +1913,8 @@
     </div>
     <div class="shop-bar"><h2><i class="ico ico-sword"></i>Weapons &amp; Shields</h2><button class="hero-btn" id="shop-back"><i class="ico ico-prev"></i>Back</button></div>
     <div id="shop-cards"></div>
+    <div class="shop-bar"><h2><i class="ico ico-scroll"></i>Enchantments &amp; Talismans</h2></div>
+    <div id="shop-charms"></div>
   </div>
 </div>
 
@@ -2172,7 +2182,7 @@
         <div class="b-hp b-mp"><span>MP</span><div class="b-track"><div class="b-fill" id="b-hero-mp"></div></div></div>
         <div class="b-hpnum" id="b-hero-hpnum">100/100</div></div>
     </div>
-    <div class="battle-text"><p id="battle-text">A wild monster appeared!</p><button class="hero-btn" id="battle-speed">Speed 1x</button></div>
+    <div class="battle-text"><p id="battle-text">A wild monster appeared!</p><button class="hero-btn" id="battle-speed">Speed 1x</button><div id="b-cmds"></div></div>
   </div>
 </div>
 
@@ -3205,7 +3215,7 @@ function resolveCombat(monster) {
   addRewards(monster.goldReward, monster.xpReward);
   showToast(`${monster.name} defeated! +${monster.goldReward} Gold, +${monster.xpReward} XP`);
   updateGameHUD();
-  if (maze) { drawRoom(); saveGameData(); if (monster.boss) mazeVictory(monster); else if (rng() < 0.08) { const w = dropEpic(); if (w) showToast(`Epic drop: ${w.name}!`, 3000); } return; }
+  if (maze) { drawRoom(); saveGameData(); if (monster.boss) mazeVictory(monster); else { const r = rng(); if (r < 0.08) { const w = dropEpic(); if (w) showToast(`Epic drop: ${w.name}!`, 3000); } else if (r < 0.25) { const c = dropCharm(); if (c) showToast(`Found the ${c.name}!`, 3000); } } return; }
   saveGameData();
   drawRoom();
   if (monsters.length === 0) showLevelClear(roomRewards.xp, roomRewards.gold);
@@ -3239,7 +3249,7 @@ function triggerAmbush(monster) {
   stopWalking();
   activeAmbush = monster;
   placeSpawnMarker(monster.col, monster.row);
-  startBattle(monster);
+  if (monster.boss) startBossBattle(monster); else startBattle(monster);
 }
 
 function placeSpawnMarker(col, row) {
@@ -3261,7 +3271,7 @@ const monsterIcon = m => m && (m.icon || (CHORES[m.type] || {}).icon);
 function closeAmbush() {
   if (battle) clearTimeout(battle.timer);
   battle = null;
-  document.getElementById("ambush-overlay").classList.remove("open");
+  document.getElementById("ambush-overlay").classList.remove("open", "boss-mode");
   activeAmbush = null;
 }
 
@@ -3998,15 +4008,15 @@ setInterval(() => { if (currentScreen === "play") checkCurse(); else tickGrime()
 
 const elder = text => ({ speaker: SPEAKERS.elder, portrait: "elder", text });
 const BOSSES = {
-  trash_king: { name: "Trash King", icon: ["R", 38, 10], stats: [11, 10, 2, "Garbage Avalanche"], hp: 260,
+  trash_king: { name: "Trash King", icon: ["R", 38, 10], stats: [6, 14, 2, "Garbage Avalanche"], hp: 230,
     banish: [elder("A whole day without a single chore, Keeper..."), elder("The Trash King smells weakness. The floor gives way!")],
     intro: [{ speaker: "Trash King", portrait: ["R", 38, 10], text: "I AM THE TRASH KING! Your neglect built my throne!" }, elder("He is tanky. Raise your DEF and bring Health Potions!")],
     win: "The Trash King crumbles into rubbish! Back upstairs, Keeper." },
-  grime_hydra: { name: "Grime Hydra", icon: ["I", 17, 2], stats: [12, 5, 5, "Hydra Bite"], hp: 220,
+  grime_hydra: { name: "Grime Hydra", icon: ["I", 17, 2], stats: [5, 6, 5, "Hydra Bite"], hp: 330,
     banish: [elder("The grime has piled too high!"), elder("It feeds the Grime Hydra... and it drags you below!")],
     intro: [{ speaker: "Grime Hydra", portrait: ["I", 17, 2], text: "Cut one head and two more grow! Hssss!" }, elder("It grows a head every turn. Strike fast: burst ATK or fire enchantments!")],
     win: "The Hydra dissolves into suds. The house breathes again." },
-  dust_wraith: { name: "Dust Wraith", icon: ["R", 53, 16], stats: [9, 4, 14, "Dust Drain"], hp: 200,
+  dust_wraith: { name: "Dust Wraith", icon: ["R", 53, 16], stats: [6, 5, 12, "Dust Drain"], hp: 220,
     banish: [elder("Your streak is broken, Keeper..."), elder("From the dust of forgotten days rises the Wraith. Down you go!")],
     intro: [{ speaker: "Dust Wraith", portrait: ["R", 53, 16], text: "Ssso many dusty days... your magic is mine." }, elder("It dodges and drains MP. Bring SPD, talismans and Mana Potions!")],
     win: "The Dust Wraith scatters like a sneeze. Your streak lives on!" }
@@ -4082,6 +4092,124 @@ function toggleDescend() {
   const keys = Object.keys(BOSSES), boss = keys[Math.floor(Math.random() * keys.length)];
   showDialogue([elder("You dare the depths by choice? Epic steel and big gold wait below, Keeper.")], () => enterMaze(boss, false));
 }
+// ---- TURN-BASED BOSS BATTLES (Stage 3) ----
+// Bosses use the battle screen in "boss-mode": the player picks Attack / Skill / Item / Defend (click or keys 1-4).
+// Charms are owned (not equipped) and read by the boss fights. Tuned by simulation: a geared Lv5 hero wins with
+// Defend/skills/potions; spamming Attack loses (Trash King slams every 3rd turn, Hydra regrows heads, Wraith drains MP).
+const CHARMS = {
+  fire_enchant: { name: "Fire Enchant", price: 120, icon: ["I", 18, 6], desc: "Fire Slash burns hotter; Hydra heads can't regrow that turn" },
+  iron_talisman: { name: "Iron Talisman", price: 150, icon: ["C", 34, 0], desc: "+8 DEF against the Trash King" },
+  ward_talisman: { name: "Ward Talisman", price: 0, icon: ["R", 44, 15], desc: "Less Dust Wraith MP drain and dodge (dungeon drop)" }
+};
+const SHOP_CHARMS = ["fire_enchant", "iron_talisman"];
+const hasCharm = id => (hero.charms || []).includes(id);
+function dropCharm() {
+  const id = ["ward_talisman", "fire_enchant", "iron_talisman"].find(c => !hasCharm(c));
+  if (!id) return null;
+  hero.charms = [...(hero.charms || []), id]; persistHero();
+  return CHARMS[id];
+}
+function renderCharms() {
+  const el = document.getElementById("shop-charms");
+  el.innerHTML = SHOP_CHARMS.map(id => `<div class="charm-card${hasCharm(id) ? " owned" : ""}" data-charm="${id}"><div class="shop-name">${CHARMS[id].name}</div>
+    <div class="shop-stat">${CHARMS[id].desc}</div><button class="hero-btn shop-buy"${hasCharm(id) ? " disabled" : ""}>${hasCharm(id) ? "Owned" : `Buy ${CHARMS[id].price}g`}</button></div>`).join("");
+  for (const card of el.children) card.insertBefore(spriteSpan(CHARMS[card.dataset.charm].icon, 3), card.children[1]);
+}
+function buyCharm(id) {
+  const c = CHARMS[id];
+  if (!c || hasCharm(id)) return;
+  if (playerGold < c.price) return shopSay(`The ${c.name} costs ${c.price} gold. Do a few chores first!`);
+  playerGold -= c.price; hero.charms = [...(hero.charms || []), id]; persistHero();
+  shopSay(`The ${c.name}! The bosses below will fear it.`);
+  saveGameData(); updateGameHUD(); renderShop();
+}
+const SKILLS = [["power", "Power Strike", 15], ["fire", "Fire Slash", 12], ["wind", "Second Wind", 10]];
+function startBossBattle(m) {
+  startBattle(m);
+  clearTimeout(battle.timer);
+  battle.bs = { turn: 0, heads: 1, defend: false, burned: false };
+  document.getElementById("ambush-overlay").classList.add("boss-mode");
+  updateBossPlate(battle);
+  battleSay(`${battle.en.name} blocks the way!`, BOSSES[m.boss].intro[1].text); // the hint line, again, right before the fight
+  battleWait(1800, bossPrompt);
+}
+function updateBossPlate(b) { document.getElementById("b-enemy-name").textContent = b.en.name + (b.monster.boss === "grime_hydra" ? ` x${b.bs.heads}` : ""); }
+function bossStatus(b) {
+  if (b.monster.boss === "grime_hydra") return `The Hydra has ${b.bs.heads} head${b.bs.heads > 1 ? "s" : ""}.`;
+  if (b.monster.boss === "trash_king" && (b.bs.turn + 1) % 3 === 0) return "The Trash King raises his fists... a SLAM is coming!";
+  if (b.monster.boss === "dust_wraith") return "The Wraith flickers in and out of sight.";
+  return "";
+}
+function bossPrompt(menu = "main") {
+  if (!battle || !battle.bs) return;
+  const b = battle, it = [];
+  b.awaiting = true;
+  if (menu === "main") it.push(["Attack", () => bossAct("attack")], ["Skill", () => bossPrompt("skill")], ["Item", () => bossPrompt("item")], ["Defend", () => bossAct("defend")]);
+  if (menu === "skill") { for (const [k, n, c] of SKILLS) it.push([`${n} ${c}MP`, () => bossAct(k), playerMp < c]); it.push(["Back", () => bossPrompt()]); }
+  if (menu === "item") it.push([`HP Potion x${potions.health}`, () => bossAct("hpot"), !potions.health], [`MP Potion x${potions.mana}`, () => bossAct("mpot"), !potions.mana], ["Back", () => bossPrompt()]);
+  b.cmds = it; b.menu = menu;
+  document.getElementById("b-cmds").innerHTML = it.map(([t, , off], i) => `<button class="hero-btn" data-i="${i}"${off ? " disabled" : ""}>${i + 1} ${t}</button>`).join("");
+  if (menu === "main") battleSay(`What will ${hero.name} do?`, bossStatus(b));
+}
+function bossPick(i) { const c = battle && battle.awaiting && battle.cmds && battle.cmds[i]; if (c && !c[2]) c[1](); }
+function bossAct(kind) {
+  const b = battle;
+  if (!b || !b.awaiting) return;
+  const cost = (SKILLS.find(s => s[0] === kind) || [])[2] || 0;
+  if (playerMp < cost) return;
+  b.awaiting = false; document.getElementById("b-cmds").innerHTML = "";
+  playerMp -= cost; b.bs.burned = false; b.actions = (b.actions || []).concat(kind);
+  const name = hero.name, boss = b.monster.boss, fire = hasCharm("fire_enchant");
+  let line = "", line2 = "", mult = 0;
+  if (kind === "attack") { const w = WEAPON_BY_ID[hero.equip && hero.equip.weapon], crit = rng() < 0.1; mult = crit ? 1.5 : 1; line = `${name} used ${w ? w.name : "Mop Swing"}!`; line2 = crit ? "A critical hit!" : ""; }
+  if (kind === "power") { mult = 2; line = `${name} used Power Strike!`; if (boss === "grime_hydra" && b.bs.heads > 1) { b.bs.heads--; line2 = "A head is lopped off!"; } }
+  if (kind === "fire") {
+    mult = (fire ? 1.8 : 1.3) * (boss === "grime_hydra" ? 1.4 : 1); line = `${name} used Fire Slash!`;
+    if (boss === "grime_hydra") { b.bs.heads = Math.max(1, b.bs.heads - (fire ? 2 : 1)); b.bs.burned = fire; line2 = fire ? "The flames sear the stumps shut!" : "It burns a head away!"; }
+    else if (fire) line2 = "The enchantment blazes!";
+  }
+  if (kind === "wind") { const h = Math.min(b.st.maxHp - playerHp, Math.round(b.st.maxHp * 0.35)); playerHp += h; line = `${name} used Second Wind!`; line2 = `Recovered ${h} HP.`; }
+  if (kind === "hpot") { potions.health--; const h = Math.min(b.st.maxHp - playerHp, 50 + 5 * (playerLevel - 1)); playerHp += h; line = `${name} drank a Health Potion!`; line2 = `Recovered ${h} HP.`; }
+  if (kind === "mpot") { potions.mana--; const g = Math.min(b.st.maxMp - playerMp, 40); playerMp += g; line = `${name} drank a Mana Potion!`; line2 = `Recovered ${g} MP.`; }
+  if (kind === "defend") { b.bs.defend = true; playerMp = Math.min(b.st.maxMp, playerMp + 10); line = `${name} braces behind the shield!`; line2 = "Recovered 10 MP."; }
+  if (mult) {
+    const dodge = boss === "dust_wraith" ? Math.max(0.05, Math.min(0.6, 0.4 + (b.en.spd - b.st.spd) * 0.02 - (hasCharm("ward_talisman") ? 0.2 : 0))) : 0;
+    battleAnim("b-hero-sprite", "b-lunge-r", 260);
+    if (rng() < dodge) line2 = "The Dust Wraith dodged!";
+    else {
+      const dmg = battleDamage(b.st.atk, b.en.def, mult);
+      b.en.hp = Math.max(0, b.en.hp - dmg);
+      setTimeout(() => { if (battle !== b) return; battleAnim("b-enemy-sprite", "b-hit", 720); setBattleBar("b-enemy-hp", b.en.hp, b.en.maxHp); }, 200 / battleSpeed);
+      line2 = line2 || `It took ${dmg} damage.`;
+    }
+  }
+  battleSay(line, line2); updateBattleHero(); updateBossPlate(b);
+  if (b.en.hp <= 0) return battleWait(1300, () => battleEnd(true));
+  battleWait(1300, () => bossTurn(b));
+}
+function bossTurn(b) {
+  if (battle !== b) return;
+  const bs = b.bs, boss = b.monster.boss;
+  bs.turn++;
+  let mult = 1, atk = b.en.atk, line = `${b.en.name} used ${b.en.move}!`, extra = "";
+  if (boss === "trash_king" && bs.turn % 3 === 0) { mult = 2.8; line = "The Trash King used GARBAGE SLAM!"; }
+  if (boss === "grime_hydra") {
+    if (bs.turn % 2 === 0) { if (bs.burned) extra = "The seared stumps can't regrow!"; else { bs.heads++; extra = `It grew another head! (${bs.heads})`; } }
+    atk += 5 * (bs.heads - 1);
+  }
+  const def = b.st.def + (boss === "trash_king" && hasCharm("iron_talisman") ? 8 : 0);
+  let dmg = battleDamage(atk, def, mult);
+  if (bs.defend) { dmg = Math.round(dmg / 2); bs.defend = false; extra = (extra + " The block halved it!").trim(); }
+  playerHp = Math.max(0, playerHp - dmg);
+  if (boss === "dust_wraith") { const d = Math.min(playerMp, hasCharm("ward_talisman") ? 5 : 15); playerMp -= d; extra = `It drained ${d} MP!`; }
+  battleAnim("b-enemy-sprite", "b-lunge-l", 260);
+  setTimeout(() => { if (battle !== b) return; battleAnim("b-hero-sprite", "b-hit", 720); updateBattleHero(); }, 200 / battleSpeed);
+  battleSay(line, `${hero.name} took ${dmg} damage. ${extra}`.trim());
+  updateBossPlate(b);
+  if (playerHp <= 0) return battleWait(1300, () => battleEnd(false));
+  battleWait(1500, () => bossPrompt());
+}
+
 window.ddDebug = { // dev/test hooks
   missDay() { daily.lastDay = dayKey(-3); daily.streak = 1; saveDaily(); },
   breakStreak() { daily.lastDay = dayKey(-3); daily.streak = 5; saveDaily(); },
@@ -4174,6 +4302,7 @@ function loadHero() {
         else if (v === null || (Array.isArray(v) && v.length === 2 && v.every(Number.isInteger))) h[key] = v;
       }
       h.owned = Array.isArray(d.owned) ? d.owned.filter(id => typeof id === "string") : [];
+      if (Array.isArray(d.charms)) h.charms = d.charms.filter(id => typeof id === "string"); // Stage 3 charms (absent in old saves)
       const eq = d.equip && typeof d.equip === "object" ? d.equip : {};
       h.equip = { weapon: typeof eq.weapon === "string" && h.owned.includes(eq.weapon) ? eq.weapon : null,
                   shield: typeof eq.shield === "string" && h.owned.includes(eq.shield) ? eq.shield : null };
@@ -4397,6 +4526,7 @@ function renderShop() {
     b.textContent = !owned ? `Buy ${w.price}g` : on ? "Equipped" : "Equip";
     b.classList.toggle("primary", on);
   }
+  renderCharms();
   drawShopScene();
 }
 
@@ -4451,6 +4581,9 @@ document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListe
 document.getElementById('palette-search').addEventListener('input', loadAssetGrid);
 document.getElementById('new-map-btn').addEventListener('click', () => maybeIntro(newMap));
 document.getElementById('descend-btn').addEventListener('click', toggleDescend);
+document.getElementById('b-cmds').addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (b) bossPick(+b.dataset.i); });
+document.getElementById('shop-charms').addEventListener('click', (e) => { const b = e.target.closest('.shop-buy'); if (b) buyCharm(b.closest('.charm-card').dataset.charm); });
+document.addEventListener('keydown', (e) => { if (battle && battle.awaiting && /^[1-4]$/.test(e.key) && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) { e.preventDefault(); bossPick(+e.key - 1); } });
 document.getElementById('replay-intro').addEventListener('click', () => showDialogue(INTRO_LINES));
 document.getElementById('dialogue').addEventListener('click', (e) => { if (!dlg || (dlg.compact && !e.target.closest('.dlg-box'))) return; e.stopPropagation(); dialogueNext(); });
 document.addEventListener('keydown', (e) => {
