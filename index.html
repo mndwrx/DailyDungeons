@@ -1713,6 +1713,23 @@
   .ico-next { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -325px -486px; width: 22px; height: 21px; }
   .ico-down { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -325px -486px; width: 22px; height: 21px; transform: rotate(90deg); }
   .ico-close { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -370px -0px; width: 16px; height: 15px; }
+  /* ---- Zelda-style dialogue box (reusable: showDialogue(lines, cb, {compact})) ---- */
+  #dialogue { position: fixed; inset: 0; z-index: 9000; display: none; background: rgba(0,0,0,.28); }
+  #dialogue.open { display: block; }
+  #dialogue.compact { background: none; pointer-events: none; }
+  .dlg-box { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(780px, 94vw); min-height: 112px; display: flex; gap: 14px; align-items: flex-start; padding: 10px 14px 14px; box-sizing: border-box; background: #140d08; border: 12px solid; border-image: url("assets/9-Slice/Ancient/brown_inlay.png") 12 / 12px; box-shadow: 0 6px 24px rgba(0,0,0,.7); cursor: pointer; pointer-events: auto; user-select: none; }
+  #dialogue.compact .dlg-box { top: 10px; bottom: auto; width: min(560px, 92vw); min-height: 0; padding: 6px 10px 10px; }
+  #dlg-portrait { flex: none; width: 80px; height: 80px; background: #2a1a0c; border: 3px solid #d9b77a; box-shadow: inset 0 0 0 2px #000; image-rendering: pixelated; }
+  #dialogue.compact #dlg-portrait { width: 48px; height: 48px; }
+  .dlg-main { flex: 1; min-width: 0; }
+  #dlg-name { font-family: var(--fx-font); color: #ffd700; font-size: 14px; text-shadow: 1px 1px 0 #000; margin-bottom: 6px; letter-spacing: 1px; }
+  #dlg-text { color: #f3e6c8; font-size: 17px; line-height: 1.45; min-height: 3em; text-shadow: 1px 1px 0 #000; }
+  #dialogue.compact #dlg-text { font-size: 14px; min-height: 0; }
+  #dlg-arrow { position: absolute; right: 12px; bottom: 6px; width: 0; height: 0; border: 7px solid transparent; border-top: 9px solid #ffd700; border-bottom: 0; visibility: hidden; animation: dlg-blink .8s steps(2) infinite; }
+  #dlg-arrow.on { visibility: visible; }
+  @keyframes dlg-blink { 50% { opacity: 0; } }
+  #replay-intro { background: none; border: 0; color: #d9b77a; font: inherit; text-decoration: underline; cursor: pointer; padding: 0 0 0 6px; }
+  #shop-say { display: none; }
   .ico-check { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -370px -45px; width: 16px; height: 15px; }
   /* palette + map frames in the fantasy skin */
   .palette-search { border: 6px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 6px; background: #f3e2b8; color: var(--ink); border-radius: 0; font-family: var(--fx-font); }
@@ -1856,7 +1873,7 @@
     <div class="stat"><span>Rooms</span><div class="value" id="menu-rooms">0</div></div>
   </div>
   </div>
-  <div class="credits">Weapons: Quintino Pixels (itch.io), CC BY 4.0, restyled to 16px · UI, tiles &amp; characters: Kenney (kenney.nl), CC0</div>
+  <div class="credits">Weapons: Quintino Pixels (itch.io), CC BY 4.0, restyled to 16px · UI, tiles &amp; characters: Kenney (kenney.nl), CC0<button id="replay-intro">Replay intro</button></div>
 </div>
 
 <!-- ===== HERO BUILDER ===== -->
@@ -2149,6 +2166,7 @@
 </div>
 
 <!-- ===== CHORE LOOT POPUP ===== -->
+<div id="dialogue"><div class="dlg-box" id="dlg-box"><canvas id="dlg-portrait" width="80" height="80"></canvas><div class="dlg-main"><div id="dlg-name"></div><div id="dlg-text"></div></div><span id="dlg-arrow"></span></div></div>
 <div id="loot-popup"><div class="loot-box"><h2 class="loot-title">Loot!</h2><div class="loot-list" id="loot-list"></div><button class="hero-btn" id="loot-ok">Nice!</button></div></div>
 
 <!-- ===== TOAST ===== -->
@@ -3092,7 +3110,7 @@ function placeMoveIndicator(col, row) {
 }
 
 function handleRoomClick(col, row) {
-  if (!isPlayMode || activeAmbush) return;
+  if (!isPlayMode || activeAmbush || (dlg && !dlg.compact)) return;
   stopWalking();
   const path = findPath(col, row);
   if (!path) {
@@ -3629,6 +3647,7 @@ function toggleChoreTimer() {
   const display = document.getElementById('chore-timer-display');
   if (choreTimerStart === null) {
     choreTimerStart = Date.now();
+    questLine(document.getElementById('chore-type').value, 'start');
     lastTimedSeconds = 0;
     display.textContent = '00:00';
     btn.textContent = 'Stop Timer';
@@ -3699,6 +3718,7 @@ function completeChore(type, customText) {
   renderChoreLog();
   showToast(`Real chore logged: +${gold} Gold, +${xp} XP`);
   showLoot(gold, xp, loot);
+  questLine(type, 'done');
 
   if (isPlayMode && chore) {
     const monster = monsters.find(m => m.type === key);
@@ -3827,6 +3847,79 @@ function loadGameData() {
 }
 
 // ---- MAIN MENU FUNCTIONS ----
+// ---- DIALOGUE (reusable; later stages: boss intros, banishment, maze NPCs) ----
+// LORE: the house sits on a dungeon; the Trash King's Grime Curse turns neglected chores into monsters; the player is the Hearth Keeper.
+const ELDER = { body: [0, 0], pants: [3, 5], shoes: [4, 5], shirt: [14, 0], hairStyle: 3, hairColor: 4, hat: [30, 8], shield: null, weapon: [42, 0] };
+const PORTRAITS = { elder: () => ELDER, shopkeeper: () => SHOPKEEPER, hero: () => hero };
+const SPEAKERS = { elder: "Elder Wizard", shopkeeper: "Shopkeeper" };
+const INTRO_KEY = "dd_intro_seen";
+const INTRO_LINES = [
+  "Hearth Keeper! At last you wake.",
+  "This humble house sits atop an ancient dungeon.",
+  "The Trash King below has cast the Grime Curse: every neglected chore twists into a monster.",
+  "Dish Slimes in the sink. Laundry Hydras in the hamper. Mimics in the bin.",
+  "Your real-world chores are your power. Scrub, fold and sweep to hold the line!",
+  "But slack off, and you'll be banished to the depths below...",
+  "Now go. Every chore is an EPIC quest!"
+].map(text => ({ speaker: SPEAKERS.elder, portrait: "elder", text }));
+const QUEST_LINES = {
+  Dishes: { start: ["The Dish Slime festers in the sink. Scrub it clean, Keeper!", "Greasy plates stack like a goblin tower. Wash them down!", "The sink bubbles with foul magic. Show it your sponge!"],
+    done: ["The Dish Slime melts away! The sink gleams once more.", "Spotless! The Trash King's grip on the kitchen weakens.", "Clean plates, clear conscience. Well fought, Keeper!"] },
+  Laundry: { start: ["The Laundry Hydra stirs in the hamper. Every sock is a head!", "A mountain of tunics threatens the realm. Wash and fold!", "Beware the Sock Whip, Keeper. Tame that pile!"],
+    done: ["The Hydra is folded and put away. Glorious!", "Fresh tunics for all! The curse retreats.", "Not a single sock left behind. Legendary!"] },
+  Trash: { start: ["A Trash Mimic lurks by the bin. Haul it out before it bites!", "The Trash King's stench grows. Take out the garbage!", "Bag it, tie it, banish it to the curb!"],
+    done: ["The Mimic is banished to the curb! The air is sweet again.", "The Trash King howls from below. You struck him hard!", "Bin emptied. The Grime Curse loses its grip."] },
+  Custom: { start: ["A new quest appears. The grime will not clean itself!", "Steel yourself, Keeper. This chore will not wait."],
+    done: ["Quest complete! The house grows stronger.", "Another blow against the Grime Curse. Well done!"] }
+};
+let dlg = null;
+function showDialogue(lines, cb, opts = {}) {
+  if (dlg) { clearInterval(dlg.timer); clearTimeout(dlg.auto); }
+  dlg = { lines, i: -1, cb, compact: !!opts.compact, full: true };
+  const el = document.getElementById("dialogue");
+  el.classList.add("open"); el.classList.toggle("compact", dlg.compact);
+  if (!dlg.compact) { stopWalking(); if (document.activeElement) document.activeElement.blur(); }
+  dialogueNext();
+}
+function dialogueNext() {
+  if (!dlg) return;
+  const line = dlg.lines[dlg.i], textEl = document.getElementById("dlg-text");
+  if (!dlg.full) { clearInterval(dlg.timer); textEl.textContent = line.text; dlg.full = true; dialogueTyped(); return; } // skip typing
+  clearTimeout(dlg.auto);
+  if (++dlg.i >= dlg.lines.length) return closeDialogue();
+  const ln = dlg.lines[dlg.i];
+  document.getElementById("dlg-name").textContent = ln.speaker || "";
+  const pc = document.getElementById("dlg-portrait"), px = pc.getContext("2d"), k = document.createElement("canvas");
+  k.width = k.height = 16; px.imageSmoothingEnabled = false; px.clearRect(0, 0, pc.width, pc.height);
+  const who = PORTRAITS[ln.portrait]; if (who) { composeHero(who(), k); px.drawImage(k, 0, 0, 16, 16, 4, 4, 72, 72); }
+  document.getElementById("dlg-arrow").classList.remove("on");
+  textEl.textContent = ""; dlg.full = false; let n = 0;
+  dlg.timer = setInterval(() => { textEl.textContent = ln.text.slice(0, ++n); if (n >= ln.text.length) { clearInterval(dlg.timer); dlg.full = true; dialogueTyped(); } }, 28);
+}
+function dialogueTyped() {
+  document.getElementById("dlg-arrow").classList.add("on");
+  if (dlg.compact && dlg.i === dlg.lines.length - 1) { const d = dlg; dlg.auto = setTimeout(() => { if (dlg === d) closeDialogue(); }, 3500); }
+}
+function closeDialogue() {
+  if (!dlg) return;
+  clearInterval(dlg.timer); clearTimeout(dlg.auto);
+  document.getElementById("dialogue").classList.remove("open", "compact");
+  const cb = dlg.cb; dlg = null;
+  if (cb) cb();
+}
+function maybeIntro(next) {
+  let seen = false; try { seen = !!localStorage.getItem(INTRO_KEY); localStorage.setItem(INTRO_KEY, "1"); } catch (e) {}
+  if (seen) next(); else showDialogue(INTRO_LINES, next);
+}
+function questLine(type, phase) {
+  const set = (QUEST_LINES[type] || QUEST_LINES.Custom)[phase], text = set[Math.floor(Math.random() * set.length)];
+  showDialogue([{ speaker: SPEAKERS.elder, portrait: "elder", text }], null, { compact: true });
+}
+function shopSay(text) {
+  document.getElementById("shop-say").textContent = text;
+  showDialogue([{ speaker: SPEAKERS.shopkeeper, portrait: "shopkeeper", text }], null, { compact: true });
+}
+
 function newMap() {
   if (!confirm("Start a brand new dungeon?")) return;
   terrainMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
@@ -4083,7 +4176,7 @@ function buyWeapon(id) {
   if (!w || hero.owned.includes(id)) return false;
   if (playerGold < w.price) {
     showToast(`Not enough gold for the ${w.name} (${w.price}g). Do a chore!`);
-    document.getElementById("shop-say").textContent = `The ${w.name} costs ${w.price} gold. Come back after some chores!`;
+    shopSay(`The ${w.name} costs ${w.price} gold. Come back after some chores!`);
     return false;
   }
   playerGold -= w.price;
@@ -4091,7 +4184,7 @@ function buyWeapon(id) {
   persistHero();
   saveGameData();
   updateGameHUD();
-  document.getElementById("shop-say").textContent = `A fine choice! The ${w.name} is yours.`;
+  shopSay(`A fine choice! The ${w.name} is yours.`);
   showToast(`Bought ${w.name} for ${w.price} gold`);
   renderShop();
   return true;
@@ -4101,6 +4194,7 @@ function equipWeapon(id) {
   const w = WEAPON_BY_ID[id];
   if (!w || !hero.owned.includes(id)) return false;
   hero.equip[w.kind] = hero.equip[w.kind] === id ? null : id; // click again to put it away
+  if (currentScreen === "shop") shopSay(hero.equip[w.kind] ? `The ${w.name} suits you, Keeper. Wield it well!` : `The ${w.name} goes back on your belt.`);
   composeHero(hero, heroCanvas);
   persistHero();
   renderShop();
@@ -4157,7 +4251,7 @@ function drawShopScene() {
 }
 
 function openShop() {
-  document.getElementById("shop-say").textContent = `Welcome, ${hero.name}! Finest steel in the house.`;
+  shopSay(`Welcome, ${hero.name}! Finest steel in the house.`);
   showScreen("shop");
 }
 
@@ -4173,7 +4267,7 @@ document.getElementById('menu-btn').addEventListener('click', () => showScreen('
 document.getElementById('builder-menu-btn').addEventListener('click', () => showScreen('menu'));
 document.getElementById('builder-palette-btn').addEventListener('click', openAssetBrowser);
 document.getElementById('builder-chores-btn').addEventListener('click', openChoreLog);
-document.getElementById('builder-play-btn').addEventListener('click', enterPlayMode);
+document.getElementById('builder-play-btn').addEventListener('click', () => maybeIntro(enterPlayMode));
 document.getElementById('browser-close').addEventListener('click', closeAssetBrowser);
 document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListener('click', () => {
   document.querySelectorAll('.browser-tabs .tab').forEach(t => t.classList.remove('active'));
@@ -4181,7 +4275,13 @@ document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListe
   loadAssetGrid();
 }));
 document.getElementById('palette-search').addEventListener('input', loadAssetGrid);
-document.getElementById('new-map-btn').addEventListener('click', newMap);
+document.getElementById('new-map-btn').addEventListener('click', () => maybeIntro(newMap));
+document.getElementById('replay-intro').addEventListener('click', () => showDialogue(INTRO_LINES));
+document.getElementById('dialogue').addEventListener('click', (e) => { if (!dlg || (dlg.compact && !e.target.closest('.dlg-box'))) return; e.stopPropagation(); dialogueNext(); });
+document.addEventListener('keydown', (e) => {
+  if (!dlg || e.code !== 'Space' || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  e.preventDefault(); e.stopImmediatePropagation(); dialogueNext();
+}, true);
 document.getElementById('edit-map-btn').addEventListener('click', enterEditMode);
 document.getElementById('play-map-btn').addEventListener('click', enterPlayMode);
 document.getElementById('chore-log-btn').addEventListener('click', openChoreLog);
