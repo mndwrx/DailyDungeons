@@ -377,6 +377,23 @@
     transition: opacity 0.25s;
   }
   #toast.open { opacity: 1; }
+  /* "6 x 4" size label that follows the pointer while dragging a builder rectangle */
+  .rect-size-label {
+    position: fixed;
+    z-index: 1600;
+    display: none;
+    background: #16161e;
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 12px;
+    font-weight: 700;
+    pointer-events: none;
+    user-select: none;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.7);
+  }
+  .rect-size-label.open { display: block; }
 
   /* desktop builder layout: HUD + inventory in a left sidebar, map fills the rest */
   @media (min-width: 800px) {
@@ -1807,6 +1824,7 @@
 
 <!-- ===== TOAST ===== -->
 <div id="toast"></div>
+<div id="rect-size-label" class="rect-size-label"></div>
 
 <!-- ===== LEVEL CLEAR POPUP ===== -->
 <div id="level-clear">
@@ -3164,79 +3182,123 @@ function canvasCell(canvas, e) {
   return (col >= 0 && col < GRID_SIZE && row >= 0 && row < GRID_SIZE) ? { col, row } : null;
 }
 
-// Builder: placing tiles is free. Tap/click places one tile; press, hold and drag paints every cell passed over.
-// Pointer Events cover mouse, touch and pen. One save per stroke; redraws are batched to one per frame.
-let paintStroke = null;
-let paintFrame = 0;
-function rawCanvasCell(canvas, e) {
+// Builder: placing tiles is free. Skylines-style zoning: press on a cell to anchor, drag to stretch a rectangle
+// (live preview + "W x H" label), release to fill it in one go. A tap without moving places one tile.
+// Escape, right-click or pointercancel drops the rectangle without changing anything. Pointer Events = mouse, touch, pen.
+let rectDrag = null;
+let rectFrame = 0;
+function clampedCanvasCell(canvas, e) {
   const rect = canvas.getBoundingClientRect();
-  return {
-    col: Math.floor((e.clientX - rect.left - canvas.clientLeft) * (canvas.width / canvas.clientWidth) / TILE_SIZE),
-    row: Math.floor((e.clientY - rect.top - canvas.clientTop) * (canvas.height / canvas.clientHeight) / TILE_SIZE)
-  };
+  const col = Math.floor((e.clientX - rect.left - canvas.clientLeft) * (canvas.width / canvas.clientWidth) / TILE_SIZE);
+  const row = Math.floor((e.clientY - rect.top - canvas.clientTop) * (canvas.height / canvas.clientHeight) / TILE_SIZE);
+  return { col: Math.max(0, Math.min(GRID_SIZE - 1, col)), row: Math.max(0, Math.min(GRID_SIZE - 1, row)) };
 }
-function strokePaintCell(col, row) {
-  if (col < 0 || row < 0 || col >= GRID_SIZE || row >= GRID_SIZE) return;
-  const key = col + "," + row;
-  if (paintStroke.done.has(key)) return; // never repaint a cell twice in one stroke
-  paintStroke.done.add(key);
-  if (paintTile(col, row, selectedTileType)) paintStroke.changed = true;
+function rectBounds(drag) {
+  const c0 = Math.min(drag.anchor.col, drag.current.col), c1 = Math.max(drag.anchor.col, drag.current.col);
+  const r0 = Math.min(drag.anchor.row, drag.current.row), r1 = Math.max(drag.anchor.row, drag.current.row);
+  return { c0, c1, r0, r1, w: c1 - c0 + 1, h: r1 - r0 + 1 };
 }
-// Bresenham line so fast moves leave no gaps
-function strokePaintLine(from, to) {
-  let x = from.col, y = from.row;
-  const dx = Math.abs(to.col - x), dy = -Math.abs(to.row - y);
-  const sx = x < to.col ? 1 : -1, sy = y < to.row ? 1 : -1;
-  let err = dx + dy;
-  for (let guard = 0; guard < 4 * GRID_SIZE * GRID_SIZE; guard++) {
-    strokePaintCell(x, y);
-    if (x === to.col && y === to.row) break;
-    const e2 = 2 * err;
-    if (e2 >= dy) { err += dy; x += sx; }
-    if (e2 <= dx) { err += dx; y += sy; }
+// Live preview: the selected tile drawn semi-transparent over every cell, a gold tint and a clear outline
+function drawRectPreview() {
+  if (!rectDrag) return;
+  const b = rectBounds(rectDrag);
+  const def = TILE_DEFS[selectedTileType];
+  const erasing = !def || def.layer === "clear";
+  const ctx = mapCtx;
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  for (let col = b.c0; col <= b.c1; col++) {
+    for (let row = b.r0; row <= b.r1; row++) {
+      const x = col * TILE_SIZE, y = row * TILE_SIZE;
+      if (erasing) {
+        ctx.globalAlpha = 0.45; ctx.fillStyle = "#ef4444"; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        continue;
+      }
+      ctx.globalAlpha = 0.6;
+      if (def.layer === "terrain" && (COLOR_TERRAIN.includes(def.value) || !def.sheet)) {
+        ctx.fillStyle = TERRAIN_COLORS[def.value] || "#8b6b4a"; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+      } else if (!(def.sheet && drawSprite(ctx, def, col, row, def.layer === "terrain" ? 0 : 2))) {
+        const symbol = ENTITY_SYMBOLS[def.value] || def.emoji;
+        if (symbol) drawEmoji(ctx, symbol, col, row);
+      }
+      ctx.globalAlpha = 0.18; ctx.fillStyle = "#facc15"; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = erasing ? "#ef4444" : "#facc15";
+  ctx.strokeRect(b.c0 * TILE_SIZE + 1.5, b.r0 * TILE_SIZE + 1.5, b.w * TILE_SIZE - 3, b.h * TILE_SIZE - 3);
+  ctx.restore();
+}
+function updateRectLabel(e) {
+  const label = document.getElementById("rect-size-label");
+  if (!label) return;
+  if (!rectDrag) { label.classList.remove("open"); return; }
+  const b = rectBounds(rectDrag);
+  label.textContent = `${b.w} x ${b.h}`;
+  label.classList.add("open");
+  if (e) {
+    const x = Math.min(e.clientX + 16, innerWidth - label.offsetWidth - 4);
+    const y = Math.min(e.clientY + 16, innerHeight - label.offsetHeight - 4);
+    label.style.left = Math.max(4, x) + "px";
+    label.style.top = Math.max(4, y) + "px";
   }
 }
-function scheduleMapRedraw() {
-  if (paintFrame) return;
-  paintFrame = requestAnimationFrame(() => { paintFrame = 0; drawMap(); });
+function scheduleRectPreview() {
+  if (rectFrame) return;
+  rectFrame = requestAnimationFrame(() => { rectFrame = 0; drawMap(); drawRectPreview(); });
 }
-function endPaintStroke(e) {
-  if (!paintStroke || (e && e.pointerId !== paintStroke.id)) return;
-  const stroke = paintStroke;
-  paintStroke = null;
-  if (mapCanvas.hasPointerCapture && mapCanvas.hasPointerCapture(stroke.id)) mapCanvas.releasePointerCapture(stroke.id);
-  if (stroke.changed) {
-    if (paintFrame) { cancelAnimationFrame(paintFrame); paintFrame = 0; }
-    drawMap();
-    saveGameData();
+function finishRectDrag(commit) {
+  const drag = rectDrag;
+  if (!drag) return;
+  rectDrag = null;
+  if (rectFrame) { cancelAnimationFrame(rectFrame); rectFrame = 0; }
+  try { if (mapCanvas.hasPointerCapture(drag.id)) mapCanvas.releasePointerCapture(drag.id); } catch (err) {}
+  updateRectLabel();
+  let changed = false;
+  if (commit) {
+    const b = rectBounds(drag);
+    for (let col = b.c0; col <= b.c1; col++)
+      for (let row = b.r0; row <= b.r1; row++)
+        if (paintTile(col, row, selectedTileType)) changed = true; // same per-piece rules as a single click
   }
+  drawMap();
+  if (changed) saveGameData();
 }
+function cancelRectDrag() { finishRectDrag(false); }
 mapCanvas.addEventListener("pointerdown", (e) => {
-  if (isPlayMode || paintStroke) return;
+  if (rectDrag) { if (e.button !== 0) { e.preventDefault(); cancelRectDrag(); } return; } // right-click mid-drag cancels
+  if (isPlayMode) return;
   if (e.pointerType === "mouse" && e.button !== 0) return; // right/middle click never paints
   const cell = canvasCell(mapCanvas, e);
   if (!cell) return;
   e.preventDefault(); // no text selection / ghost drag image
   try { mapCanvas.setPointerCapture(e.pointerId); } catch (err) {}
-  paintStroke = { id: e.pointerId, done: new Set(), last: cell, changed: false };
-  strokePaintCell(cell.col, cell.row);
-  if (paintStroke.changed) scheduleMapRedraw();
+  rectDrag = { id: e.pointerId, anchor: cell, current: cell };
+  updateRectLabel(e);
+  scheduleRectPreview();
 });
 mapCanvas.addEventListener("pointermove", (e) => {
-  if (!paintStroke || e.pointerId !== paintStroke.id) return;
+  if (!rectDrag || e.pointerId !== rectDrag.id) return;
   e.preventDefault();
-  const points = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
-  for (const p of (points.length ? points : [e])) {
-    const cell = rawCanvasCell(mapCanvas, p);
-    if (cell.col === paintStroke.last.col && cell.row === paintStroke.last.row) continue;
-    strokePaintLine(paintStroke.last, cell);
-    paintStroke.last = cell;
+  if (e.pointerType === "mouse" && (e.buttons & 2)) { cancelRectDrag(); return; } // right button pressed while dragging
+  const cell = clampedCanvasCell(mapCanvas, e);
+  if (cell.col !== rectDrag.current.col || cell.row !== rectDrag.current.row) {
+    rectDrag.current = cell;
+    scheduleRectPreview();
   }
-  if (paintStroke.changed) scheduleMapRedraw();
+  updateRectLabel(e);
 });
-["pointerup", "pointercancel", "lostpointercapture", "pointerleave"].forEach(type => mapCanvas.addEventListener(type, endPaintStroke));
-mapCanvas.addEventListener("contextmenu", (e) => e.preventDefault());
+mapCanvas.addEventListener("pointerup", (e) => {
+  if (!rectDrag || e.pointerId !== rectDrag.id) return;
+  rectDrag.current = clampedCanvasCell(mapCanvas, e);
+  finishRectDrag(true);
+});
+mapCanvas.addEventListener("pointercancel", (e) => { if (rectDrag && e.pointerId === rectDrag.id) cancelRectDrag(); });
+mapCanvas.addEventListener("lostpointercapture", (e) => { if (rectDrag && e.pointerId === rectDrag.id) cancelRectDrag(); });
+mapCanvas.addEventListener("contextmenu", (e) => { e.preventDefault(); if (rectDrag) cancelRectDrag(); });
 mapCanvas.addEventListener("dragstart", (e) => e.preventDefault());
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && rectDrag) { e.preventDefault(); cancelRectDrag(); } });
 
 // Play: click anywhere in the house to walk there (BFS around walls/furniture)
 roomCanvas.addEventListener("click", (e) => {
