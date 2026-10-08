@@ -1868,6 +1868,8 @@ function initMaps() {
   entityMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
   terrainRot = blankRotGrid();
   entityRot = blankRotGrid();
+  overlayMap = blankRotGrid();
+  overlayRot = blankRotGrid();
 }
 
 function blankRotGrid() {
@@ -1875,20 +1877,47 @@ function blankRotGrid() {
 }
 
 // Old saves stored doors/windows (33-39) and trees/rocks (8, 9) on the terrain layer, which replaced the tile under them.
-// Move them to the entity layer: doors/windows over a wall, trees/rocks over the plain Floor.
-const LEGACY_TERRAIN_PIECES = { 8: 1, 9: 1, 33: 2, 34: 2, 35: 2, 36: 2, 37: 2, 38: 2, 39: 2 };
+// Move them to the entity layer. Pure layers: nothing is invented under them, the ground stays empty.
+const LEGACY_TERRAIN_PIECES = [8, 9, 33, 34, 35, 36, 37, 38, 39];
 function migrateLayers() {
   let moved = 0;
   for (let col = 0; col < GRID_SIZE; col++)
     for (let row = 0; row < GRID_SIZE; row++) {
       const t = terrainMap[col][row];
-      if (!(t in LEGACY_TERRAIN_PIECES)) continue;
+      if (!LEGACY_TERRAIN_PIECES.includes(t)) continue;
       if (!entityMap[col][row]) { entityMap[col][row] = t; entityRot[col][row] = terrainRot[col][row]; }
-      terrainMap[col][row] = entityMap[col][row] === t ? LEGACY_TERRAIN_PIECES[t] : DEFAULT_FLOOR;
+      terrainMap[col][row] = 0;
       terrainRot[col][row] = 0;
       moved++;
     }
   return moved;
+}
+
+// Hang-on decor (curtains, paintings, mirrors, clocks, chandelier) lives on the top "overlay" layer so it stacks over a
+// window/door/furniture. Old saves kept it on the entity layer: lift it up when the overlay cell is free.
+function migrateOverlay() {
+  let moved = 0;
+  for (let col = 0; col < GRID_SIZE; col++)
+    for (let row = 0; row < GRID_SIZE; row++) {
+      const e = entityMap[col][row];
+      if (!OVERLAY_DEFS[e] || overlayMap[col][row]) continue;
+      overlayMap[col][row] = e; overlayRot[col][row] = entityRot[col][row];
+      entityMap[col][row] = 0; entityRot[col][row] = 0;
+      moved++;
+    }
+  return moved;
+}
+
+// Old saves have no overlay layer: anything missing or malformed loads as an empty cell
+function validTileGrid(grid) {
+  const out = blankRotGrid();
+  if (!Array.isArray(grid)) return out;
+  for (let col = 0; col < GRID_SIZE; col++)
+    for (let row = 0; row < GRID_SIZE; row++) {
+      const v = grid[col] && grid[col][row];
+      out[col][row] = Number.isInteger(v) && v > 0 ? v : 0;
+    }
+  return out;
 }
 
 // Old saves have no rotation: anything missing or malformed loads as 0
@@ -1932,6 +1961,9 @@ let entityMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0)
 // Rotation per cell and per layer (quarter turns). Purely visual: blocking and triggers ignore it.
 let terrainRot = blankRotGrid();
 let entityRot = blankRotGrid();
+// Top layer: hang-on decor drawn over the entity (curtains over a window). Never blocks walking.
+let overlayMap = blankRotGrid();
+let overlayRot = blankRotGrid();
 let player = { x: 0, y: 0, roomX: 0, roomY: 0 };
 let playerHp = 100;
 let playerMp = 100;
@@ -2080,7 +2112,7 @@ const SHEETS = {
   rpg_sheet: { src: "assets/Spritesheet/roguelikeSheet_transparent.png", stride: 17, w: 968, h: 526 } // Roguelike RPG pack (yard, doors, windows, decor)
 };
 
-// Palette id -> real tile value. layer "terrain" writes terrainMap, "entity" writes entityMap.
+// Palette id -> real tile value. layer "terrain" writes terrainMap, "entity" writes entityMap, "overlay" writes overlayMap (top).
 // Original 14 entries keep their ids/values/triggers; categories now match the palette tabs.
 const TILE_DEFS = {
   floor:         { value: 1,  layer: "terrain", cat: "floors",   label: "Floor",          sheet: "rougelike", col: 24, row: 1 },
@@ -2101,12 +2133,12 @@ const TILE_DEFS = {
 };
 
 // ~90 hand-picked house pieces. Sheets: I = Roguelike Indoors ("rougelike"), R = Roguelike RPG ("rpg_sheet"), U = RPG Urban ("rpg_urban").
-// Flags: block (terrain that stops walking), walk (furniture you can walk over), wall (wall piece: survives a wall being painted under it),
-//        door (walkable even on a wall), base (color drawn under a transparent terrain sprite).
-// Every entity piece is layered over whatever terrain is already in the cell.
+// Flags: block (terrain that stops walking), walk (furniture you can walk over), wall (piece meant to hang on a wall),
+//        door (walkable even on a wall).
+// Pure layers: an entity piece draws over whatever terrain is in the cell (or the empty background); nothing is filled under it.
 function houseDefs() {
   const S = { I: "rougelike", R: "rpg_sheet", U: "rpg_urban" };
-  const T = "terrain", E = "entity";
+  const T = "terrain", E = "entity", O = "overlay"; // O = hang-on decor stacked over windows/doors/furniture
   const rows = [
     // id, value, layer, cat, label, sheet, col, row, flags
     ["oak_planks",       20, T, "floors",  "Oak Planks",          "R", 8, 3],
@@ -2145,9 +2177,9 @@ function houseDefs() {
     ["toilet",           54, E, "bath",    "Toilet",              null, 0, 0, { emoji: "🚽" }],
     ["bathtub",          55, E, "bath",    "Bathtub",             null, 0, 0, { emoji: "🛁" }],
     ["shower",           56, E, "bath",    "Shower",              null, 0, 0, { emoji: "🚿" }],
-    ["toilet_paper",     61, E, "bath",    "Toilet Paper",        null, 0, 0, { emoji: "🧻", walk: 1 }],
-    ["wall_mirror",      57, E, "bath",    "Wall Mirror",         "I", 22, 14, { wall: 1, walk: 1 }],
-    ["round_mirror",     58, E, "bath",    "Round Mirror",        "R", 24, 8, { wall: 1, walk: 1 }],
+    ["toilet_paper",     61, O, "bath",    "Toilet Paper",        null, 0, 0, { emoji: "🧻", walk: 1 }],
+    ["wall_mirror",      57, O, "bath",    "Wall Mirror",         "I", 22, 14, { wall: 1, walk: 1 }],
+    ["round_mirror",     58, O, "bath",    "Round Mirror",        "R", 24, 8, { wall: 1, walk: 1 }],
     ["vanity_cabinet",   59, E, "bath",    "Vanity Cabinet",      "I", 9, 12],
     ["bath_mat",         60, E, "bath",    "Bath Mat",            "I", 19, 14, { walk: 1 }],
 
@@ -2171,8 +2203,8 @@ function houseDefs() {
     ["full_bookshelf",   78, E, "living",  "Full Bookshelf",      "R", 43, 12],
     ["orange_rug",       79, E, "living",  "Orange Rug",          "I", 19, 13, { walk: 1 }],
     ["teal_rug",         80, E, "living",  "Teal Rug",            "I", 21, 16, { walk: 1 }],
-    ["candle_stand",     82, E, "living",  "Candle Stand",        "I", 19, 3],
-    ["potted_plant",     83, E, "living",  "Potted Plant",        "I", 16, 0],
+    ["candle_stand",     82, O, "living",  "Candle Stand",        "I", 19, 3],
+    ["potted_plant",     83, O, "living",  "Potted Plant",        "I", 16, 0],
     ["brick_fireplace",  84, E, "living",  "Brick Fireplace",     "R", 54, 8],
     ["stone_fireplace",  85, E, "living",  "Stone Fireplace",     "R", 54, 10],
     ["piano",            86, E, "living",  "Piano",               "I", 23, 8],
@@ -2201,16 +2233,16 @@ function houseDefs() {
     ["recycling_bin",   113, E, "yard",    "Recycling Bin",       "U", 9, 9],
     ["rain_barrel",     114, E, "yard",    "Rain Barrel",         "R", 23, 0],
 
-    ["chandelier",      117, E, "decor",   "Chandelier",          "I", 19, 0, { walk: 1 }],
-    ["candelabra",      119, E, "decor",   "Candelabra",          "I", 16, 7],
-    ["small_plant",     120, E, "decor",   "Small Plant",         "I", 17, 0],
-    ["landscape_art",   122, E, "decor",   "Landscape Painting",  "R", 29, 10, { wall: 1, walk: 1 }],
-    ["sunset_art",      123, E, "decor",   "Sunset Painting",     "R", 30, 10, { wall: 1, walk: 1 }],
-    ["photo_frames",    124, E, "decor",   "Photo Frames",        "I", 16, 12, { wall: 1, walk: 1 }],
-    ["curtains_orange", 125, E, "decor",   "Orange Curtains",     "R", 54, 0, { wall: 1, walk: 1 }],
-    ["curtains_teal",   126, E, "decor",   "Teal Curtains",       "R", 56, 0, { wall: 1, walk: 1 }],
-    ["teapot",          127, E, "decor",   "Teapot",              "R", 55, 15],
-    ["cuckoo_clock",    128, E, "decor",   "Cuckoo Clock",        "R", 26, 8, { wall: 1, walk: 1 }],
+    ["chandelier",      117, O, "decor",   "Chandelier",          "I", 19, 0, { walk: 1 }],
+    ["candelabra",      119, O, "decor",   "Candelabra",          "I", 16, 7],
+    ["small_plant",     120, O, "decor",   "Small Plant",         "I", 17, 0],
+    ["landscape_art",   122, O, "decor",   "Landscape Painting",  "R", 29, 10, { wall: 1, walk: 1 }],
+    ["sunset_art",      123, O, "decor",   "Sunset Painting",     "R", 30, 10, { wall: 1, walk: 1 }],
+    ["photo_frames",    124, O, "decor",   "Photo Frames",        "I", 16, 12, { wall: 1, walk: 1 }],
+    ["curtains_orange", 125, O, "decor",   "Orange Curtains",     "R", 54, 0, { wall: 1, walk: 1 }],
+    ["curtains_teal",   126, O, "decor",   "Teal Curtains",       "R", 56, 0, { wall: 1, walk: 1 }],
+    ["teapot",          127, O, "decor",   "Teapot",              "R", 55, 15],
+    ["cuckoo_clock",    128, O, "decor",   "Cuckoo Clock",        "R", 26, 8, { wall: 1, walk: 1 }],
     ["produce_crate",   130, E, "decor",   "Produce Crate",       "R", 14, 7]
   ];
   const out = {};
@@ -2218,16 +2250,17 @@ function houseDefs() {
     out[id] = { value, layer, cat, label, ...(sheet ? { sheet: S[sheet], col, row } : {}),
       ...(flags.emoji ? { emoji: flags.emoji } : {}),
       ...(flags.block ? { block: true } : {}), ...(flags.walk ? { walk: true } : {}),
-      ...(flags.wall ? { wall: true } : {}), ...(flags.door ? { door: true } : {}), ...(flags.base ? { base: flags.base } : {}) };
+      ...(flags.wall ? { wall: true } : {}), ...(flags.door ? { door: true } : {}) };
   }
   return out;
 }
 
 // value -> def lookups for rendering, walking and the minimap
-const TERRAIN_DEFS = {}, ENTITY_DEFS = {};
+const TERRAIN_DEFS = {}, ENTITY_DEFS = {}, OVERLAY_DEFS = {};
 for (const def of Object.values(TILE_DEFS)) {
   if (def.layer === "terrain") TERRAIN_DEFS[def.value] = def;
   if (def.layer === "entity") ENTITY_DEFS[def.value] = def;
+  if (def.layer === "overlay") OVERLAY_DEFS[def.value] = def;
 }
 
 // Tiles that wake a chore monster when the player steps onto / next to them.
@@ -2337,11 +2370,13 @@ function fillSwatch(el, def, scale) {
 }
 
 // ---- TILE PAINTING (free) ----
-const DEFAULT_FLOOR = 1; // plain "Floor" (same tile as the starter room) used only under pieces placed in an empty cell
+// Pure layers: a piece only ever changes its own layer. Terrain under an entity stays, an entity over new terrain stays,
+// an entity in an empty cell stays on the empty background. The eraser peels top-down: overlay, then entity, then terrain.
 function paintTile(col, row, tileId, rot = selectedRotation) {
   const def = TILE_DEFS[tileId];
   if (!def) return false;
   if (def.layer === "clear") {
+    if (overlayMap[col][row]) { overlayMap[col][row] = 0; overlayRot[col][row] = 0; return true; }
     if (entityMap[col][row]) { entityMap[col][row] = 0; entityRot[col][row] = 0; return true; }
     if (terrainMap[col][row]) { terrainMap[col][row] = 0; terrainRot[col][row] = 0; return true; }
     return false;
@@ -2350,15 +2385,17 @@ function paintTile(col, row, tileId, rot = selectedRotation) {
     if (terrainMap[col][row] === def.value && terrainRot[col][row] === rot) return false;
     terrainMap[col][row] = def.value;
     terrainRot[col][row] = rot;
-    const onTop = ENTITY_DEFS[entityMap[col][row]];
-    if (BLOCKING_TERRAIN.includes(def.value) && !(onTop && onTop.wall)) { entityMap[col][row] = 0; entityRot[col][row] = 0; } // walls replace furniture, doors/windows/wall decor stay
+    return true;
+  }
+  if (def.layer === "overlay") {
+    if (overlayMap[col][row] === def.value && overlayRot[col][row] === rot) return false;
+    overlayMap[col][row] = def.value;
+    overlayRot[col][row] = rot;
     return true;
   }
   if (entityMap[col][row] === def.value && entityRot[col][row] === rot) return false;
   entityMap[col][row] = def.value;
   entityRot[col][row] = rot;
-  // Pieces are layered over the existing tile (wall, floor, carpet, grass...). Only a truly empty cell gets the plain Floor.
-  if (!terrainMap[col][row]) { terrainMap[col][row] = DEFAULT_FLOOR; terrainRot[col][row] = 0; }
   return true;
 }
 
@@ -2402,7 +2439,9 @@ function addRoom(x, y, name) {
     terrain: terrainMap.map(row => [...row]),
     entity: entityMap.map(row => [...row]),
     terrainRot: terrainRot.map(row => [...row]),
-    entityRot: entityRot.map(row => [...row])
+    entityRot: entityRot.map(row => [...row]),
+    overlay: overlayMap.map(row => [...row]),
+    overlayRot: overlayRot.map(row => [...row])
   };
 }
 
@@ -2416,7 +2455,9 @@ function isWalkable(col, row) {
   const e = room.entity[col][row];
   const piece = ENTITY_DEFS[e];
   if (piece && piece.door) return true; // a door opens the wall it sits on
-  return !BLOCKING_TERRAIN.includes(room.terrain[col][row]) && (e === 0 || !!(piece && piece.walk));
+  const t = room.terrain[col][row];
+  if (!t) return !!(e && piece && piece.walk); // no ground: fully empty blocks, a lone piece follows its own rule (rugs walk, furniture blocks)
+  return !BLOCKING_TERRAIN.includes(t) && (e === 0 || !!(piece && piece.walk));
 }
 
 // Which chore monster (if any) a tile in the current room belongs to (tile coords, not room coords)
@@ -2487,10 +2528,10 @@ function drawEmoji(ctx, symbol, col, row, rot = 0) {
   ctx.restore();
 }
 
-function drawTiles(ctx, terrain, entity, tRot, eRot) {
+function drawTiles(ctx, terrain, entity, tRot, eRot, overlay, oRot) {
   const rotAt = (grid, col, row) => (grid && grid[col] && grid[col][row]) || 0;
   ctx.imageSmoothingEnabled = false;
-  // Terrain layer: original values keep their flat colors, new floors/walls/doors draw their sprite
+  // Terrain layer: original values keep their flat colors (they are the floor/wall itself), other floors/walls draw only their sprite
   for (let col = 0; col < GRID_SIZE; col++) {
     for (let row = 0; row < GRID_SIZE; row++) {
       const value = terrain[col][row];
@@ -2504,9 +2545,7 @@ function drawTiles(ctx, terrain, entity, tRot, eRot) {
         }
         continue;
       }
-      ctx.fillStyle = def.base || "#8b6b4a";
-      ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-      drawSprite(ctx, def, col, row, 0, rotAt(tRot, col, row));
+      drawSprite(ctx, def, col, row, 0, rotAt(tRot, col, row)); // no fill behind: transparent pixels show the background
     }
   }
   // Entity layer: Kenney sprite when loaded; monsters keep their colored inset + symbol; other emoji pieces draw the emoji
@@ -2530,6 +2569,18 @@ function drawTiles(ctx, terrain, entity, tRot, eRot) {
       if (symbol) drawEmoji(ctx, symbol, col, row, rot);
     }
   }
+  // Overlay layer (top): hang-on decor over whatever is below, no fill behind it
+  if (!overlay) return;
+  for (let col = 0; col < GRID_SIZE; col++) {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      const value = overlay[col] && overlay[col][row];
+      const def = value && OVERLAY_DEFS[value];
+      if (!def) continue;
+      const rot = rotAt(oRot, col, row);
+      if (def.sheet && drawSprite(ctx, def, col, row, 2, rot)) continue;
+      if (def.emoji) drawEmoji(ctx, def.emoji, col, row, rot);
+    }
+  }
 }
 
 function drawGrid(ctx, canvas) {
@@ -2549,7 +2600,7 @@ function drawGrid(ctx, canvas) {
 
 function drawMap() {
   mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-  drawTiles(mapCtx, terrainMap, entityMap, terrainRot, entityRot);
+  drawTiles(mapCtx, terrainMap, entityMap, terrainRot, entityRot, overlayMap, overlayRot);
   drawGrid(mapCtx, mapCanvas);
   drawMinimap();
 }
@@ -2558,7 +2609,7 @@ function drawRoom() {
   roomCtx.clearRect(0, 0, roomCanvas.width, roomCanvas.height);
   const room = currentRoomData();
   if (!room) return;
-  drawTiles(roomCtx, room.terrain, room.entity, room.terrainRot, room.entityRot);
+  drawTiles(roomCtx, room.terrain, room.entity, room.terrainRot, room.entityRot, room.overlay, room.overlayRot);
 
   // Lurking chore monsters: badge on their trigger tile
   for (const m of monsters) {
@@ -3160,6 +3211,8 @@ function saveGameData() {
     entityMap,
     terrainRot,
     entityRot,
+    overlayMap,
+    overlayRot,
     player,
     currentRoom,
     monsters,
@@ -3189,7 +3242,10 @@ function loadGameData() {
       entityMap = data.entityMap || entityMap;
       terrainRot = validRotGrid(data.terrainRot);
       entityRot = validRotGrid(data.entityRot);
+      overlayMap = validTileGrid(data.overlayMap);
+      overlayRot = validRotGrid(data.overlayRot);
       migrateLayers();
+      migrateOverlay();
       player = data.player || player;
       currentRoom = data.currentRoom || currentRoom;
       monsters = data.monsters || monsters;
@@ -3218,6 +3274,8 @@ function newMap() {
   entityMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
   terrainRot = blankRotGrid();
   entityRot = blankRotGrid();
+  overlayMap = blankRotGrid();
+  overlayRot = blankRotGrid();
   doors = [];
   monsters = [];
   activeRooms = {};
@@ -3328,7 +3386,8 @@ function drawRectPreview() {
       }
       ctx.globalAlpha = 0.6;
       if (def.layer === "terrain" && (COLOR_TERRAIN.includes(def.value) || !def.sheet)) {
-        ctx.fillStyle = TERRAIN_COLORS[def.value] || "#8b6b4a"; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        const color = TERRAIN_COLORS[def.value];
+        if (color && color !== "transparent") { ctx.fillStyle = color; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE); }
       } else if (!(def.sheet && drawSprite(ctx, def, col, row, def.layer === "terrain" ? 0 : 2, selectedRotation))) {
         const symbol = ENTITY_SYMBOLS[def.value] || def.emoji;
         if (symbol) drawEmoji(ctx, symbol, col, row, selectedRotation);

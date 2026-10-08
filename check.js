@@ -50,7 +50,7 @@ for (const key of ['dishes', 'laundry', 'trash']) {
 
 
 // 6. Palette: hand-picked house pieces, category tabs, search, all sheets exist
-const houseRows = [...script.matchAll(/^\s*\["(\w+)",\s*(\d+),\s*[TE],\s*"(\w+)",\s*"[^"]+",\s*(?:"([IRU])"|null)/gm)];
+const houseRows = [...script.matchAll(/^\s*\["(\w+)",\s*(\d+),\s*[TEO],\s*"(\w+)",\s*"[^"]+",\s*(?:"([IRU])"|null)/gm)];
 const tileVals = [...script.matchAll(/\b\w+:\s*\{\s*value:\s*(\d+),/g)].map(m => +m[1]).concat(houseRows.map(m => +m[2]));
 houseRows.length >= 90 ? pass(`${houseRows.length} house pieces in TILE_DEFS`) : fail(`only ${houseRows.length} house pieces`);
 new Set(tileVals).size === tileVals.length ? pass(`All ${tileVals.length} tile values unique`) : fail('Duplicate tile values');
@@ -82,7 +82,7 @@ missingRot.length ? fail('Rotation/eraser pieces missing: ' + missingRot.join(',
 ['builder-rotate-btn', 'builder-eraser-btn', 'builder-swatch'].every(id => ids.has(id)) ? pass('Toolbar has rotate button, eraser button and swatch') : fail('Toolbar rotate/eraser/swatch missing');
 /terrainRot = validRotGrid\(data\.terrainRot\)/.test(script) && /entityRot = validRotGrid\(data\.entityRot\)/.test(script) && /payload = \{[\s\S]*?terrainRot,[\s\S]*?entityRot,/.test(script)
   ? pass('Rotation saved and loaded (old saves default to 0)') : fail('Rotation not persisted');
-/drawTiles\(roomCtx, room\.terrain, room\.entity, room\.terrainRot, room\.entityRot\)/.test(script) && /drawTiles\(mapCtx, terrainMap, entityMap, terrainRot, entityRot\)/.test(script)
+/drawTiles\(roomCtx, room\.terrain, room\.entity, room\.terrainRot, room\.entityRot, room\.overlay, room\.overlayRot\)/.test(script) && /drawTiles\(mapCtx, terrainMap, entityMap, terrainRot, entityRot, overlayMap, overlayRot\)/.test(script)
   ? pass('Builder map and play room both draw rotations') : fail('Rotation not drawn in builder and play');
 /function isWalkable[^}]*Rot/.test(script) || /function triggerAt[^}]*Rot/.test(script) ? fail('Rotation leaks into gameplay rules') : pass('Blocking/triggers ignore rotation');
 
@@ -92,7 +92,20 @@ const layerRows = Object.fromEntries(houseRows.map(m => [m[1], m[0]]));
   ? pass('Doors and windows are on the entity layer') : fail('Doors/windows still on the terrain layer');
 /tree:\s*\{\s*value: 8,\s*layer: "entity"/.test(script) && /rock:\s*\{\s*value: 9,\s*layer: "entity"/.test(script) ? pass('Tree/rock keep values 8/9 on the entity layer') : fail('Tree/rock still replace the ground');
 /base: "#b45309"/.test(script) ? fail('Orange base color still drawn under pieces') : pass('No orange base color under doors');
-/if \(!terrainMap\[col\]\[row\]\) \{ terrainMap\[col\]\[row\] = DEFAULT_FLOOR/.test(script) ? pass('Default floor only goes into empty cells') : fail('Pieces still replace the tile under them');
+/DEFAULT_FLOOR/.test(script) ? fail('Pieces still get an automatic floor under them') : pass('Pure layers: no automatic floor under pieces');
+(() => { const m = script.match(/function paintTile[\s\S]*?\n\}/); const body = m ? m[0] : '';
+  const terr = body.match(/def\.layer === "terrain"\) \{[\s\S]*?return true;\s*\}/), ent = body.slice(body.lastIndexOf('return true;\n  }') + 1);
+  return m && terr && !/entityMap/.test(terr[0]) && !/terrainMap/.test(ent); })()
+  ? pass('Placing a piece only changes its own layer (terrain keeps the entity, entity keeps the terrain)') : fail('paintTile writes to the other layer');
+/ctx\.fillStyle = def\.base|"#8b6b4a"/.test(script) ? fail('Solid fallback color still drawn behind sprites') : pass('No solid fallback color behind sprites');
+/if \(!t\) return !!\(e && piece && piece\.walk\)/.test(script) ? pass('A lone piece on empty ground walks by its own rule') : fail('Walkability for pieces without ground missing');
+['curtains_orange', 'curtains_teal', 'landscape_art', 'sunset_art', 'photo_frames', 'cuckoo_clock', 'wall_mirror', 'round_mirror', 'chandelier', 'candle_stand', 'candelabra', 'potted_plant', 'small_plant', 'teapot', 'toilet_paper'].every(id => layerRows[id] && /,\s*O,/.test(layerRows[id]))
+  ? pass('Hang-on + tabletop decor (curtains, paintings, mirrors, clock, chandelier, candles, plants, teapot, toilet paper) is on the top overlay layer') : fail('Hang-on decor not on the overlay layer');
+/payload = \{[\s\S]*?overlayMap,[\s\S]*?overlayRot,/.test(script) && /overlayMap = validTileGrid\(data\.overlayMap\)/.test(script) && /migrateOverlay\(\);/.test(script)
+  ? pass('Overlay layer saved + loaded (old saves: empty overlay, decor lifted off the entity layer)') : fail('Overlay layer not persisted');
+/if \(overlayMap\[col\]\[row\]\) \{ overlayMap\[col\]\[row\] = 0[\s\S]*?if \(entityMap\[col\]\[row\]\) \{ entityMap[\s\S]*?if \(terrainMap\[col\]\[row\]\)/.test(script)
+  ? pass('Eraser peels top-down: overlay, entity, terrain') : fail('Eraser order wrong');
+/function isWalkable[^}]*overlay/.test(script) ? fail('Overlay affects walking') : pass('Overlay never blocks walking');
 /piece && piece\.door\) return true/.test(script) ? pass('Doors are walkable through walls') : fail('Doors not walkable');
 /function migrateLayers/.test(script) && /migrateLayers\(\);/.test(script) ? pass('Old saves migrate terrain doors/windows/trees to the entity layer') : fail('No legacy layer migration');
 
