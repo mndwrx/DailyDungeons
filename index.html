@@ -1726,6 +1726,58 @@
   .map-wrap, .game-play-area { background: #1d140c radial-gradient(circle at 50% 50%, #3a2716 0%, #1d140c 75%); }
   #map, .room-canvas { border: 10px solid; border-image: url("assets/9-Slice/Ancient/brown.png") 16 / 10px; border-radius: 0; }
   .move-indicator, .monster-spawn { line-height: 0; }
+
+  /* ===== FANTASY SKIN: remaining panels (builder sidebar lower half, chore log, bars, form fields, scrollbars, page bg) ===== */
+  body, .map-wrap, .game-play-area { /* dark wood planks instead of a flat fill */
+    background-color: #1d140c;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.1) 40%, rgba(0, 0, 0, 0.45)),
+      repeating-linear-gradient(0deg, #120b06 0 2px, transparent 2px 40px),
+      repeating-linear-gradient(90deg, rgba(255, 220, 160, 0.035) 0 1px, transparent 1px 7px, rgba(0, 0, 0, 0.06) 7px 9px, transparent 9px 23px),
+      linear-gradient(90deg, #2a1b0f, #24170c 50%, #2a1b0f);
+  }
+  #app > .top-panel, #app > .bottom-panel { border-right: 0; }
+  .bottom-panel { border-style: solid; border-width: 10px; border-image: url("assets/9-Slice/Ancient/brown.png") 16 fill / 10px; background: #6e4b2c; color: var(--wood-text); }
+  .inv-slot { border: 6px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 6px; background: #e8d3a3; border-radius: 0; color: var(--ink); }
+  .inv-slot .inv-label { color: var(--ink); font-family: var(--fx-font); }
+  .inv-slot .inv-count { background: #6e4b2c; color: var(--wood-text); border: 1px solid #3b2614; border-radius: 0; font-family: var(--fx-font); }
+  .equip-slot, .keystat { border: 6px solid; border-image: url("assets/9-Slice/Ancient/brown_inlay.png") 12 fill / 6px; background: #4a3019; border-radius: 0; }
+  .equip-slot .equip-label, .keystat .ks-label, .map-legend, .legend-item span, .minimap-title, .chore-form-group label, .chore-log-section-title, .vital-bar .bar-label, .level-label, .skill-label {
+    font-family: var(--fx-font); color: var(--wood-text); letter-spacing: 0.5px; }
+  .equip-slot .equip-sub { color: #f0c860; }
+  .minimap { border: 8px solid; border-image: url("assets/9-Slice/Ancient/brown.png") 16 fill / 8px; background: #2a1a0c; border-radius: 0; }
+  .level-disc { border: 6px solid; border-image: url("assets/9-Slice/Ancient/brown_inlay.png") 12 fill / 6px; background: #3a2716; border-radius: 0; }
+  .skill-btn { font-family: var(--fx-font); border-radius: 0; border-style: solid; border-width: 6px 8px 9px;
+    border-image: url("assets/PNG/buttonLong_brown.png") 12 14 16 14 fill / 6px 8px 9px; background: transparent; color: var(--wood-text); text-shadow: 1px 1px 0 #2a1a0c; }
+  .skill-btn { padding: 3px 2px; min-width: 0; }
+  .skill-row { min-width: 0; flex: 1; }
+  .skill-btn:hover { background: transparent; filter: brightness(1.1); }
+  .skill-btn:active { border-image-source: url("assets/PNG/buttonLong_brown_pressed.png"); }
+  /* HP / MP / XP bars: dark inset troughs with a 1px highlight, pixel-square ends */
+  .bar-track, .game-hud-bars .bar .track { background: #2a1a0c; border: 2px solid #3b2614; border-radius: 0; box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.6); min-height: 8px; }
+  .bar-fill, .game-hud-bars .bar .fill { border-radius: 0; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.25); }
+  .game-hud-bars .bar .label { font-family: var(--fx-font); color: var(--wood-text); }
+  /* form fields: parchment inlay, ink text, pixel arrow on selects */
+  .chore-form-group select, .chore-form-group input, #hero-name {
+    border: 6px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 6px; background-color: #f3e2b8; color: var(--ink);
+    border-radius: 0; font-family: var(--fx-font); font-size: 12px; padding: 4px 6px; }
+  .chore-form-group select { appearance: none; -webkit-appearance: none; padding-right: 26px; cursor: pointer; image-rendering: pixelated;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 4' shape-rendering='crispEdges'%3E%3Cpath fill='%233b2614' d='M0 0h7v1h-1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h-1z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 6px center; background-size: 14px 8px; }
+  .chore-form-group select option { background: #f3e2b8; color: var(--ink); }
+  .chore-form-group select:focus, .chore-form-group input:focus, #hero-name:focus { outline: 2px solid #f0c860; outline-offset: 1px; }
+  .chore-form-group input::placeholder, #hero-name::placeholder { color: #8a6a3e; }
+  .chore-log-entry { border: 6px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 6px; background: #e8d3a3; color: var(--ink); border-radius: 0; }
+  .chore-log-entry .log-time, .chore-log-entry .log-rewards, .log-empty { color: #6e4b2c; }
+  .chore-log-entry .log-chore { color: var(--ink); font-family: var(--fx-font); }
+  .log-empty { color: var(--wood-text); opacity: 0.8; font-family: var(--fx-font); }
+  .timer-display { font-family: var(--fx-font); color: #f0c860; text-shadow: 1px 1px 0 #2a1a0c; }
+  /* scrollbars: wood thumb in a dark trough */
+  * { scrollbar-width: thin; scrollbar-color: #a0703a #2a1a0c; }
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: #2a1a0c; border-left: 2px solid #3b2614; }
+  ::-webkit-scrollbar-thumb { background: #a0703a; border: 2px solid #3b2614; box-shadow: inset 2px 2px 0 #c89058, inset -2px -2px 0 #6e4b2c; }
+  ::-webkit-scrollbar-thumb:hover { background: #b07a3f; }
+  ::-webkit-scrollbar-corner { background: #2a1a0c; }
 </style>
 </head>
 <body>
