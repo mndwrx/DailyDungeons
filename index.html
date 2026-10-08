@@ -1630,7 +1630,7 @@
   #shop-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 10px; padding: 12px; border-style: solid; border-width: 14px; border-image: url("assets/9-Slice/Ancient/tan.png") 16 fill / 14px; background: #d9c193; }
   .shop-card { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 4px; color: var(--ink); border: 8px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 8px; background: #e8d4a8; }
   .shop-card.owned { border-image-source: url("assets/9-Slice/Ancient/brown_inlay.png"); color: var(--wood-text); background: #8a6a3e; }
-  .shop-art { width: 71px; height: 79px; background: url("assets/weapons/RPG_Weapons.png") no-repeat; image-rendering: pixelated; }
+  .shop-art { width: 64px; height: 64px; background: url("assets/weapons/weapons_kenney16.png") no-repeat; background-size: 512px 320px; image-rendering: pixelated; }
   .shop-name { font: 12px var(--fx-font); text-align: center; min-height: 15px; }
   .shop-stat { font-size: 12px; white-space: nowrap; }
   .shop-buy { font-size: 12px; padding: 3px 8px; cursor: pointer; }
@@ -1688,7 +1688,7 @@
   <button class="start-btn secondary" id="hero-btn"><i class="ico ico-helmet"></i>Create Hero</button>
   <button class="start-btn" id="play-map-btn"><i class="ico ico-next"></i>Play</button>
   </div>
-  <div class="credits">Weapons: Quintino Pixels (itch.io), CC BY 4.0 · UI, tiles &amp; characters: Kenney (kenney.nl), CC0</div>
+  <div class="credits">Weapons: Quintino Pixels (itch.io), CC BY 4.0, restyled to 16px · UI, tiles &amp; characters: Kenney (kenney.nl), CC0</div>
   <div class="start-stats">
     <div class="stat"><span>Gold</span><div class="value" id="menu-gold">0</div></div>
     <div class="stat"><span>XP</span><div class="value" id="menu-xp">0</div></div>
@@ -3624,9 +3624,9 @@ function openHero(from) {
 }
 
 // ---- WEAPON SHOP ----
-// Quintino Pixels "Free Pixel Art Fantasy Weapons" (CC BY 4.0): 8 x 5 grid measured from the card sheet,
-// cards at x = 30 + 75*col, y = 30 + 120*row (71 x 115); the art sits in the top ~90px of each card.
-const WEAPON_SHEET_SRC = "assets/weapons/RPG_Weapons.png";
+// Quintino Pixels "Free Pixel Art Fantasy Weapons" (CC BY 4.0), restyled to Kenney's 16px look by
+// restyled weapon sheet: 8 x 5 grid of 16px cells, same row/col as the original card sheet.
+const WEAPON_SHEET_SRC = "assets/weapons/weapons_kenney16.png";
 const WEAPON_ROWS = [
   [0, 0, "Straight Sword", 10], [0, 1, "Royal Blade", 35], [0, 2, "Greed's Edge", 60], [0, 3, "Spark Sword", 40],
   [0, 4, "Dagger", 20], [0, 5, "King Killer", 40], [0, 6, "Spider Stinger", 60], [0, 7, "Leecher", 90],
@@ -3642,7 +3642,7 @@ const WEAPON_ROWS = [
 const weaponPrice = power => Math.round((power * power / 30 + power * 1.5 + 10) / 5) * 5;
 const WEAPONS = WEAPON_ROWS.map(([row, col, name, power, kind = "weapon"]) => ({
   id: name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""), name, power, kind, row, col,
-  x: 30 + 75 * col, y: 30 + 120 * row, price: weaponPrice(power), bb: [30 + 75 * col, 30 + 120 * row, 71, 90] }));
+  x: 16 * col, y: 16 * row, price: weaponPrice(power), bb: [16 * col, 16 * row, 16, 16] }));
 const WEAPON_BY_ID = Object.fromEntries(WEAPONS.map(w => [w.id, w]));
 const SHOPKEEPER = { body: [0, 1], pants: [3, 0], shoes: [4, 0], shirt: [14, 4], hairStyle: 1, hairColor: 4, hat: [30, 8], shield: null, weapon: null };
 let weaponSheet = null;
@@ -3654,8 +3654,8 @@ function loadWeaponSheet() {
     const c = document.createElement("canvas"); c.width = img.width; c.height = img.height;
     const x = c.getContext("2d"); x.drawImage(img, 0, 0);
     for (const w of WEAPONS) { // tight box around the opaque pixels of each cell
-      const d = x.getImageData(w.x, w.y, 71, 90).data; let x0 = 71, y0 = 90, x1 = -1, y1 = -1;
-      for (let yy = 0; yy < 90; yy++) for (let xx = 0; xx < 71; xx++) if (d[(yy * 71 + xx) * 4 + 3] > 20) { x0 = Math.min(x0, xx); x1 = Math.max(x1, xx); y0 = Math.min(y0, yy); y1 = Math.max(y1, yy); }
+      const d = x.getImageData(w.x, w.y, 16, 16).data; let x0 = 16, y0 = 16, x1 = -1, y1 = -1;
+      for (let yy = 0; yy < 16; yy++) for (let xx = 0; xx < 16; xx++) if (d[(yy * 16 + xx) * 4 + 3] > 20) { x0 = Math.min(x0, xx); x1 = Math.max(x1, xx); y0 = Math.min(y0, yy); y1 = Math.max(y1, yy); }
       if (x1 >= 0) w.bb = [w.x + x0, w.y + y0, x1 - x0 + 1, y1 - y0 + 1];
     }
     composeHero(hero, heroCanvas);
@@ -3670,7 +3670,7 @@ function loadWeaponSheet() {
 function drawShopItem(ctx, w, box, scale) {
   if (!weaponSheet) return;
   const [bx, by, bw, bh] = box.map(v => v * scale), [sx, sy, sw, sh] = w.bb;
-  const k = Math.min(bw / sw, bh / sh), dw = sw * k, dh = sh * k;
+  const f = Math.min(bw / sw, bh / sh), k = f >= 1 ? Math.floor(f) : f, dw = sw * k, dh = sh * k; // whole-pixel scale when upscaling
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(weaponSheet, sx, sy, sw, sh, bx + (bw - dw) / 2, by + bh - dh, dw, dh);
 }
@@ -3718,7 +3718,7 @@ function renderShop() {
   const grid = document.getElementById("shop-cards");
   if (!grid.childElementCount) {
     grid.innerHTML = WEAPONS.map(w => `<div class="shop-card" data-weapon="${w.id}">
-      <div class="shop-art" style="background-position:-${w.x}px -${w.y}px"></div>
+      <div class="shop-art" style="background-position:-${w.x * 4}px -${w.y * 4}px"></div>
       <div class="shop-name">${w.name}</div>
       <div class="shop-stat"><i class="ico ico-${w.kind === "shield" ? "shield" : "sword"}"></i>+${w.power} · <i class="ico ico-gold"></i>${w.price}</div>
       <button class="hero-btn shop-buy"></button></div>`).join("");
@@ -3749,7 +3749,7 @@ function drawShopScene() {
   // rack boards + a few wares on the wall
   x.fillStyle = "#7a5230"; x.fillRect(12, 70, 92, 5); x.fillRect(216, 70, 92, 5);
   if (weaponSheet) [["royal_blade", 16], ["war_hammer", 46], ["elven_bow", 76], ["lion_guard", 220], ["wizard_s_staff", 250], ["great_axe", 280]].forEach(([id, wx]) => {
-    const w = WEAPON_BY_ID[id]; if (!w) return; const [sx, sy, sw, sh] = w.bb, k = Math.min(26 / sw, 52 / sh);
+    const w = WEAPON_BY_ID[id]; if (!w) return; const [sx, sy, sw, sh] = w.bb, k = Math.max(1, Math.floor(Math.min(28 / sw, 52 / sh)));
     x.drawImage(weaponSheet, sx, sy, sw, sh, wx + (26 - sw * k) / 2, 70 - sh * k, sw * k, sh * k); });
   // shopkeeper (character sheet, 16px scaled x5)
   if (heroSheet) { const k = document.createElement("canvas"); k.width = k.height = 16; composeHero(SHOPKEEPER, k); x.drawImage(k, 120, 32, 80, 80); }
@@ -3758,7 +3758,7 @@ function drawShopScene() {
   x.fillStyle = "#b07a3f"; x.fillRect(0, 100, 320, 7);
   x.fillStyle = "#5a3b22"; for (let px = 0; px < 320; px += 40) x.fillRect(px, 107, 2, 43);
   x.fillRect(0, 126, 320, 2);
-  if (weaponSheet) { const w = WEAPON_BY_ID.straight_sword, [sx, sy, sw, sh] = w.bb; x.save(); x.translate(232, 100); x.rotate(-Math.PI / 2); x.drawImage(weaponSheet, sx, sy, sw, sh, -4, 0, sw * 0.45, sh * 0.45); x.restore(); }
+  if (weaponSheet) { const w = WEAPON_BY_ID.straight_sword, [sx, sy, sw, sh] = w.bb; x.save(); x.translate(232, 100); x.rotate(-Math.PI / 2); x.drawImage(weaponSheet, sx, sy, sw, sh, -4, 0, sw * 2, sh * 2); x.restore(); }
   document.getElementById("shop-say").textContent = document.getElementById("shop-say").textContent || "Welcome!";
 }
 
