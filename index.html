@@ -1600,15 +1600,29 @@
   #start-page > .credits, #start-page > .start-stats { z-index: 1; text-shadow: 0 1px 0 #000, 0 0 4px #000; }
   #start-page.open { justify-content: flex-start; padding-top: clamp(10px, 4vh, 40px); } /* placeMenuCard() seats the card just above the heroes */
   #start-page > .scroll-card { zoom: 0.78; }
-  #start-page > .start-stats { margin-top: 8px; }
+  /* title v2: crest + coin heap (canvases drawn at whole-pixel scale by drawTitleArt), stats inside the card */
+  #start-page h1 { display: flex; align-items: center; gap: 8px; position: relative; z-index: 3; /* title text in front of the coin heap */
+    text-shadow: -1px 0 #f3e2b8, 1px 0 #f3e2b8, 0 -1px #f3e2b8, 0 1px #f3e2b8, 2px 2px 0 #2a1408; }
+  .title-art { display: block; image-rendering: pixelated; flex: none; }
+  #title-coins { position: relative; z-index: 1; filter: brightness(0.82) saturate(0.9); } /* behind the title's lower edge; overlap set in JS */
+  #start-page .subtitle .epic { color: #b07a12; text-shadow: 1px 1px 0 #f3e2b8; }
+  #start-page .scroll-card { padding-top: 10px; padding-bottom: 8px; } /* tightened so the stats fit and the card bottom stays above the heroes */
+  #start-page .scroll-card .start-btn { margin-top: 2px; margin-bottom: 2px; padding-top: 2px; padding-bottom: 2px; }
+  #start-page .scroll-card .start-stats { position: static; margin-top: 6px; gap: 18px; color: var(--ink); text-shadow: none; }
+  #start-page .scroll-card .start-stats .value { color: #8a5a0a; font-size: 18px; }
+  .tb-blur { inset: 0; background: url("assets/bg/title-bg2.jpg") center / 100% 100% no-repeat;
+    background-image: image-set(url("assets/bg/title-bg2.webp") type("image/webp"), url("assets/bg/title-bg2.jpg") type("image/jpeg"));
+    filter: blur(2.5px); /* depth of field: sharp around the heroes (52%, 82%), gently blurrier outward */
+    -webkit-mask-image: radial-gradient(ellipse 58% 62% at 52% 82%, transparent 22%, rgba(0, 0, 0, 0.55) 60%, #000 100%);
+    mask-image: radial-gradient(ellipse 58% 62% at 52% 82%, transparent 22%, rgba(0, 0, 0, 0.55) 60%, #000 100%); }
   /* cover-fit, but nudged 2.5% of the screen width left (~48px at 1080p); the extra 5% width keeps the right edge covered */
   .tb-stage { position: absolute; left: calc(50% - 2.5vw); left: calc(50% - 2.5cqw); top: 50%; aspect-ratio: 1376 / 768; transform: translate(-50%, -50%);
     width: max(105vw, 100vh * 1.79167); width: max(105cqw, 100cqh * 1.79167); } /* image stays perfectly still */
   .tb-stage img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; image-rendering: pixelated; }
   .tb-stage > div { position: absolute; }
   .tb-stink { left: 55%; top: 0; width: 37%; height: 66%; image-rendering: pixelated;
-    background: url("assets/bg/title-bg.jpg") no-repeat;
-    background-image: image-set(url("assets/bg/title-bg.webp") type("image/webp"), url("assets/bg/title-bg.jpg") type("image/jpeg"));
+    background: url("assets/bg/title-bg2.jpg") no-repeat;
+    background-image: image-set(url("assets/bg/title-bg2.webp") type("image/webp"), url("assets/bg/title-bg2.jpg") type("image/jpeg"));
     background-size: 270.27% 151.52%; background-position: 87.3% 0;
     -webkit-mask-image: radial-gradient(closest-side, #000 45%, transparent); mask-image: radial-gradient(closest-side, #000 45%, transparent);
     filter: saturate(1.35) brightness(1.18); animation: tb-stink 5s ease-in-out infinite; }
@@ -1719,26 +1733,27 @@
 <!-- ===== START PAGE ===== -->
 <div id="start-page">
   <div id="title-bg" aria-hidden="true"><div class="tb-stage">
-    <picture><source srcset="assets/bg/title-bg.webp" type="image/webp"><img id="title-bg-img" src="assets/bg/title-bg.jpg" alt="" width="1376" height="768" decoding="async"></picture>
-    <div class="tb-stink"></div><div class="tb-puff"></div><div class="tb-puff p2"></div><div class="tb-puff p3"></div><div class="tb-puff p4"></div>
+    <picture><source srcset="assets/bg/title-bg2.webp" type="image/webp"><img id="title-bg-img" src="assets/bg/title-bg2.jpg" alt="" width="1376" height="768" decoding="async"></picture>
+    <div class="tb-blur"></div><div class="tb-stink"></div><div class="tb-puff"></div><div class="tb-puff p2"></div><div class="tb-puff p3"></div><div class="tb-puff p4"></div>
     <div class="tb-orb"></div><div class="tb-candle"></div>
   </div><div class="tb-vignette"></div></div>
   <div class="scroll-card">
-  <h1><i class="ico ico-shield"></i>DailyDungeons</h1>
-  <div class="subtitle">Build your home. Make it a dungeon.</div>
+  <h1><canvas id="title-crest" class="title-art" width="1" height="1"></canvas>DailyDungeons</h1>
+  <canvas id="title-coins" class="title-art" width="1" height="1"></canvas>
+  <div class="subtitle" id="title-tagline">Every chore is an <b class="epic">EPIC</b> quest.</div>
   <button class="start-btn" id="new-map-btn"><i class="ico ico-map"></i>New Map</button>
   <button class="start-btn secondary" id="edit-map-btn"><i class="ico ico-pick"></i>Edit Dungeon</button>
   <button class="start-btn secondary" id="asset-palette-toggle"><i class="ico ico-book"></i>Asset Palette</button>
   <button class="start-btn secondary" id="hero-btn"><i class="ico ico-helmet"></i>Create Hero</button>
   <button class="start-btn" id="play-map-btn"><i class="ico ico-next"></i>Play</button>
-  </div>
-  <div class="credits">Weapons: Quintino Pixels (itch.io), CC BY 4.0, restyled to 16px · UI, tiles &amp; characters: Kenney (kenney.nl), CC0</div>
   <div class="start-stats">
     <div class="stat"><span>Gold</span><div class="value" id="menu-gold">0</div></div>
     <div class="stat"><span>XP</span><div class="value" id="menu-xp">0</div></div>
     <div class="stat"><span>Level</span><div class="value" id="menu-level">1</div></div>
     <div class="stat"><span>Rooms</span><div class="value" id="menu-rooms">0</div></div>
   </div>
+  </div>
+  <div class="credits">Weapons: Quintino Pixels (itch.io), CC BY 4.0, restyled to 16px · UI, tiles &amp; characters: Kenney (kenney.nl), CC0</div>
 </div>
 
 <!-- ===== HERO BUILDER ===== -->
@@ -3204,6 +3219,45 @@ function showMainMenu() {
   document.getElementById("menu-xp").textContent = playerXp;
   document.getElementById("menu-level").textContent = playerLevel;
   document.getElementById("menu-rooms").textContent = Object.keys(activeRooms).length;
+  drawTitleArt();
+  placeMenuCard();
+}
+
+// Title crest (Kenney char-sheet heater shield + restyled Royal Blade across it) and a coin heap
+// (roguelikeSheet gold piles + coin stacks). Built at 1x, then blown up by a whole number into the canvas;
+// the CSS size divides the card's zoom back out so every sprite pixel is n screen pixels.
+function drawTitleArt() {
+  const crest = document.getElementById("title-crest"), heap = document.getElementById("title-coins");
+  const ch = kenneySprites.char, rpg = kenneySprites.rpg_sheet;
+  if (!crest || !heap) return;
+  if (!ch || !rpg || !weaponSheet) { if ((drawTitleArt.tries = (drawTitleArt.tries || 0) + 1) < 60) setTimeout(drawTitleArt, 200); return; }
+  const zoom = parseFloat(getComputedStyle(document.querySelector("#start-page .scroll-card")).zoom) || 1;
+  const titlePx = parseFloat(getComputedStyle(document.querySelector("#start-page h1")).fontSize) * zoom;
+  const short = innerHeight < 600; // phones in landscape: one step smaller so the card still fits
+  const cn = Math.round(1.75 * Math.max(2, Math.round(titlePx * 2 / 15) - (short ? 1 : 0))), hn = short ? 1 : 2; // crest ~3.5x title height; heap scale
+  if (crest.dataset.n === cn + "/" + hn) return;
+  crest.dataset.n = cn + "/" + hn;
+  let n;
+  const blit = (canvas, src, bx, by, bw, bh) => { // copy a 1x box into the canvas at scale n, sized for the zoom
+    canvas.width = bw * n; canvas.height = bh * n;
+    canvas.style.width = bw * n / zoom + "px"; canvas.style.height = bh * n / zoom + "px";
+    const x = canvas.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(src, bx, by, bw, bh, 0, 0, bw * n, bh * n);
+  };
+  const bbox = c => { const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+    for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (d[(y * c.width + x) * 4 + 3] > 0) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    return [x0, y0, x1 - x0 + 1, y1 - y0 + 1]; };
+  const c1 = document.createElement("canvas"); c1.width = c1.height = 24;
+  let x = c1.getContext("2d"); x.imageSmoothingEnabled = false;
+  x.save(); x.translate(12, 12); x.rotate(-Math.PI / 4); x.drawImage(weaponSheet, 16, 0, 16, 16, -8, -8, 16, 16); x.restore(); // sword crossing behind
+  x.drawImage(ch, 38 * 17, 8 * 17, 16, 16, 0, 1, 16, 16);                        // teal heater shield (cell art sits at 8..16, 6..16)
+  n = cn; blit(crest, c1, ...bbox(c1));
+  const c2 = document.createElement("canvas"); c2.width = 46; c2.height = 48;
+  x = c2.getContext("2d"); x.imageSmoothingEnabled = false;
+  const P = (c, r, dx, dy) => x.drawImage(rpg, c * 17, r * 17, 16, 16, dx, dy + 12, 16, 16);
+  [[45, 11, 0, 2], [45, 11, 0, -5], [45, 11, 28, 4], [45, 11, 28, -3], [43, 11, 12, 0], [42, 11, 4, 10], [42, 11, 22, 10],
+   [43, 11, 12, 12]].forEach(a => P(...a)); // back stacks first, big pile in front
+  const hb = bbox(c2); n = hn; blit(heap, c2, ...hb);
+  heap.style.marginTop = -Math.round(Math.max(0, crest.height - titlePx) / 2 + titlePx * (hn > 1 ? 0.6 : 0.4)) / zoom + "px"; // heap peeks out behind the title's lower edge (crest makes the h1 taller than the text)
   placeMenuCard();
 }
 
@@ -3215,7 +3269,7 @@ function placeMenuCard() {
   const st = page.querySelector(".tb-stage").getBoundingClientRect(), h = page.querySelector(".scroll-card").getBoundingClientRect().height;
   page.style.paddingTop = Math.max(8, Math.round(st.top + 0.64 * st.height - h)) + "px";
 }
-window.addEventListener("resize", placeMenuCard);
+window.addEventListener("resize", () => { drawTitleArt(); placeMenuCard(); });
 window.addEventListener("orientationchange", () => setTimeout(placeMenuCard, 150));
 if (document.fonts) document.fonts.ready.then(placeMenuCard);
 
