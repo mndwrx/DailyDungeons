@@ -1635,6 +1635,44 @@
   .shop-stat { font-size: 12px; white-space: nowrap; }
   .shop-buy { font-size: 12px; padding: 3px 8px; cursor: pointer; }
   .shop-buy:disabled { opacity: 0.7; cursor: default; }
+  /* ===== PIXEL ICONS (no emoji): Kenney sheet sprites, crisp; --s scales the 16px tiles ===== */
+  .ico { display: inline-block; vertical-align: middle; --s: 1; width: calc(var(--s) * 16px); height: calc(var(--s) * 16px); background-repeat: no-repeat; image-rendering: pixelated; margin: 0 4px 0 0; flex: none; }
+  .start-btn .ico, #start-page h1 .ico, .hero-btn .ico, .shop-bar h2 .ico, .ambush-box .ico, .level-clear-box .ico { --s: 2; }
+  .shop-gold .ico, .shop-stat .ico { --s: 1; }
+  .ico-map { background-image: url("assets/roguelike_transparent.png"); background-size: calc(var(--s) * 458px) calc(var(--s) * 305px); background-position: calc(var(--s) * -306px) calc(var(--s) * -0px); }
+  .ico-pick { background-image: url("assets/Spritesheet/roguelikeDungeon_transparent.png"); background-size: calc(var(--s) * 492px) calc(var(--s) * 305px); background-position: calc(var(--s) * -255px) calc(var(--s) * -255px); }
+  .ico-book { background-image: url("assets/Spritesheet/roguelikeSheet_transparent.png"); background-size: calc(var(--s) * 968px) calc(var(--s) * 526px); background-position: calc(var(--s) * -816px) calc(var(--s) * -255px); }
+  .ico-helmet { background-image: url("assets/Spritesheet/roguelikeChar_transparent.png"); background-size: calc(var(--s) * 918px) calc(var(--s) * 203px); background-position: calc(var(--s) * -476px) calc(var(--s) * -0px); }
+  .ico-gold { background-image: url("assets/Spritesheet/roguelikeSheet_transparent.png"); background-size: calc(var(--s) * 968px) calc(var(--s) * 526px); background-position: calc(var(--s) * -765px) calc(var(--s) * -170px); }
+  .ico-sword { background-image: url("assets/Spritesheet/roguelikeChar_transparent.png"); background-size: calc(var(--s) * 918px) calc(var(--s) * 203px); background-position: calc(var(--s) * -748px) calc(var(--s) * -102px); }
+  .ico-staff { background-image: url("assets/Spritesheet/roguelikeChar_transparent.png"); background-size: calc(var(--s) * 918px) calc(var(--s) * 203px); background-position: calc(var(--s) * -714px) calc(var(--s) * -0px); }
+  .ico-scroll { background-image: url("assets/Spritesheet/roguelikeSheet_transparent.png"); background-size: calc(var(--s) * 968px) calc(var(--s) * 526px); background-position: calc(var(--s) * -748px) calc(var(--s) * -255px); }
+  .ico-potion { background-image: url("assets/Spritesheet/roguelikeSheet_transparent.png"); background-size: calc(var(--s) * 968px) calc(var(--s) * 526px); background-position: calc(var(--s) * -935px) calc(var(--s) * -204px); }
+  .ico-chest { background-image: url("assets/Spritesheet/roguelikeSheet_transparent.png"); background-size: calc(var(--s) * 968px) calc(var(--s) * 526px); background-position: calc(var(--s) * -646px) calc(var(--s) * -170px); }
+  .ico-dagger { background-image: url("assets/Spritesheet/roguelikeChar_transparent.png"); background-size: calc(var(--s) * 918px) calc(var(--s) * 203px); background-position: calc(var(--s) * -714px) calc(var(--s) * -102px); }
+  .ico-trash { background-image: url("assets/rpg_urban_tilemap.png"); background-size: calc(var(--s) * 432px) calc(var(--s) * 288px); background-position: calc(var(--s) * -160px) calc(var(--s) * -144px); }
+  .ico-broom { background-image: url("assets/Spritesheet/roguelikeSheet_transparent.png"); background-size: calc(var(--s) * 968px) calc(var(--s) * 526px); background-position: calc(var(--s) * -901px) calc(var(--s) * -272px); }
+  .ico-candle { background-image: url("assets/roguelike_transparent.png"); background-size: calc(var(--s) * 458px) calc(var(--s) * 305px); background-position: calc(var(--s) * -306px) calc(var(--s) * -102px); }
+  .ico-crate { background-image: url("assets/Spritesheet/roguelikeDungeon_transparent.png"); background-size: calc(var(--s) * 492px) calc(var(--s) * 305px); background-position: calc(var(--s) * -85px) calc(var(--s) * -85px); }
+  .ico-door { background-image: url("assets/Spritesheet/roguelikeDungeon_transparent.png"); background-size: calc(var(--s) * 492px) calc(var(--s) * 305px); background-position: calc(var(--s) * -357px) calc(var(--s) * -0px); }
+  .ico-shield { background-image: url("assets/Spritesheet/roguelikeChar_transparent.png"); background-size: calc(var(--s) * 918px) calc(var(--s) * 203px); background-position: calc(var(--s) * -578px) calc(var(--s) * -0px); }
+  .ico-prev { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -237px -486px; width: 22px; height: 21px; }
+  .ico-next { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -325px -486px; width: 22px; height: 21px; }
+  .ico-down { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -325px -486px; width: 22px; height: 21px; transform: rotate(90deg); }
+  .ico-close { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -370px -0px; width: 16px; height: 15px; }
+  .ico-check { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -370px -45px; width: 16px; height: 15px; }
+  /* palette + map frames in the fantasy skin */
+  .palette-search { border: 6px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 6px; background: #f3e2b8; color: var(--ink); border-radius: 0; font-family: var(--fx-font); }
+  .browser-header h2, .browser-info { color: var(--wood-text); font-family: var(--fx-font); }
+  .asset-item { border: 8px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 8px; background: #e8d4a8; border-radius: 0; }
+  .asset-item .label { color: var(--ink); font-family: var(--fx-font); letter-spacing: 0; }
+  .asset-item:hover { filter: brightness(1.08); }
+  .asset-item.selected { border-image-source: url("assets/9-Slice/Ancient/brown_inlay.png"); background: #8a6a3e; box-shadow: 0 0 0 2px #ffd700; }
+  .asset-item.selected .label { color: var(--wood-text); }
+  .asset-item .swatch, .builder-swatch { border-color: #6e4b2c; background-color: #2a1a0c; }
+  .map-wrap, .game-play-area { background: #1d140c radial-gradient(circle at 50% 50%, #3a2716 0%, #1d140c 75%); }
+  #map, .room-canvas { border: 10px solid; border-image: url("assets/9-Slice/Ancient/brown.png") 16 / 10px; border-radius: 0; }
+  .move-indicator, .monster-spawn { line-height: 0; }
 </style>
 </head>
 <body>
@@ -1642,13 +1680,13 @@
 <!-- ===== START PAGE ===== -->
 <div id="start-page">
   <div class="scroll-card">
-  <h1>🏰 DailyDungeons</h1>
+  <h1><i class="ico ico-shield"></i>DailyDungeons</h1>
   <div class="subtitle">Build your home. Make it a dungeon.</div>
-  <button class="start-btn" id="new-map-btn">✨ New Map</button>
-  <button class="start-btn secondary" id="edit-map-btn">🛠️ Edit Dungeon</button>
-  <button class="start-btn secondary" id="asset-palette-toggle">🎨 Asset Palette</button>
-  <button class="start-btn secondary" id="hero-btn">🧙 Create Hero</button>
-  <button class="start-btn" id="play-map-btn">▶️ Play</button>
+  <button class="start-btn" id="new-map-btn"><i class="ico ico-map"></i>New Map</button>
+  <button class="start-btn secondary" id="edit-map-btn"><i class="ico ico-pick"></i>Edit Dungeon</button>
+  <button class="start-btn secondary" id="asset-palette-toggle"><i class="ico ico-book"></i>Asset Palette</button>
+  <button class="start-btn secondary" id="hero-btn"><i class="ico ico-helmet"></i>Create Hero</button>
+  <button class="start-btn" id="play-map-btn"><i class="ico ico-next"></i>Play</button>
   </div>
   <div class="credits">Weapons: Quintino Pixels (itch.io), CC BY 4.0 · UI, tiles &amp; characters: Kenney (kenney.nl), CC0</div>
   <div class="start-stats">
@@ -1668,8 +1706,8 @@
       <label for="hero-name">Name</label>
       <input id="hero-name" maxlength="18" placeholder="Hero" autocomplete="off" />
       <div class="hero-actions">
-        <button class="hero-btn primary" id="hero-save">💾 Save Hero</button>
-        <button class="hero-btn" id="hero-back">↩ Back</button>
+        <button class="hero-btn primary" id="hero-save"><i class="ico ico-check"></i>Save Hero</button>
+        <button class="hero-btn" id="hero-back"><i class="ico ico-prev"></i>Back</button>
       </div>
     </div>
     <div id="hero-slots"></div>
@@ -1682,9 +1720,9 @@
     <div class="shop-stage">
       <canvas id="shop-scene" width="320" height="150"></canvas>
       <div class="shop-say" id="shop-say">Welcome, traveler!</div>
-      <div class="shop-gold">💰 <span id="shop-gold">0</span> Gold</div>
+      <div class="shop-gold"><i class="ico ico-gold"></i><span id="shop-gold">0</span> Gold</div>
     </div>
-    <div class="shop-bar"><h2>⚔️ Weapons &amp; Shields</h2><button class="hero-btn" id="shop-back">↩ Back</button></div>
+    <div class="shop-bar"><h2><i class="ico ico-sword"></i>Weapons &amp; Shields</h2><button class="hero-btn" id="shop-back"><i class="ico ico-prev"></i>Back</button></div>
     <div id="shop-cards"></div>
   </div>
 </div>
@@ -1705,13 +1743,13 @@
       </div>
     </div>
     <div class="game-hud-actions builder-actions">
-      <button id="builder-menu-btn">🏠 Menu</button>
-      <button id="builder-palette-btn">🎨 Asset Palette</button>
-      <button id="builder-chores-btn">📋 Chores</button>
-      <button id="builder-play-btn">▶️ Play</button>
+      <button id="builder-menu-btn"><i class="ico ico-door"></i>Menu</button>
+      <button id="builder-palette-btn"><i class="ico ico-book"></i>Asset Palette</button>
+      <button id="builder-chores-btn"><i class="ico ico-scroll"></i>Chores</button>
+      <button id="builder-play-btn"><i class="ico ico-next"></i>Play</button>
       <span class="builder-selected-wrap">Tile: <span id="builder-swatch" class="builder-swatch" aria-hidden="true"></span> <b id="builder-selected">Floor</b></span>
-      <button id="builder-rotate-btn" class="builder-tool-btn" title="Rotate clockwise (R) / counter-clockwise (Shift+R)">↻ 0°</button>
-      <button id="builder-eraser-btn" class="builder-tool-btn" title="Eraser (E)">🧽 Erase</button>
+      <button id="builder-rotate-btn" class="builder-tool-btn" title="Rotate clockwise (R) / counter-clockwise (Shift+R)">Rotate 0°</button>
+      <button id="builder-eraser-btn" class="builder-tool-btn" title="Eraser (E)"><i class="ico ico-broom"></i>Erase</button>
     </div>
     <div class="stats-row">
       <div class="keystat">
@@ -1754,9 +1792,9 @@
         <div class="level-label">Level <span id="level-label-text">1</span></div>
       </div>
       <div class="skill-row">
-        <div class="skill-btn"><div class="skill-icon">⚔️</div><div class="skill-label">Attack</div></div>
-        <div class="skill-btn"><div class="skill-icon">💨</div><div class="skill-label">Dodge</div></div>
-        <div class="skill-btn"><div class="skill-icon">🌀</div><div class="skill-label">Dash</div></div>
+        <div class="skill-btn"><div class="skill-icon"><i class="ico ico-sword"></i></div><div class="skill-label">Attack</div></div>
+        <div class="skill-btn"><div class="skill-icon"><i class="ico ico-prev"></i></div><div class="skill-label">Dodge</div></div>
+        <div class="skill-btn"><div class="skill-icon"><i class="ico ico-next"></i></div><div class="skill-label">Dash</div></div>
       </div>
     </div>
   </header>
@@ -1769,41 +1807,41 @@
   <!-- BOTTOM INTERACTION PANEL -->
   <footer class="bottom-panel">
     <div class="inv-grid">
-      <div class="inv-slot">🧪<div class="inv-label">Red Potion</div><div class="inv-count">3</div></div>
-      <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div><div class="inv-count">1</div></div>
-      <div class="inv-slot">🗝️<div class="inv-label">Key</div><div class="inv-count">1</div></div>
-      <div class="inv-slot">🧪<div class="inv-label">Red Potion</div></div>
-      <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
-      <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
-      <div class="inv-slot">🧪<div class="inv-label">Red Potion</div></div>
-      <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
-      <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
+      <div class="inv-slot"><i class="ico ico-potion"></i><div class="inv-label">Red Potion</div><div class="inv-count">3</div></div>
+      <div class="inv-slot"><i class="ico ico-potion"></i><div class="inv-label">Blue Potion</div><div class="inv-count">1</div></div>
+      <div class="inv-slot"><i class="ico ico-chest"></i><div class="inv-label">Key</div><div class="inv-count">1</div></div>
+      <div class="inv-slot"><i class="ico ico-potion"></i><div class="inv-label">Red Potion</div></div>
+      <div class="inv-slot"><i class="ico ico-potion"></i><div class="inv-label">Blue Potion</div></div>
+      <div class="inv-slot"><i class="ico ico-potion"></i><div class="inv-label">Blue Potion</div></div>
+      <div class="inv-slot"><i class="ico ico-potion"></i><div class="inv-label">Red Potion</div></div>
+      <div class="inv-slot"><i class="ico ico-potion"></i><div class="inv-label">Blue Potion</div></div>
+      <div class="inv-slot"><i class="ico ico-potion"></i><div class="inv-label">Blue Potion</div></div>
     </div>
     <div class="equip-row">
       <div class="equip-slot">
-        <div class="equip-icon">🔪</div>
+        <div class="equip-icon"><i class="ico ico-dagger"></i></div>
         <div class="equip-label">Equipped Weapon</div>
         <div class="equip-sub">Dagger</div>
       </div>
       <div class="equip-slot">
-        <div class="equip-icon">🗝️</div>
+        <div class="equip-icon"><i class="ico ico-chest"></i></div>
         <div class="equip-label">Consumable</div>
         <div class="equip-sub">Red Potion 3</div>
       </div>
       <div class="equip-slot">
-        <div class="equip-icon">🗝️</div>
+        <div class="equip-icon"><i class="ico ico-chest"></i></div>
         <div class="equip-label">Key Item</div>
         <div class="equip-sub">Hidden Key</div>
       </div>
       <div class="equip-slot">
-        <div class="equip-icon">🗑️</div>
+        <div class="equip-icon"><i class="ico ico-trash"></i></div>
         <div class="equip-label">Discard</div>
       </div>
     </div>
     <div class="map-legend">
       <div class="legend-item"><div class="legend-hex green"></div><span>SAFE ZONE</span></div>
-      <div class="legend-item"><div class="legend-hex gold">▶</div><span>STAIRS UP</span></div>
-      <div class="legend-item"><div class="legend-hex blue">▼</div><span>STAIRS DOWN</span></div>
+      <div class="legend-item"><div class="legend-hex gold"><i class="ico ico-next"></i></div><span>STAIRS UP</span></div>
+      <div class="legend-item"><div class="legend-hex blue"><i class="ico ico-down"></i></div><span>STAIRS DOWN</span></div>
       <div class="legend-item"><div class="legend-red"></div><span>Event DANGER</span></div>
     </div>
     <div class="minimap-title">Floor 01 — Living Room</div>
@@ -1816,25 +1854,25 @@
 <!-- ===== REAL CHORE LOG DRAWER ===== -->
 <div id="chore-log-panel">
   <div class="chore-panel-header">
-    <span class="panel-title">📋 Real Chore Log</span>
-    <button class="panel-close" id="chore-log-close">✕</button>
+    <span class="panel-title"><i class="ico ico-scroll"></i>Real Chore Log</span>
+    <button class="panel-close" id="chore-log-close"><i class="ico ico-close"></i></button>
   </div>
   <div class="chore-form-group">
     <label for="chore-type">Chore Type</label>
     <select id="chore-type">
-      <option value="Dishes">🍽️ Dishes</option>
-      <option value="Laundry">👕 Laundry</option>
-      <option value="Trash">🗑️ Trash</option>
-      <option value="Custom">✏️ Custom</option>
+      <option value="Dishes">Dishes</option>
+      <option value="Laundry">Laundry</option>
+      <option value="Trash">Trash</option>
+      <option value="Custom">Custom</option>
     </select>
   </div>
   <div class="chore-form-group" id="chore-custom-group" style="display:none;">
     <label for="chore-custom">Custom Chore</label>
     <input type="text" id="chore-custom" placeholder="Describe your chore..." />
   </div>
-  <button class="chore-btn" id="chore-complete">✅ Mark Complete</button>
+  <button class="chore-btn" id="chore-complete"><i class="ico ico-check"></i>Mark Complete</button>
   <div class="timer-section">
-    <button class="chore-btn tiny" id="chore-timer-btn">⏱️ Start Timer</button>
+    <button class="chore-btn tiny" id="chore-timer-btn">Start Timer</button>
     <span class="timer-display" id="chore-timer-display">00:00</span>
   </div>
   <div class="chore-log-section">
@@ -1848,8 +1886,8 @@
 <!-- ===== ASSET BROWSER WINDOW ===== -->
 <div id="asset-browser">
   <div class="browser-header">
-    <h2 id="browser-title">🎨 Asset Browser</h2>
-    <button id="browser-close" class="browser-close">✕</button>
+    <h2 id="browser-title"><i class="ico ico-book"></i>Asset Browser</h2>
+    <button id="browser-close" class="browser-close"><i class="ico ico-close"></i></button>
   </div>
   <div class="browser-body">
     <div class="browser-tabs">
@@ -1913,18 +1951,18 @@
       </div>
     </div>
     <div class="game-hud-actions">
-      <button id="menu-btn">🏠 Menu</button>
-      <button id="chore-log-btn">📋 Chores</button>
-      <button id="toggle-edit">🛠️ Edit Dungeon</button>
-      <button id="hud-hero-btn">🧙 Hero</button>
-      <button id="shop-btn">🛒 Shop</button>
-      <button id="surfactant-btn">⚔️ Surfactant Blast</button>
+      <button id="menu-btn"><i class="ico ico-door"></i>Menu</button>
+      <button id="chore-log-btn"><i class="ico ico-scroll"></i>Chores</button>
+      <button id="toggle-edit"><i class="ico ico-pick"></i>Edit Dungeon</button>
+      <button id="hud-hero-btn"><i class="ico ico-helmet"></i>Hero</button>
+      <button id="shop-btn"><i class="ico ico-gold"></i>Shop</button>
+      <button id="surfactant-btn"><i class="ico ico-staff"></i>Surfactant Blast</button>
     </div>
   </div>
   <div class="game-play-area">
     <canvas class="room-canvas" id="room-canvas" width="640" height="640"></canvas>
-    <div class="move-indicator" id="move-indicator">▼</div>
-    <div class="monster-spawn" id="monster-spawn">👾</div>
+    <div class="move-indicator" id="move-indicator"><i class="ico ico-down"></i></div>
+    <div class="monster-spawn" id="monster-spawn"></div>
   </div>
 </div>
 
@@ -1934,9 +1972,9 @@
     <h2 class="ambush-title">AMBUSH!</h2>
     <p class="ambush-text">A monster appeared!</p>
     <div class="ambush-actions">
-      <button id="ambush-fight">⛏️ Fight</button>
-      <button id="ambush-run">🏃 Run</button>
-      <button id="ambush-hide">🕳️ Hide</button>
+      <button id="ambush-fight"><i class="ico ico-sword"></i>Fight</button>
+      <button id="ambush-run"><i class="ico ico-prev"></i>Run</button>
+      <button id="ambush-hide"><i class="ico ico-crate"></i>Hide</button>
     </div>
   </div>
 </div>
@@ -1952,8 +1990,8 @@
     <div class="sub">You finished all the chores in this room.</div>
     <div class="loot">Rewards: <span id="level-xp">+500</span> XP <span id="level-gold">+150</span> Gold</div>
     <div class="actions">
-      <button id="level-continue">⬇️ Go Downstairs</button>
-      <button id="level-menu">🏠 Main Menu</button>
+      <button id="level-continue"><i class="ico ico-down"></i>Go Downstairs</button>
+      <button id="level-menu"><i class="ico ico-door"></i>Main Menu</button>
     </div>
   </div>
 </div>
@@ -2123,25 +2161,12 @@ const ENTITY_COLORS = {
   13: "#94a3b8",  // trash can
 };
 
-const ENTITY_SYMBOLS = {
-  3: "🛏️",
-  4: "🚰",
-  5: "🦠",
-  6: "👔",
-  7: "🗑️",
-  12: "🧺",
-  13: "🚮",
-  8: "🌳",
-  9: "🪨",
-  10: "🌿",
-  11: "🌤️",
-};
 
 const CHORES = {
   dishes: {
     id: "dishes",
     name: "Dish Slime",
-    symbol: "🦠",
+    icon: ["F", 1, 0],
     type: "monster",
     hp: 30,
     maxHp: 30,
@@ -2156,7 +2181,7 @@ const CHORES = {
   laundry: {
     id: "laundry",
     name: "Laundry Hydra",
-    symbol: "👔",
+    icon: ["I", 17, 2],
     type: "monster",
     hp: 60,
     maxHp: 60,
@@ -2171,7 +2196,7 @@ const CHORES = {
   trash: {
     id: "trash",
     name: "Trash Mimic",
-    symbol: "🗑️",
+    icon: ["R", 38, 10],
     type: "monster",
     hp: 80,
     maxHp: 80,
@@ -2186,7 +2211,7 @@ const CHORES = {
   mow: {
     id: "mow",
     name: "Lawn Mimic",
-    symbol: "🌿",
+    icon: ["R", 21, 9],
     type: "monster",
     hp: 50,
     maxHp: 50,
@@ -2201,7 +2226,7 @@ const CHORES = {
   yard_trash: {
     id: "yard_trash",
     name: "Trash Mimic",
-    symbol: "🗑️",
+    icon: ["R", 38, 10],
     type: "monster",
     hp: 60,
     maxHp: 60,
@@ -2223,7 +2248,10 @@ let manifestData = {};
 const SHEETS = {
   rougelike: { src: "assets/roguelike_transparent.png", stride: 17, w: 458, h: 305 }, // 16px tiles, 1px margin
   rpg_urban: { src: "assets/rpg_urban_tilemap.png", stride: 16, w: 432, h: 288 },    // 16px tiles, no margin
-  rpg_sheet: { src: "assets/Spritesheet/roguelikeSheet_transparent.png", stride: 17, w: 968, h: 526 } // Roguelike RPG pack (yard, doors, windows, decor)
+  rpg_sheet: { src: "assets/Spritesheet/roguelikeSheet_transparent.png", stride: 17, w: 968, h: 526 }, // Roguelike RPG pack (yard, doors, windows, decor)
+  char: { src: "assets/Spritesheet/roguelikeChar_transparent.png", stride: 17, w: 918, h: 203 },     // Roguelike characters
+  dungeon: { src: "assets/Spritesheet/roguelikeDungeon_transparent.png", stride: 17, w: 492, h: 305 }, // Roguelike dungeon
+  fallback: { src: "assets/pixel_fallbacks.png", stride: 17, w: 33, h: 16 } // hand-made pixel art where Kenney has no match (bathtub, dish slime)
 };
 
 // Palette id -> real tile value. layer "terrain" writes terrainMap, "entity" writes entityMap, "overlay" writes overlayMap (top).
@@ -2232,17 +2260,17 @@ const TILE_DEFS = {
   floor:         { value: 1,  layer: "terrain", cat: "floors",   label: "Floor",          sheet: "rougelike", col: 24, row: 1 },
   wall:          { value: 2,  layer: "terrain", cat: "floors",   label: "Wall",           sheet: "rpg_urban", col: 9,  row: 1 },
   grass:         { value: 10, layer: "terrain", cat: "yard",     label: "Lawn",           sheet: "rpg_urban", col: 6,  row: 12 },
-  sky:           { value: 11, layer: "terrain", cat: "yard",     label: "Patio",          emoji: "🌤️" },
+  sky:           { value: 11, layer: "terrain", cat: "yard",     label: "Patio",          sheet: "dungeon", col: 16, row: 17 },
   tree:          { value: 8,  layer: "entity",  cat: "yard",     label: "Tree",           sheet: "rpg_urban", col: 17, row: 9 }, // layered over the ground (old saves migrate)
-  rock:          { value: 9,  layer: "entity",  cat: "yard",     label: "Rock",           emoji: "🪨" },
+  rock:          { value: 9,  layer: "entity",  cat: "yard",     label: "Rock",           sheet: "rpg_sheet", col: 54, row: 19 },
   bed:           { value: 3,  layer: "entity",  cat: "bedroom",  label: "Bed",            sheet: "rougelike", col: 13, row: 0 },
   sink:          { value: 4,  layer: "entity",  cat: "kitchen",  label: "Sink",           sheet: "rougelike", col: 8,  row: 13 },
   laundry:       { value: 12, layer: "entity",  cat: "laundry",  label: "Laundry",        sheet: "rougelike", col: 17, row: 2 },
   trashcan:      { value: 13, layer: "entity",  cat: "kitchen",  label: "Trash Can",      sheet: "rpg_urban", col: 10, row: 9 },
-  dish_slime:    { value: 5,  layer: "entity",  cat: "monsters", label: "Dish Slime",     emoji: "🦠" },
-  laundry_hydra: { value: 6,  layer: "entity",  cat: "monsters", label: "Laundry Hydra",  emoji: "👔" },
-  trash_mimic:   { value: 7,  layer: "entity",  cat: "monsters", label: "Trash Mimic",    emoji: "🗑️" },
-  eraser:        { value: "clear", layer: "clear", cat: "floors", label: "Eraser",        emoji: "🧽" },
+  dish_slime:    { value: 5,  layer: "entity",  cat: "monsters", label: "Dish Slime",     sheet: "fallback", col: 1, row: 0 },
+  laundry_hydra: { value: 6,  layer: "entity",  cat: "monsters", label: "Laundry Hydra",  sheet: "rougelike", col: 17, row: 2 },
+  trash_mimic:   { value: 7,  layer: "entity",  cat: "monsters", label: "Trash Mimic",    sheet: "rpg_sheet", col: 38, row: 10 },
+  eraser:        { value: "clear", layer: "clear", cat: "floors", label: "Eraser",        sheet: "rpg_sheet", col: 53, row: 16 },
   ...houseDefs()
 };
 
@@ -2251,7 +2279,7 @@ const TILE_DEFS = {
 //        door (walkable even on a wall).
 // Pure layers: an entity piece draws over whatever terrain is in the cell (or the empty background); nothing is filled under it.
 function houseDefs() {
-  const S = { I: "rougelike", R: "rpg_sheet", U: "rpg_urban" };
+  const S = { I: "rougelike", R: "rpg_sheet", U: "rpg_urban", C: "char", D: "dungeon", F: "fallback" };
   const T = "terrain", E = "entity", O = "overlay"; // O = hang-on decor stacked over windows/doors/furniture
   const rows = [
     // id, value, layer, cat, label, sheet, col, row, flags
@@ -2288,10 +2316,10 @@ function houseDefs() {
     ["kitchen_chair",    51, E, "kitchen", "Kitchen Chair",       "I", 0, 2],
     ["set_table",        53, E, "kitchen", "Set Table",           "R", 11, 4],
 
-    ["toilet",           54, E, "bath",    "Toilet",              null, 0, 0, { emoji: "🚽" }],
-    ["bathtub",          55, E, "bath",    "Bathtub",             null, 0, 0, { emoji: "🛁" }],
-    ["shower",           56, E, "bath",    "Shower",              null, 0, 0, { emoji: "🚿" }],
-    ["toilet_paper",     61, O, "bath",    "Toilet Paper",        null, 0, 0, { emoji: "🧻", walk: 1 }],
+    ["toilet",           54, E, "bath",    "Toilet",              "R", 44, 11],
+    ["bathtub",          55, E, "bath",    "Bathtub",             "F", 0, 0],
+    ["shower",           56, E, "bath",    "Shower",              "I", 11, 15],
+    ["toilet_paper",     61, O, "bath",    "Toilet Paper",        "R", 44, 15, { walk: 1 }],
     ["wall_mirror",      57, O, "bath",    "Wall Mirror",         "I", 22, 14, { wall: 1, walk: 1 }],
     ["round_mirror",     58, O, "bath",    "Round Mirror",        "R", 24, 8, { wall: 1, walk: 1 }],
     ["vanity_cabinet",   59, E, "bath",    "Vanity Cabinet",      "I", 9, 12],
@@ -2309,10 +2337,10 @@ function houseDefs() {
     ["green_rug",        72, E, "bedroom", "Green Rug",           "I", 19, 12, { walk: 1 }],
 
     ["bench",            73, E, "living",  "Cushioned Bench",     "I", 5, 7],
-    ["sofa",             81, E, "living",  "Sofa",                null, 0, 0, { emoji: "🛋️" }],
+    ["sofa",             81, E, "living",  "Sofa",                "I", 4, 7],
     ["armchair_orange",  74, E, "living",  "Armchair (Orange)",   "I", 25, 11],
     ["armchair_green",   75, E, "living",  "Armchair (Green)",    "I", 25, 15],
-    ["tv",               76, E, "living",  "TV",                  null, 0, 0, { emoji: "📺" }],
+    ["tv",               76, E, "living",  "TV",                  "R", 49, 16],
     ["bookshelf",        77, E, "living",  "Bookshelf",           "I", 19, 17],
     ["full_bookshelf",   78, E, "living",  "Full Bookshelf",      "R", 43, 12],
     ["orange_rug",       79, E, "living",  "Orange Rug",          "I", 19, 13, { walk: 1 }],
@@ -2325,7 +2353,7 @@ function houseDefs() {
     ["pouf",             88, E, "living",  "Pouf",                "I", 17, 3],
 
     ["washer",           89, E, "laundry", "Washing Machine",     "I", 14, 16],
-    ["laundry_basket",   90, E, "laundry", "Laundry Basket",      null, 0, 0, { emoji: "🧺" }],
+    ["laundry_basket",   90, E, "laundry", "Laundry Basket",      "I", 17, 3],
     ["clothesline",      91, E, "laundry", "Clothesline",         "R", 51, 13],
     ["drying_line",      92, E, "laundry", "Drying Line (Green)", "I", 16, 2],
 
@@ -2418,6 +2446,28 @@ function loadKenneySprites() {
     redraw();
   };
   img3.src = SHEETS.rpg_sheet.src;
+
+  for (const key of ["char", "dungeon", "fallback"]) {
+    const img = new Image();
+    img.onload = () => { kenneySprites[key] = img; redraw(); };
+    img.src = SHEETS[key].src;
+  }
+}
+
+// Pixel sprite icon (never an emoji): icon = [sheet letter, col, row]
+const SHEET_LETTER = { I: "rougelike", R: "rpg_sheet", U: "rpg_urban", C: "char", D: "dungeon", F: "fallback" };
+function spriteSpan(icon, scale = 1) {
+  const el = document.createElement("i");
+  el.className = "ico";
+  const s = icon && SHEETS[SHEET_LETTER[icon[0]]];
+  if (s) el.style.cssText = `width:${16 * scale}px;height:${16 * scale}px;background-image:url('${s.src}');background-size:${s.w * scale}px ${s.h * scale}px;background-position:-${icon[1] * s.stride * scale}px -${icon[2] * s.stride * scale}px`;
+  return el;
+}
+function drawIconCanvas(ctx, icon, x, y, size) {
+  const key = icon && SHEET_LETTER[icon[0]], img = key && kenneySprites[key];
+  if (!img) return;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(img, icon[1] * SHEETS[key].stride, icon[2] * SHEETS[key].stride, 16, 16, x, y, size, size);
 }
 
 // ---- MANIFEST PARSING ----
@@ -2461,7 +2511,7 @@ function updateBrushToolbar() {
     swatch.style.transform = `rotate(${selectedRotation * 90}deg)`;
   }
   const btn = document.getElementById("builder-rotate-btn");
-  if (btn) btn.textContent = `↻ ${selectedRotation * 90}°`;
+  if (btn) btn.textContent = `Rotate ${selectedRotation * 90}°`;
   const er = document.getElementById("builder-eraser-btn");
   if (er) er.classList.toggle("active", selectedTileType === "eraser");
 }
@@ -2589,7 +2639,7 @@ function spawnMonster(choreKey, col, row) {
     col, row,
     type: choreKey,
     name: chore.name,
-    symbol: chore.symbol,
+    icon: chore.icon,
     hp: chore.maxHp,
     maxHp: chore.maxHp,
     xpReward: chore.xpReward,
@@ -2679,8 +2729,6 @@ function drawTiles(ctx, terrain, entity, tRot, eRot, overlay, oRot) {
         ctx.arc(col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 2 - 4, 0, Math.PI * 2);
         ctx.stroke();
       }
-      const symbol = ENTITY_SYMBOLS[value] || (def && def.emoji);
-      if (symbol) drawEmoji(ctx, symbol, col, row, rot);
     }
   }
   // Overlay layer (top): hang-on decor over whatever is below, no fill behind it
@@ -2692,7 +2740,6 @@ function drawTiles(ctx, terrain, entity, tRot, eRot, overlay, oRot) {
       if (!def) continue;
       const rot = rotAt(oRot, col, row);
       if (def.sheet && drawSprite(ctx, def, col, row, 2, rot)) continue;
-      if (def.emoji) drawEmoji(ctx, def.emoji, col, row, rot);
     }
   }
 }
@@ -2733,10 +2780,7 @@ function drawRoom() {
     roomCtx.beginPath();
     roomCtx.arc(cx, cy, 10, 0, Math.PI * 2);
     roomCtx.fill();
-    roomCtx.font = "13px sans-serif";
-    roomCtx.textAlign = "center";
-    roomCtx.textBaseline = "middle";
-    roomCtx.fillText(m.symbol, cx, cy + 1);
+    drawIconCanvas(roomCtx, m.icon || (CHORES[m.type] || {}).icon, cx - 8, cy - 8, 16);
   }
 
   // Player
@@ -2750,14 +2794,6 @@ function drawRoom() {
       // the player's own hero (layered from the Roguelike Characters sheet), pixel-crisp
       roomCtx.imageSmoothingEnabled = false;
       roomCtx.drawImage(heroCanvas, player.x * TILE_SIZE + 2, player.y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-    } else {
-      const cls = playerClass;
-      const symbol = cls === "Warrior" ? "⚔️" : cls === "Rogue" ? "🥷" : "🧙";
-      roomCtx.fillStyle = "#f5c542";
-      roomCtx.font = `${TILE_SIZE - 12}px sans-serif`;
-      roomCtx.textAlign = "center";
-      roomCtx.textBaseline = "middle";
-      roomCtx.fillText(symbol, player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2 + 3);
     }
   }
   drawGrid(roomCtx, roomCanvas);
@@ -2879,7 +2915,7 @@ function placeMoveIndicator(col, row) {
   const scale = roomCanvas.clientWidth / roomCanvas.width;
   indicator.style.left = (rect.left - area.left + roomCanvas.clientLeft + (col + 0.5) * TILE_SIZE * scale) + "px";
   indicator.style.top = (rect.top - area.top + roomCanvas.clientTop + (row + 0.5) * TILE_SIZE * scale) + "px";
-  indicator.textContent = "▼";
+  indicator.innerHTML = '<i class="ico ico-down"></i>';
   indicator.style.display = "block";
 }
 
@@ -2925,7 +2961,7 @@ function addRewards(gold, xp) {
   if (leveled) {
     playerHp = 100;
     playerMp = 100;
-    setTimeout(() => showToast(`⭐ Level up! You are now level ${playerLevel}.`), 1200);
+    setTimeout(() => showToast(`Level up! You are now level ${playerLevel}.`), 1200);
   }
   if (isPlayMode) {
     roomRewards.gold += gold;
@@ -2942,7 +2978,7 @@ function resolveCombat(monster, opts = {}) {
   monsters = monsters.filter(m => m !== monster);
   if (!opts.noDamage) playerHp = Math.max(0, playerHp - Math.max(1, Math.round(monster.maxHp / 4) - gearBonus())); // equipped shop gear softens the hit
   addRewards(monster.goldReward, monster.xpReward);
-  showToast(`${monster.symbol} ${monster.name} defeated! +${monster.goldReward} Gold, +${monster.xpReward} XP`);
+  showToast(`${monster.name} defeated! +${monster.goldReward} Gold, +${monster.xpReward} XP`);
   if (playerHp <= 0) {
     playerHp = 50;
     showToast("You fainted... a real chore break restores you. HP 50.");
@@ -2974,11 +3010,11 @@ function triggerAmbush(monster) {
   stopWalking();
   activeAmbush = monster;
   const chore = CHORES[monster.type] || {};
-  document.querySelector("#ambush-overlay .ambush-title").textContent = `AMBUSH! ${monster.symbol} ${monster.name}`;
+  document.querySelector("#ambush-overlay .ambush-title").textContent = `AMBUSH! ${monster.name}`;
   document.querySelector("#ambush-overlay .ambush-text").textContent =
     `A ${monster.name} (HP ${monster.hp}) bursts out! Real chore: ${chore.chore || "clean up"}. Reward: +${monster.goldReward} Gold, +${monster.xpReward} XP.`;
   const spawn = document.getElementById("monster-spawn");
-  spawn.textContent = monster.symbol;
+  spawn.replaceChildren(spriteSpan(monster.icon || (CHORES[monster.type] || {}).icon, 2));
   placeSpawnMarker(monster.col, monster.row);
   document.getElementById("ambush-overlay").classList.add("open");
 }
@@ -3248,7 +3284,7 @@ function toggleChoreTimer() {
     choreTimerStart = Date.now();
     lastTimedSeconds = 0;
     display.textContent = '00:00';
-    btn.textContent = '⏹️ Stop Timer';
+    btn.textContent = 'Stop Timer';
     choreTimerInterval = setInterval(() => {
       display.textContent = formatMMSS(Math.floor((Date.now() - choreTimerStart) / 1000));
     }, 250);
@@ -3265,7 +3301,7 @@ function stopChoreTimer() {
   choreTimerInterval = null;
   choreTimerStart = null;
   document.getElementById('chore-timer-display').textContent = formatMMSS(lastTimedSeconds);
-  document.getElementById('chore-timer-btn').textContent = '⏱️ Start Timer';
+  document.getElementById('chore-timer-btn').textContent = 'Start Timer';
 }
 
 function renderChoreLog() {
@@ -3281,7 +3317,7 @@ function renderChoreLog() {
     const t = document.createElement("div"); t.className = "log-time"; t.textContent = `[${c.time}]`;
     const n = document.createElement("div"); n.className = "log-chore"; n.textContent = c.label;
     const r = document.createElement("div"); r.className = "log-rewards";
-    r.textContent = `+${c.gold} Gold · +${c.xp} XP` + (c.timed ? ` · ⏱ ${formatMMSS(c.timed)}` : "");
+    r.textContent = `+${c.gold} Gold · +${c.xp} XP` + (c.timed ? ` · Timer ${formatMMSS(c.timed)}` : "");
     entry.append(t, n, r);
     logList.appendChild(entry);
   }
@@ -3312,7 +3348,7 @@ function completeChore(type, customText) {
   playerMp = Math.min(100, playerMp + 25);
   addRewards(gold, xp);
   renderChoreLog();
-  showToast(`✅ Real chore logged: +${gold} Gold, +${xp} XP`);
+  showToast(`Real chore logged: +${gold} Gold, +${xp} XP`);
 
   if (isPlayMode && chore) {
     const monster = monsters.find(m => m.type === key);
@@ -3548,9 +3584,9 @@ function openHeroScreen() {
   if (!slots.childElementCount) {
     slots.innerHTML = HERO_SLOTS.map(([key, label]) =>
       `<span class="slot-label">${label}</span>` +
-      `<button class="hero-arrow prev" data-slot="${key}" data-dir="-1" aria-label="Previous ${label}">◀</button>` +
+      `<button class="hero-arrow prev" data-slot="${key}" data-dir="-1" aria-label="Previous ${label}">Prev</button>` +
       `<span class="slot-value" id="hero-val-${key}"></span>` +
-      `<button class="hero-arrow next" data-slot="${key}" data-dir="1" aria-label="Next ${label}">▶</button>`).join("");
+      `<button class="hero-arrow next" data-slot="${key}" data-dir="1" aria-label="Next ${label}">Next</button>`).join("");
     slots.addEventListener("click", e => { const b = e.target.closest(".hero-arrow"); if (b) cycleHeroSlot(b.dataset.slot, +b.dataset.dir); });
   }
   renderHeroScreen();
@@ -3578,7 +3614,7 @@ function saveHero() {
   hero = heroDraft;
   try { localStorage.setItem(HERO_KEY, JSON.stringify(hero)); } catch (e) { console.warn("Hero not saved:", e); }
   composeHero(hero, heroCanvas);
-  showToast(`🧙 ${hero.name} is ready!`);
+  showToast(`${hero.name} is ready!`);
   showScreen(heroReturn);
 }
 
@@ -3662,7 +3698,7 @@ function buyWeapon(id) {
   saveGameData();
   updateGameHUD();
   document.getElementById("shop-say").textContent = `A fine choice! The ${w.name} is yours.`;
-  showToast(`🛒 Bought ${w.name} for ${w.price} gold`);
+  showToast(`Bought ${w.name} for ${w.price} gold`);
   renderShop();
   return true;
 }
@@ -3684,7 +3720,7 @@ function renderShop() {
     grid.innerHTML = WEAPONS.map(w => `<div class="shop-card" data-weapon="${w.id}">
       <div class="shop-art" style="background-position:-${w.x}px -${w.y}px"></div>
       <div class="shop-name">${w.name}</div>
-      <div class="shop-stat">${w.kind === "shield" ? "🛡️" : "⚔️"} +${w.power} · 💰 ${w.price}</div>
+      <div class="shop-stat"><i class="ico ico-${w.kind === "shield" ? "shield" : "sword"}"></i>+${w.power} · <i class="ico ico-gold"></i>${w.price}</div>
       <button class="hero-btn shop-buy"></button></div>`).join("");
     grid.addEventListener("click", e => {
       const b = e.target.closest(".shop-buy"); if (!b) return;
@@ -3696,7 +3732,7 @@ function renderShop() {
     const w = WEAPON_BY_ID[card.dataset.weapon], owned = hero.owned.includes(w.id), on = hero.equip[w.kind] === w.id;
     card.classList.toggle("owned", owned);
     const b = card.querySelector(".shop-buy");
-    b.textContent = !owned ? `Buy ${w.price}g` : on ? "✔ Equipped" : "Equip";
+    b.textContent = !owned ? `Buy ${w.price}g` : on ? "Equipped" : "Equip";
     b.classList.toggle("primary", on);
   }
   drawShopScene();
@@ -3821,8 +3857,7 @@ function drawRectPreview() {
         const color = TERRAIN_COLORS[def.value];
         if (color && color !== "transparent") { ctx.fillStyle = color; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE); }
       } else if (!(def.sheet && drawSprite(ctx, def, col, row, def.layer === "terrain" ? 0 : 2, selectedRotation))) {
-        const symbol = ENTITY_SYMBOLS[def.value] || def.emoji;
-        if (symbol) drawEmoji(ctx, symbol, col, row, selectedRotation);
+        // sprite sheet still loading: the gold tint + outline below still show the rectangle
       }
       ctx.globalAlpha = 0.18; ctx.fillStyle = "#facc15"; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
     }

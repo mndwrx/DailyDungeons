@@ -46,11 +46,14 @@ for (const key of ['dishes', 'laundry', 'trash']) {
   ? pass('Trigger tiles map sink/laundry/trash can to their monsters') : fail('TRIGGER_ENTITIES mapping missing');
 ['sink', 'laundry', 'trashcan', 'floor', 'wall'].every(id => new RegExp(`\\b${id}:\\s*\\{\\s*value:`).test(script))
   ? pass('Palette ids map to tile values (TILE_DEFS)') : fail('TILE_DEFS missing palette ids');
-(script.includes('7: "#f97316"') && script.includes('🗑️')) ? pass('Trash Mimic color/symbol present') : fail('Trash Mimic color/symbol missing');
+(script.includes('7: "#f97316"') && /trash_mimic:[^\n]*sheet: "rpg_sheet"/.test(script)) ? pass('Trash Mimic color/sprite present') : fail('Trash Mimic color/sprite missing');
+{ const EMO = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}\u{2300}-\u{23FF}\u{25A0}-\u{25FF}]/u;
+  const bad = html.split('\n').map((l, i) => [i + 1, l]).filter(([, l]) => EMO.test(l));
+  bad.length ? fail('Emoji left in index.html at lines ' + bad.map(b => b[0]).join(',')) : pass('No emoji anywhere in index.html (pixel sprite icons only)'); }
 
 
 // 6. Palette: hand-picked house pieces, category tabs, search, all sheets exist
-const houseRows = [...script.matchAll(/^\s*\["(\w+)",\s*(\d+),\s*[TEO],\s*"(\w+)",\s*"[^"]+",\s*(?:"([IRU])"|null)/gm)];
+const houseRows = [...script.matchAll(/^\s*\["(\w+)",\s*(\d+),\s*[TEO],\s*"(\w+)",\s*"[^"]+",\s*(?:"([IRUCDF])"|null)/gm)];
 const tileVals = [...script.matchAll(/\b\w+:\s*\{\s*value:\s*(\d+),/g)].map(m => +m[1]).concat(houseRows.map(m => +m[2]));
 houseRows.length >= 90 ? pass(`${houseRows.length} house pieces in TILE_DEFS`) : fail(`only ${houseRows.length} house pieces`);
 new Set(tileVals).size === tileVals.length ? pass(`All ${tileVals.length} tile values unique`) : fail('Duplicate tile values');
