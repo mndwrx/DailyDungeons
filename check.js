@@ -1,86 +1,56 @@
+// DailyDungeons static check: real JS parse + the pieces the chore loop depends on.
 const fs = require('fs');
+const vm = require('vm');
 const html = fs.readFileSync('index.html', 'utf8');
+let failed = 0;
+const pass = msg => console.log('PASS', msg);
+const fail = msg => { console.log('FAIL', msg); failed++; };
 
-// Check for balanced braces in script section
 const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
-if (scriptMatch) {
-  const rawScript = scriptMatch[1];
-  let script = rawScript;
-  // Strip single-line comments
-  script = script.replace(/\/\/.*$/gm, '');
-  // Strip multi-line comments
-  script = script.replace(/\/\*[\s\S]*?\*\//g, '');
-  let braceCount = 0;
-  let parenCount = 0;
-  let bracketCount = 0;
-  let inString = false;
-  let stringChar = '';
-  let escapeNext = false;
-  
-  for (let i = 0; i < script.length; i++) {
-    const c = script[i];
-    if (escapeNext) { escapeNext = false; continue; }
-    if (c === '\\') { escapeNext = true; continue; }
-    if (!inString && (c === '"' || c === "'" || c === '`')) { inString = true; stringChar = c; continue; }
-    if (inString && c === stringChar) { inString = false; continue; }
-    if (!inString) {
-      if (c === '{') braceCount++;
-      else if (c === '}') braceCount--;
-      else if (c === '(') parenCount++;
-      else if (c === ')') parenCount--;
-      else if (c === '[') bracketCount++;
-      else if (c === ']') bracketCount--;
-    }
-  }
-  console.log('Brace balance:', braceCount);
-  console.log('Paren balance:', parenCount);
-  console.log('Bracket balance:', bracketCount);
-  
-  if (braceCount !== 0 || parenCount !== 0 || bracketCount !== 0) {
-    console.log('SYNTAX ERROR: Unbalanced brackets');
-    process.exit(1);
-  } else {
-    console.log('Syntax check: PASSED');
-  }
-  
-  // Check key functions exist (use rawScript to avoid comment-stripping false negatives)
-  const required = ['getActiveModifiers', 'equipment_modifiers', 'monsterStats', 'resolveCombat', 'tryMove', 'addChaos', 'loadGameData', 'renderVault', 'updateChaosHUD', 'canPurchase'];
-  for (const fn of required) {
-    if (!rawScript.includes(fn)) {
-      console.log('MISSING:', fn);
-      process.exit(1);
-    }
-  }
-  console.log('All required functions/structures present: PASSED');
+if (!scriptMatch) { console.log('No script tag found'); process.exit(1); }
+const script = scriptMatch[1];
 
-  // Check entity 7 references (HTML elements checked against full html, JS against rawScript)
-  if (!html.includes('Trash Mimic') || !html.includes('tool-trash-mimic')) {
-    console.log('MISSING: Trash Mimic references');
-    process.exit(1);
-  }
-  console.log('Trash Mimic integration: PASSED');
+// 1. Syntax: compile (not run) the game script
+try { new vm.Script(script, { filename: 'index.html<script>' }); pass('Script parses'); }
+catch (e) { fail('Syntax error: ' + e.message); }
 
-  // Check lore fields
-  const loreCount = (rawScript.match(/lore:/g) || []).length;
-  if (loreCount < 3) {
-    console.log('MISSING: lore fields (need 3: slime, hydra, trash mimic), found:', loreCount);
-    process.exit(1);
-  }
-  console.log('Lore fields: PASSED (count:', loreCount + ')');
+// 2. Core functions are actually defined (not just mentioned)
+const required = [
+  'showScreen', 'loadAssetGrid', 'selectTile', 'paintTile', 'showToast',
+  'completeChore', 'toggleChoreTimer', 'renderChoreLog', 'addRewards',
+  'tryMove', 'findPath', 'handleRoomClick', 'isWalkable', 'triggerAt', 'spawnRandomMonsters',
+  'checkAmbush', 'triggerAmbush', 'ambushFight', 'ambushRun', 'ambushHide', 'resolveCombat', 'showLevelClear',
+  'drawMap', 'drawRoom', 'drawMinimap', 'drawLevelDisc', 'saveGameData', 'loadGameData', 'newMap'
+];
+const missingFns = required.filter(fn => !new RegExp(`function\\s+${fn}\\s*\\(`).test(script));
+missingFns.length ? fail('Missing functions: ' + missingFns.join(', ')) : pass(`${required.length} core functions defined`);
 
-  // Check ENTITY_COLORS and ENTITY_SYMBOLS have 7
-  if (!rawScript.includes('7: "#f97316"') && !rawScript.includes("7: '#f97316'")) {
-    console.log('MISSING: ENTITY_COLORS[7]');
-    process.exit(1);
-  }
-  if (!rawScript.includes('7:') || !rawScript.includes('🗑️')) {
-    console.log('MISSING: ENTITY_SYMBOLS[7]');
-    process.exit(1);
-  }
-  console.log('ENTITY_COLORS/SYMBOLS for 7: PASSED');
-  
-  console.log('\nALL CHECKS PASSED');
-} else {
-  console.log('No script tag found');
-  process.exit(1);
+// 3. Every getElementById('x') used by the script exists in the markup
+const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map(m => m[1]));
+const used = new Set([...script.matchAll(/getElementById\(\s*['"]([^'"]+)['"]\s*\)/g)].map(m => m[1]));
+const missingIds = [...used].filter(id => !ids.has(id));
+missingIds.length ? fail('Script references missing ids: ' + missingIds.join(', ')) : pass(`All ${used.size} referenced element ids exist`);
+
+// 4. UI controls the loop needs
+const controls = ['new-map-btn', 'edit-map-btn', 'play-map-btn', 'builder-menu-btn', 'builder-palette-btn', 'builder-chores-btn',
+  'builder-play-btn', 'browser-close', 'chore-type', 'chore-custom', 'chore-complete', 'chore-timer-btn', 'chore-log-list',
+  'ambush-fight', 'ambush-run', 'ambush-hide', 'level-continue', 'level-menu', 'menu-btn', 'chore-log-btn', 'toggle-edit', 'toast'];
+const missingCtl = controls.filter(id => !ids.has(id));
+missingCtl.length ? fail('Missing controls: ' + missingCtl.join(', ')) : pass(`${controls.length} loop controls present`);
+
+// 5. Chore monsters: lore + trigger tiles (sink -> dishes, laundry -> laundry, trash can -> trash)
+for (const key of ['dishes', 'laundry', 'trash']) {
+  new RegExp(`${key}:\\s*\\{[\\s\\S]*?lore:`).test(script) ? pass(`CHORES.${key} has lore`) : fail(`CHORES.${key} missing or has no lore`);
 }
+/TRIGGER_ENTITIES\s*=\s*\{[^}]*4:\s*"dishes"[^}]*12:\s*"laundry"[^}]*13:\s*"trash"/.test(script)
+  ? pass('Trigger tiles map sink/laundry/trash can to their monsters') : fail('TRIGGER_ENTITIES mapping missing');
+['sink', 'laundry', 'trashcan', 'floor', 'wall'].every(id => new RegExp(`\\b${id}:\\s*\\{\\s*value:`).test(script))
+  ? pass('Palette ids map to tile values (TILE_DEFS)') : fail('TILE_DEFS missing palette ids');
+(script.includes('7: "#f97316"') && script.includes('🗑️')) ? pass('Trash Mimic color/symbol present') : fail('Trash Mimic color/symbol missing');
+
+// 6. Design rules: no Tile Tokens, no blocking alerts
+/token/i.test(html) ? fail('Tile Token references remain') : pass('No Tile Token references');
+/\balert\s*\(/.test(script) ? fail('alert() still used') : pass('No blocking alert() calls');
+
+console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nALL CHECKS PASSED');
+process.exit(failed ? 1 : 0);

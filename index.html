@@ -1,1915 +1,3010 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DailyDungeons — Tilemap Editor</title>
-  <style>
-    :root {
-      --bg: #0f1115;
-      --panel: #1a1d24;
-      --panel-2: #232732;
-      --text: #e8eaed;
-      --muted: #8b8f98;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Courier New', 'Consolas', monospace;
-    }
-
-    /* ===== DAILY DUNGEONS — PIXEL-ART ROGUELIKE UI ===== */
-    #app {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* TOP INFO PANEL */
-    .top-panel {
-      background: #16161e;
-      border-bottom: 1px solid #2a2a35;
-      display: flex;
-      flex-direction: column;
-      padding: 8px 10px;
-      gap: 4px;
-      min-height: 0;
-    }
-
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .floor-block {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 2px;
-    }
-
-    .floor-label {
-      font-size: 10px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .floor-num {
-      font-size: 22px;
-      font-weight: 700;
-      color: #e8eaed;
-    }
-
-    .sep {
-      color: #444;
-      font-size: 14px;
-    }
-
-    .location-box {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 2px;
-      text-align: right;
-      padding-top: 6px;
-    }
-
-    .loc-title {
-      font-size: 14px;
-      color: #f0e68c;
-      font-weight: 700;
-    }
-
-    .stats-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      padding: 4px 0;
-      border-top: 1px solid #2a2a35;
-      border-bottom: 1px solid #2a2a35;
-      margin: 4px 0;
-    }
-
-    .keystat {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      padding: 6px 12px;
-      background: #1a1d24;
-      border: 1px solid #2a2a35;
-      border-radius: 4px;
-    }
-
-    .ks-label {
-      font-size: 9px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .ks-value {
-      font-size: 18px;
-      font-weight: 700;
-      color: #ffd700;
-    }
-
-    .ks-value.gold { color: #ffd700; }
-    .ks-value.keys { color: #f0e68c; }
-
-    .bars-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      padding: 4px 0;
-    }
-
-    .vital-bar {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      flex: 1;
-    }
-
-    .bar-label {
-      font-size: 9px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .bar-track {
-      width: 100%;
-      height: 5px;
-      background: #2a2a35;
-      border-radius: 2px;
-      overflow: hidden;
-      border: 1px solid #3a3a45;
-    }
-
-    .bar-fill {
-      height: 100%;
-      border-radius: 2px;
-      transition: width 0.3s ease;
-    }
-
-    .bar-value {
-      font-size: 10px;
-      font-weight: 700;
-      color: #f0e68c;
-    }
-
-    .bars-row .vital-bar:nth-child(1) .bar-fill { background: #ef4444; }
-    .bars-row .vital-bar:nth-child(2) .bar-fill { background: #3b82f6; }
-
-    .level-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      padding-top: 6px;
-    }
-
-    .level-disc {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-    }
-
-    .level-disc canvas {
-      border: 2px solid #3b3b4a;
-      border-radius: 4px;
-    }
-
-    .level-label {
-      font-size: 11px;
-      color: #e8eaed;
-      font-weight: 700;
-    }
-
-    .skill-row {
-      display: flex;
-      gap: 6px;
-    }
-
-    .skill-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      padding: 6px 10px;
-      background: #1a1d24;
-      border: 1px solid #2a2a35;
-      border-radius: 4px;
-      cursor: pointer;
-      flex: 1;
-      text-align: center;
-    }
-
-    .skill-btn:hover {
-      border-color: #f59e0b;
-      background: #2a2a3a;
-    }
-
-    .skill-icon {
-      font-size: 20px;
-    }
-
-    .skill-label {
-      font-size: 9px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* MAP CANVAS */
-    .map-wrap {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #0a0a0f;
-      padding: 10px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    #map {
-      background: #0a0a0f;
-      border: 3px solid #3b3b4a;
-      border-radius: 6px;
-      cursor: crosshair;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      max-width: 100%;
-      height: auto;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
-    }
-
-    /* BOTTOM INTERACTION PANEL */
-    .bottom-panel {
-      background: #16161e;
-      border-top: 1px solid #2a2a35;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding: 6px 8px;
-      min-height: 0;
-    }
-
-    .inv-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-      flex: 1;
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    .inv-slot {
-      background: #1a1d24;
-      border: 1px solid #2a2a35;
-      border-radius: 4px;
-      padding: 5px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .inv-slot .inv-label {
-      font-size: 8px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .inv-slot .inv-count {
-      position: absolute;
-      bottom: 3px;
-      right: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #f0e68c;
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: 2px;
-      padding: 0 4px;
-    }
-
-    .inv-slot:nth-child(1) { border-color: #ef4444; }
-    .inv-slot:nth-child(2) { border-color: #3b82f6; }
-    .inv-slot:nth-child(3) { border-color: #f0e68c; }
-    .inv-slot:nth-child(4) { border-color: #ef4444; }
-    .inv-slot:nth-child(5) { border-color: #3b82f6; }
-    .inv-slot:nth-child(6) { border-color: #3b82f6; }
-    .inv-slot:nth-child(7) { border-color: #ef4444; }
-    .inv-slot:nth-child(8) { border-color: #3b82f6; }
-    .inv-slot:nth-child(9) { border-color: #3b82f6; }
-
-    .equip-row {
-      display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
-      padding: 4px 0;
-      border-top: 1px solid #2a2a35;
-      border-bottom: 1px solid #2a2a35;
-      margin: 4px 0;
-    }
-
-    .equip-slot {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1px;
-      padding: 6px 10px;
-      background: #1a1d24;
-      border: 1px solid #2a2a35;
-      border-radius: 4px;
-      flex: 1;
-      text-align: center;
-    }
-
-    .equip-slot .equip-label {
-      font-size: 9px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .equip-slot .equip-sub {
-      font-size: 9px;
-      color: #f0e68c;
-      font-weight: 700;
-    }
-
-    .equip-slot .equip-icon {
-      font-size: 22px;
-    }
-
-    .tools-row {
-      display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
-      padding: 4px 0;
-      border-top: 1px solid #2a2a35;
-      border-bottom: 1px solid #2a2a35;
-      margin: 4px 0;
-    }
-
-    .tool-btn {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      background: #1a1d24;
-      border: 1px solid #2a2a35;
-      border-radius: 3px;
-      font-size: 10px;
-      color: #888;
-      cursor: pointer;
-      font-family: 'Courier New', monospace;
-    }
-
-    .tool-btn input {
-      accent-color: #f59e0b;
-      margin: 0;
-    }
-
-    .tool-btn input:checked ~ * {
-      color: #f0e68c;
-      font-weight: 700;
-    }
-
-    .map-legend {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      padding: 4px 0;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      background: #1a1d24;
-      border: 1px solid #2a2a35;
-      border-radius: 4px;
-      font-size: 9px;
-      color: #888;
-    }
-
-    .legend-hex {
-      width: 16px;
-      height: 16px;
-      border-radius: 3px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 8px;
-      font-weight: 700;
-      border: 1px solid #444;
-    }
-
-    .legend-hex.green { background: #22c55e; color: #0a0a0f; }
-    .legend-hex.gold { background: #f5c542; color: #0a0a0f; }
-    .legend-hex.blue { background: #3b82f6; color: #0a0a0f; }
-
-    .legend-red {
-      width: 14px;
-      height: 14px;
-      border-radius: 3px;
-      background: #ef4444;
-      border: 1px solid #444;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 8px;
-      color: #0a0a0f;
-    }
-
-    .minimap-title {
-      font-size: 9px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      padding: 2px 0;
-    }
-
-    .minimap {
-      position: relative;
-      border: 2px solid #3b3b4a;
-      border-radius: 4px;
-      overflow: hidden;
-      background: #0a0a0f;
-    }
-
-    .minimap canvas {
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      width: 100%;
-      height: auto;
-    }
-
-    /* ===== REAL CHORE LOG PANEL ===== */
-    #chore-log-panel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 320px;
-      max-width: 90vw;
-      height: 100vh;
-      z-index: 300;
-      background: #16161e;
-      border-left: 1px solid #2a2a35;
-      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.6);
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      padding: 12px 14px;
-      gap: 8px;
-    }
-
-    #chore-log-panel.open {
-      transform: translateX(0);
-    }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .panel-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #f0e68c;
-    }
-
-    .panel-close {
-      background: transparent;
-      border: 1px solid #3b3b4a;
-      color: #888;
-      border-radius: 3px;
-      padding: 4px 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .panel-close:hover {
-      background: #2a2a35;
-      color: #f0e68c;
-    }
-
-    .form-group {
-      margin-bottom: 0;
-    }
-
-    .form-group label {
-      font-size: 10px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .form-group select,
-    .form-group input {
-      width: 100%;
-      padding: 5px 6px;
-      border: 1px solid #3b3b4a;
-      background: #1a1d24;
-      color: #e8eaed;
-      font-size: 11px;
-      border-radius: 3px;
-      font-family: 'Courier New', monospace;
-    }
-
-    .form-group select:focus,
-    .form-group input:focus {
-      border-color: #f59e0b;
-      outline: none;
-    }
-
-    .btn-complete {
-      padding: 7px 12px;
-      border-radius: 4px;
-      border: 1px solid #3b3b4a;
-      background: #1a1d24;
-      color: #e8eaed;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: 'Courier New', monospace;
-      width: 100%;
-    }
-
-    .btn-complete:hover {
-      background: #2a2a3a;
-      border-color: #f59e0b;
-      color: #f0e68c;
-    }
-
-    .timer-section {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .btn-timer {
-      flex: 1;
-      padding: 6px;
-      border-radius: 4px;
-      border: 1px solid #3b3b4a;
-      background: #1a1d24;
-      color: #e8eaed;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: 'Courier New', monospace;
-    }
-
-    .btn-timer:hover {
-      background: #2a2a3a;
-      border-color: #f59e0b;
-      color: #f0e68c;
-    }
-
-    .timer-display {
-      font-size: 20px;
-      font-weight: 700;
-      color: #f59e0b;
-      font-family: 'Courier New', monospace;
-      min-width: 50px;
-    }
-
-    .log-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      overflow-y: auto;
-      min-height: 0;
-    }
-
-    .log-section-title {
-      font-size: 10px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .log-list {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .log-entry {
-      background: #0a0a0f;
-      border: 1px solid #2a2a35;
-      border-radius: 3px;
-      padding: 6px 8px;
-      animation: slideIn 0.2s ease;
-    }
-
-    .log-entry .log-time {
-      font-size: 9px;
-      color: #666;
-    }
-
-    .log-entry .log-chore {
-      font-size: 11px;
-      color: #e8eaed;
-      font-weight: 600;
-    }
-
-    .log-entry .log-rewards {
-      font-size: 10px;
-      color: #7c3aed;
-    }
-
-    .log-empty {
-      text-align: center;
-      color: #666;
-      padding: 12px;
-      font-size: 11px;
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(10px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    #ambush-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 500;
-      background: rgba(0, 0, 0, 0.85);
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #ambush-overlay.open { display: flex; }
-
-    .scroll-box {
-      background: #16161e;
-      border: 3px solid #3b3b4a;
-      border-radius: 8px;
-      padding: 24px 28px;
-      max-width: 600px;
-      width: calc(100% - 48px);
-      text-align: center;
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
-      position: relative;
-    }
-
-    .scroll-box h2 {
-      font-size: 20px;
-      color: #f0e68c;
-      margin: 0 0 12px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-
-    .lore-text {
-      color: #b8b8d4;
-      font-size: 13px;
-      line-height: 1.6;
-      text-align: center;
-      margin: 0 0 20px;
-      font-family: 'Courier New', monospace;
-    }
-
-    .slime-sprite { font-size: 64px; margin: 12px 0; }
-
-    .scroll-box .actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
-
-    .scroll-box .actions button {
-      padding: 12px 24px;
-      border-radius: 6px;
-      border: 2px solid #f59e0b;
-      background: #f59e0b;
-      color: #0a0a0f;
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-      font-family: 'Courier New', monospace;
-    }
-
-    .scroll-box .actions button:hover { filter: brightness(1.1); }
-  </style>
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DailyDungeons — Cozy Home Builder</title>
+<link rel="icon" href="data:," />
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #1a1d24;
+    --panel-2: #232732;
+    --text: #e8eaed;
+    --muted: #8b8f98;
+    --accent: #f0e68c;
+    --gold: #ffd700;
+    --teal: #38bdf8;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Courier New', 'Consolas', monospace;
+  }
+
+  /* ===== START PAGE ===== */
+  #start-page {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: #0a0a0f;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  #start-page.open { display: flex; }
+
+  #start-page h1 {
+    font-size: 32px;
+    color: var(--accent);
+    font-weight: 700;
+    text-shadow: 0 0 20px rgba(240, 230, 140, 0.3);
+    margin-bottom: 4px;
+  }
+
+  #start-page .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .start-btn {
+    padding: 14px 32px;
+    border-radius: 6px;
+    border: 2px solid var(--gold);
+    background: var(--gold);
+    color: #0a0a0f;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    margin: 6px 12px;
+    transition: filter 0.2s;
+  }
+
+  .start-btn:hover {
+    filter: brightness(1.1);
+  }
+
+  .start-btn.secondary {
+    border-color: var(--teal);
+    background: var(--teal);
+  }
+
+  .start-btn.secondary:hover {
+    filter: brightness(1.1);
+  }
+
+  .start-stats {
+    position: absolute;
+    bottom: 24px;
+    display: flex;
+    gap: 20px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .start-stats .stat {
+    text-align: center;
+  }
+
+  .start-stats .stat .value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* ===== GAME INTERFACE ===== */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* TOP INFO PANEL */
+  .top-panel {
+    background: #16161e;
+    border-bottom: 1px solid #2a2a35;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px;
+    gap: 4px;
+    min-height: 0;
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .floor-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .floor-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .floor-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .sep {
+    color: #444;
+    font-size: 14px;
+  }
+
+  .location-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    text-align: right;
+    padding-top: 6px;
+  }
+
+  .loc-title {
+    font-size: 14px;
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .stats-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0;
+    border-top: 1px solid #2a2a35;
+    border-bottom: 1px solid #2a2a35;
+    margin: 4px 0;
+  }
+
+  .keystat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 12px;
+    background: #1a1d24;
+    border: 1px solid #2a2a35;
+    border-radius: 4px;
+  }
+
+  .ks-label {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .ks-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  .ks-value.gold { color: var(--gold); }
+  .ks-value.teal { color: var(--teal); }
+  .ks-value.gold2 { color: var(--gold); }
+
+  .bars-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0;
+  }
+
+  .vital-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .bar-label {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .bar-track {
+    width: 100%;
+    height: 5px;
+    background: #2a2a35;
+    border-radius: 2px;
+    overflow: hidden;
+    border: 1px solid #3a3a45;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .bar-value {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .bars-row .vital-bar:nth-child(1) .bar-fill { background: #ef4444; }
+  .bars-row .vital-bar:nth-child(2) .bar-fill { background: var(--teal); }
+
+  .level-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding-top: 6px;
+  }
+
+  .level-disc {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .level-disc canvas {
+    border: 2px solid #3b3b4a;
+    border-radius: 4px;
+  }
+
+  .level-label {
+    font-size: 11px;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .skill-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .skill-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 10px;
+    background: #1a1d24;
+    border: 1px solid #2a2a35;
+    border-radius: 4px;
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+  }
+
+  .skill-btn:hover {
+    border-color: var(--gold);
+    background: #2a2a3a;
+  }
+
+  .skill-icon {
+    font-size: 20px;
+  }
+
+  .skill-label {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* MAP CANVAS */
+  .map-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0f;
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  #map {
+    background: #0a0a0f;
+    border: 3px solid #3b3b4a;
+    border-radius: 6px;
+    cursor: crosshair;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    max-width: 100%;
+    height: auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+    max-height: 100%;
+    width: auto;
+  }
+
+  /* keep HUD panels at natural size; the map takes the remaining height */
+  #app > .top-panel, #app > .bottom-panel { flex-shrink: 0; }
+
+  .builder-actions { flex-wrap: wrap; align-items: center; }
+  .builder-selected-wrap { font-size: 11px; color: var(--muted); }
+  .builder-selected-wrap b { color: var(--gold); }
+
+  .asset-item .swatch.kenny-asset { image-rendering: pixelated; background-repeat: no-repeat; background-origin: border-box; }
+  .asset-item .swatch.emoji-swatch { display: flex; align-items: center; justify-content: center; font-size: 22px; }
+
+  #toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%);
+    z-index: 1500;
+    background: #16161e;
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  #toast.open { opacity: 1; }
+
+  /* desktop builder layout: HUD + inventory in a left sidebar, map fills the rest */
+  @media (min-width: 800px) {
+    #app { display: grid; grid-template-columns: 340px 1fr; grid-template-rows: auto 1fr; }
+    #app > .top-panel { grid-column: 1; grid-row: 1; border-right: 1px solid #2a2a35; }
+    #app > .bottom-panel { grid-column: 1; grid-row: 2; overflow-y: auto; border-right: 1px solid #2a2a35; }
+    #app > .map-wrap { grid-column: 2; grid-row: 1 / 3; }
+    #app > .bottom-panel > * { flex: none; }
+    #app > .bottom-panel .minimap { width: 164px; }
+  }
+
+  /* BOTTOM INTERACTION PANEL */
+  .bottom-panel {
+    background: #16161e;
+    border-top: 1px solid #2a2a35;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 8px;
+    min-height: 0;
+  }
+
+  .inv-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .inv-slot {
+    background: #1a1d24;
+    border: 1px solid #2a2a35;
+    border-radius: 4px;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .inv-slot .inv-label {
+    font-size: 8px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .inv-slot .inv-count {
+    position: absolute;
+    bottom: 3px;
+    right: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #f0e68c;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 2px;
+    padding: 0 4px;
+  }
+
+  .inv-slot:nth-child(1) { border-color: #ef4444; }
+  .inv-slot:nth-child(2) { border-color: #3b82f6; }
+  .inv-slot:nth-child(3) { border-color: #f0e68c; }
+  .inv-slot:nth-child(4) { border-color: #ef4444; }
+  .inv-slot:nth-child(5) { border-color: #3b82f6; }
+  .inv-slot:nth-child(6) { border-color: #3b82f6; }
+  .inv-slot:nth-child(7) { border-color: #ef4444; }
+  .inv-slot:nth-child(8) { border-color: #3b82f6; }
+  .inv-slot:nth-child(9) { border-color: #3b82f6; }
+
+  .equip-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+    border-top: 1px solid #2a2a35;
+    border-bottom: 1px solid #2a2a35;
+    margin: 4px 0;
+  }
+
+  .equip-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 6px 10px;
+    background: #1a1d24;
+    border: 1px solid #2a2a35;
+    border-radius: 4px;
+    flex: 1;
+    text-align: center;
+  }
+
+  .equip-slot .equip-label {
+    font-size: 9px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .equip-slot .equip-sub {
+    font-size: 9px;
+    color: #f0e68c;
+    font-weight: 700;
+  }
+
+  .equip-slot .equip-icon {
+    font-size: 22px;
+  }
+
+  .tools-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+    border-top: 1px solid #2a2a35;
+    border-bottom: 1px solid #2a2a35;
+    margin: 4px 0;
+  }
+
+  .tool-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #1a1d24;
+    border: 1px solid #2a2a35;
+    border-radius: 3px;
+    font-size: 10px;
+    color: #888;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+  }
+
+  .tool-btn input {
+    accent-color: #f59e0b;
+    margin: 0;
+  }
+
+  .tool-btn input:checked ~ * {
+    color: #f0e68c;
+    font-weight: 700;
+  }
+
+  .map-legend {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #1a1d24;
+    border: 1px solid #2a2a35;
+    border-radius: 4px;
+    font-size: 9px;
+    color: #888;
+  }
+
+  .legend-hex {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 700;
+    border: 1px solid #444;
+  }
+
+  .legend-hex.green { background: #22c55e; color: #0a0a0f; }
+  .legend-hex.gold { background: #f5c542; color: #0a0a0f; }
+  .legend-hex.blue { background: #3b82f6; color: #0a0a0f; }
+
+  .legend-red {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    background: #ef4444;
+    border: 1px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    color: #0a0a0f;
+  }
+
+  .minimap-title {
+    font-size: 9px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 2px 0;
+  }
+
+  .minimap {
+    position: relative;
+    border: 2px solid #3b3b4a;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #0a0a0f;
+  }
+
+  .minimap canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    width: 100%;
+    height: auto;
+  }
+
+  /* CHORE LOG DRAWER */
+  #chore-log-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 340px;
+    max-width: 90vw;
+    height: 100vh;
+    z-index: 300;
+    background: #16161e;
+    border-left: 1px solid #2a2a35;
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.6);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  #chore-log-panel.open {
+    transform: translateX(0);
+  }
+
+  .chore-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  .panel-close {
+    background: transparent;
+    border: 1px solid #3b3b4a;
+    color: var(--muted);
+    border-radius: 3px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .panel-close:hover {
+    background: #2a2a35;
+    color: var(--gold);
+  }
+
+  .chore-form-group {
+    margin-bottom: 0;
+  }
+
+  .chore-form-group label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .chore-form-group select,
+  .chore-form-group input {
+    width: 100%;
+    padding: 5px 6px;
+    border: 1px solid #3b3b4a;
+    background: #1a1d24;
+    color: var(--text);
+    font-size: 11px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .chore-form-group select:focus,
+  .chore-form-group input:focus {
+    border-color: var(--gold);
+    outline: none;
+  }
+
+  .chore-btn {
+    padding: 7px 12px;
+    border-radius: 4px;
+    border: 1px solid #3b3b4a;
+    background: #1a1d24;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    width: 100%;
+  }
+
+  .chore-btn:hover {
+    background: #2a2a3a;
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .timer-section {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .chore-btn.tiny {
+    flex: 1;
+    padding: 4px;
+    font-size: 10px;
+  }
+
+  .timer-display {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+    font-family: 'Courier New', monospace;
+    min-width: 50px;
+  }
+
+  .chore-log-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  .chore-log-section-title {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .chore-log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .chore-log-entry {
+    background: #0a0a0f;
+    border: 1px solid #2a2a35;
+    border-radius: 3px;
+    padding: 6px 8px;
+    animation: slideIn 0.2s ease;
+  }
+
+  .chore-log-entry .log-time {
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  .chore-log-entry .log-chore {
+    font-size: 11px;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .chore-log-entry .log-rewards {
+    font-size: 10px;
+    color: var(--gold);
+  }
+
+  .log-empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 12px;
+    font-size: 11px;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ===== ASSET BROWSER ===== */
+  #asset-browser {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 300;
+    background: #0a0a0f;
+    display: none;
+    flex-direction: column;
+    border-right: 2px solid #3b3b4a;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+  }
+
+  #asset-browser.open {
+    display: flex;
+  }
+
+  .browser-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: #1a1a2e;
+    border-bottom: 2px solid #3b3b4a;
+  }
+
+  .browser-header h2 {
+    font-size: 16px;
+    margin: 0;
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .browser-close {
+    background: transparent;
+    border: 1px solid #3b3b4a;
+    color: var(--muted);
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .browser-close:hover {
+    background: #2a2a3a;
+    color: var(--gold);
+  }
+
+  .browser-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 10px;
+  }
+
+  .browser-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid #3b3b4a;
+    padding-bottom: 6px;
+    flex-wrap: wrap;
+  }
+
+  .browser-tabs .tab {
+    padding: 6px 12px;
+    border: 1px solid #3b3b4a;
+    background: #16161e;
+    color: var(--muted);
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+  }
+
+  .browser-tabs .tab.active {
+    background: #2d2d4a;
+    border-color: var(--gold);
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .browser-tabs .tab:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .asset-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 6px;
+    overflow-y: auto;
+    padding: 6px;
+  }
+
+  #asset-grid { align-content: start; }
+
+  .asset-grid .grid-loading {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 20px;
+  }
+
+  .asset-item {
+    background: #16161e;
+    border: 2px solid #3b3b4a;
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .asset-item:hover {
+    border-color: var(--gold);
+    box-shadow: 0 0 12px rgba(240, 230, 140, 0.3);
+  }
+
+  .asset-item .swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .asset-item .label {
+    font-size: 11px;
+    color: var(--text);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .asset-item.selected {
+    border-color: var(--gold);
+    box-shadow: 0 0 8px rgba(240, 230, 140, 0.4);
+  }
+
+  .browser-info {
+    padding: 8px 12px;
+    background: #16161e;
+    border-top: 2px solid #3b3b4a;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ===== GAMEPLAY OVERLAY ===== */
+  #gameplay-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: #0a0a0f;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #gameplay-overlay.open {
+    display: flex;
+  }
+
+  .game-hud {
+    background: #16161e;
+    border-bottom: 2px solid #3b3b4a;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 12px;
+    gap: 4px;
+  }
+
+  .game-hud-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .game-hud-top .room-name {
+    font-size: 14px;
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .game-hud-top .room-name .sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .game-hud-stats {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .game-hud-stats .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 8px;
+    background: #1a1d24;
+    border: 1px solid #2a2a35;
+    border-radius: 3px;
+    min-width: 60px;
+  }
+
+  .game-hud-stats .stat .label {
+    font-size: 8px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .game-hud-stats .stat .value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  .game-hud-stats .stat .value.gold { color: var(--gold); }
+  .game-hud-stats .stat .value.teal { color: var(--teal); }
+  .game-hud-stats .stat .value.xp { color: #7c3aed; }
+
+  .game-hud-bars {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .game-hud-bars .bar {
+    flex: 1;
+    min-width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .game-hud-bars .bar .label {
+    font-size: 8px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .game-hud-bars .bar .track {
+    width: 100%;
+    height: 4px;
+    background: #2a2a35;
+    border-radius: 2px;
+    overflow: hidden;
+    border: 1px solid #3a3a45;
+  }
+
+  .game-hud-bars .bar .fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .game-hud-bars .bar .fill.hp { background: #ef4444; }
+  .game-hud-bars .bar .fill.mp { background: var(--teal); }
+
+  .game-hud-actions {
+    display: flex;
+    gap: 6px;
+    padding-top: 4px;
+  }
+
+  .game-hud-actions button {
+    padding: 6px 12px;
+    border-radius: 3px;
+    border: 1px solid #3b3b4a;
+    background: #1a1d24;
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+  }
+
+  .game-hud-actions button:hover {
+    background: #2a2a3a;
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .game-play-area {
+    flex: 1;
+    min-height: 0;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: #0a0a0f;
+    overflow: hidden;
+  }
+
+  .room-canvas {
+    background: #0a0a0f;
+    border: 3px solid #3b3b4a;
+    border-radius: 6px;
+    cursor: pointer;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    max-width: 100%;
+    max-height: 100%; /* shrink to fit short windows instead of clipping rows */
+    width: auto;
+    height: auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+    display: block;
+  }
+
+  .move-indicator {
+    display: none;
+    transform: translate(-50%, -50%);
+    position: absolute;
+    font-size: 24px;
+    color: var(--gold);
+    pointer-events: none;
+    animation: fadeIn 0.3s ease;
+    z-index: 10;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .monster-spawn {
+    display: none;
+    margin: -18px 0 0 -14px;
+    position: absolute;
+    font-size: 28px;
+    color: #ef4444;
+    pointer-events: none;
+    animation: spawnFlash 1.5s ease;
+    z-index: 5;
+  }
+
+  @keyframes spawnFlash {
+    0% { opacity: 1; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1.5); }
+    100% { opacity: 0; }
+  }
+
+  .damage-number {
+    position: absolute;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ef4444;
+    pointer-events: none;
+    animation: damageFloat 1s ease;
+    z-index: 15;
+  }
+
+  @keyframes damageFloat {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-20px) scale(1.5); }
+  }
+
+  /* ===== LEVEL CLEAR ===== */
+  #level-clear {
+    position: fixed;
+    inset: 0;
+    z-index: 600;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #level-clear.open { display: flex; }
+
+  .level-clear-box {
+    background: #16161e;
+    border: 4px solid var(--gold);
+    border-radius: 8px;
+    padding: 32px 40px;
+    max-width: 500px;
+    width: calc(100% - 48px);
+    text-align: center;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+  }
+
+  .level-clear-box .title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0 0 12px;
+  }
+
+  .level-clear-box .sub {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .level-clear-box .loot {
+    font-size: 12px;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .level-clear-box .actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+
+  .level-clear-box .actions button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: 2px solid var(--gold);
+    background: var(--gold);
+    color: #0a0a0f;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+  }
+
+  .level-clear-box .actions button:hover { filter: brightness(1.1); }
+
+  /* ===== AMBUSH POPUP ===== */
+  #ambush-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 450;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #ambush-overlay.open { display: flex; }
+
+  .ambush-box {
+    background: #16161e;
+    border: 4px solid var(--red, #ef4444);
+    border-radius: 8px;
+    padding: 32px 40px;
+    max-width: 500px;
+    width: calc(100% - 48px);
+    text-align: center;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+  }
+
+  .ambush-box .ambush-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--red, #ef4444);
+    margin: 0 0 12px;
+  }
+
+  .ambush-box .ambush-text {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .ambush-box .ambush-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+
+  .ambush-box .ambush-actions button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: 2px solid var(--gold);
+    background: var(--gold);
+    color: #0a0a0f;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+  }
+
+  .ambush-box .ambush-actions button:hover { filter: brightness(1.1); }
+
+  /* ===== CHORE LOG PAGE (separate view) ===== */
+  #chore-log-page {
+    position: fixed;
+    inset: 0;
+    z-index: 250;
+    background: #0f1115;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #chore-log-page.open {
+    display: flex;
+  }
+
+  .chore-log-page-header {
+    background: #16161e;
+    border-bottom: 2px solid #3b3b4a;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .chore-log-page-header h2 {
+    font-size: 18px;
+    color: var(--gold);
+    margin: 0;
+  }
+
+  .chore-log-page-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .chore-log-page-body .form-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .chore-log-page-body .form-group select,
+  .chore-log-page-body .form-group input {
+    flex: 1;
+    min-width: 150px;
+    padding: 6px 8px;
+    border: 1px solid #3b3b4a;
+    background: #1a1d24;
+    color: var(--text);
+    font-size: 12px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .chore-log-page-body .form-group select:focus,
+  .chore-log-page-body .form-group input:focus {
+    border-color: var(--gold);
+    outline: none;
+  }
+
+  .chore-log-page-body .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--gold);
+    background: var(--gold);
+    color: #0a0a0f;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+  }
+
+  .chore-log-page-body .btn:hover {
+    filter: brightness(1.1);
+  }
+
+  .chore-log-page-body .timer-section {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .chore-log-page-body .btn.tiny {
+    flex: 1;
+    padding: 6px;
+    font-size: 10px;
+  }
+
+  .chore-log-page-body .timer-display {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gold);
+    font-family: 'Courier New', monospace;
+    min-width: 60px;
+  }
+
+  .chore-log-page-body .chore-log-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  .chore-log-page-body .chore-log-section-title {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .chore-log-page-body .chore-log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .chore-log-page-body .chore-log-entry {
+    background: #0a0a0f;
+    border: 1px solid #2a2a35;
+    border-radius: 3px;
+    padding: 6px 8px;
+  }
+
+  .chore-log-page-body .chore-log-entry .log-time {
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  .chore-log-page-body .chore-log-entry .log-chore {
+    font-size: 11px;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .chore-log-page-body .chore-log-entry .log-rewards {
+    font-size: 10px;
+    color: var(--gold);
+  }
+
+  .chore-log-page-body .chore-log-list .log-empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 12px;
+    font-size: 11px;
+  }
+
+  /* ===== DONE/CREATE PROMPT ===== */
+  #done-prompt {
+    position: fixed;
+    inset: 0;
+    z-index: 350;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #done-prompt.open {
+    display: flex;
+  }
+
+  .done-prompt-box {
+    background: #16161e;
+    border: 4px solid var(--gold);
+    border-radius: 8px;
+    padding: 32px 40px;
+    max-width: 420px;
+    width: calc(100% - 48px);
+    text-align: center;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+  }
+
+  .done-prompt-box h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gold);
+    margin: 0 0 12px;
+  }
+
+  .done-prompt-box .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .done-prompt-box .loot {
+    font-size: 12px;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .done-prompt-box .loot .item {
+    display: inline-block;
+    padding: 4px 8px;
+    background: #1a1d24;
+    border: 1px solid #3b3b4a;
+    border-radius: 3px;
+    margin: 0 4px;
+  }
+
+  .done-prompt-box .actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+
+  .done-prompt-box .actions button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: 2px solid var(--gold);
+    background: var(--gold);
+    color: #0a0a0f;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+  }
+
+  .done-prompt-box .actions button:hover { filter: brightness(1.1); }
+
+  /* ===== CHAOS BAR ===== */
+  .chaos-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background: #1a1d24;
+    border: 1px solid #2a2a35;
+    border-radius: 3px;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .chaos-bar-container .label {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .chaos-bar {
+    flex: 1;
+    height: 4px;
+    background: #2a2a35;
+    border-radius: 2px;
+    overflow: hidden;
+    border: 1px solid #3a3a45;
+  }
+
+  .chaos-bar .fill {
+    height: 100%;
+    background: #ef4444;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .chaos-bar .value {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gold);
+    min-width: 24px;
+  }
+</style>
 </head>
 <body>
-  <!-- ===== DAILY DUNGEONS — PIXEL-ART ROGUELIKE UI ===== -->
-  <div id="app">
-    <!-- TOP INFO PANEL (Level / Floor / Gold / Keys / HP / MP / Level) -->
-    <header class="top-panel">
-      <div class="top-bar">
-        <div class="floor-block">
-          <div class="floor-label">Floor</div>
-          <div class="floor-num"><span id="floor-display">07</span> <span class="sep">|</span> <span id="subfloor-display">B2</span></div>
-        </div>
-        <div class="location-box">
-          <div class="loc-title">7B-2 <span style="color:#888;font-size:11px;">(Subway Tunnels)</span></div>
-          <div style="color:#888;font-size:10px;">Nebula Station</div>
-        </div>
-      </div>
-      <div class="stats-row">
-        <div class="keystat">
-          <div class="ks-label">Gold</div>
-          <div class="ks-value gold"><span id="hud-gold">0</span></div>
-        </div>
-        <div class="keystat">
-          <div class="ks-label">Keys</div>
-          <div class="ks-value"><span id="hud-keys">2</span></div>
-        </div>
-      </div>
-      <div class="bars-row">
-        <div class="vital-bar">
-          <div class="bar-label">HP</div>
-          <div class="bar-track"><div id="hud-hp" class="bar-fill" style="width:100%;background:#ef4444;"></div></div>
-          <div class="bar-value"><span id="hp-text">68/90</span></div>
-        </div>
-        <div class="vital-bar">
-          <div class="bar-label">MP</div>
-          <div class="bar-track"><div id="hud-mp" class="bar-fill" style="width:100%;background:#3b82f6;"></div></div>
-          <div class="bar-value"><span id="mp-text">42/50</span></div>
-        </div>
-      </div>
-      <div class="level-row">
-        <div class="level-disc">
-          <canvas id="leveldisk" width="120" height="120"></canvas>
-          <div class="level-label">Level <span id="level-display">12</span></div>
-        </div>
-        <div class="skill-row">
-          <div class="skill-btn"><div class="skill-icon">⚔️</div><div class="skill-label">Attack</div></div>
-          <div class="skill-btn"><div class="skill-icon">💨</div><div class="skill-label">Dodge</div></div>
-          <div class="skill-btn"><div class="skill-icon">🌀</div><div class="skill-label">Dash</div></div>
-        </div>
-      </div>
-    </header>
 
-    <!-- MAP CANVAS -->
-    <div class="map-wrap">
-      <canvas id="map" width="640" height="640"></canvas>
-    </div>
+<!-- ===== START PAGE ===== -->
+<div id="start-page">
+  <h1>🏰 DailyDungeons</h1>
+  <div class="subtitle">Build your home. Make it a dungeon.</div>
+  <button class="start-btn" id="new-map-btn">✨ New Map</button>
+  <button class="start-btn secondary" id="edit-map-btn">🛠️ Edit Dungeon</button>
+  <button class="start-btn secondary" id="asset-palette-toggle">🎨 Asset Palette</button>
+  <button class="start-btn" id="play-map-btn">▶️ Play</button>
+  <div class="start-stats">
+    <div class="stat"><span>Gold</span><div class="value" id="menu-gold">0</div></div>
+    <div class="stat"><span>XP</span><div class="value" id="menu-xp">0</div></div>
+    <div class="stat"><span>Level</span><div class="value" id="menu-level">1</div></div>
+    <div class="stat"><span>Rooms</span><div class="value" id="menu-rooms">0</div></div>
+  </div>
+</div>
 
-    <!-- BOTTOM INTERACTION PANEL (Inventory Grid + Equipment + Minimap + Level Disk) -->
-    <footer class="bottom-panel">
-      <div class="inv-grid">
-        <div class="inv-slot">🧪<div class="inv-label">Red Potion</div><div class="inv-count">3</div></div>
-        <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div><div class="inv-count">1</div></div>
-        <div class="inv-slot">🗝️<div class="inv-label">Key</div><div class="inv-count">1</div></div>
-        <div class="inv-slot">🧪<div class="inv-label">Red Potion</div></div>
-        <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
-        <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
-        <div class="inv-slot">🧪<div class="inv-label">Red Potion</div></div>
-        <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
-        <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
-      </div>
-      <div class="equip-row">
-        <div class="equip-slot">
-          <div class="equip-icon">🔪</div>
-          <div class="equip-label">Equipped Weapon</div>
-          <div class="equip-sub">Dagger</div>
-        </div>
-        <div class="equip-slot">
-          <div class="equip-icon">🗝️</div>
-          <div class="equip-label">Consumable</div>
-          <div class="equip-sub">Red Potion 3</div>
-        </div>
-        <div class="equip-slot">
-          <div class="equip-icon">🗝️</div>
-          <div class="equip-label">Key Item</div>
-          <div class="equip-sub">Subway Key</div>
-        </div>
-        <div class="equip-slot">
-          <div class="equip-icon">🗑️</div>
-          <div class="equip-label">Discard</div>
-        </div>
-      </div>
-      <div class="tools-row">
-        <label class="tool-btn"><input type="radio" name="tool" value="1" checked /> 🛋️ Floor</label>
-        <label class="tool-btn"><input type="radio" name="tool" value="2" /> 🧱 Wall</label>
-        <label class="tool-btn"><input type="radio" name="tool" value="3" /> 🛏️ Bed</label>
-        <label class="tool-btn"><input type="radio" name="tool" value="4" /> 🚰 Sink</label>
-        <label class="tool-btn"><input type="radio" name="tool" value="5" /> 🦠 Dish Slime</label>
-        <label class="tool-btn"><input type="radio" name="tool" value="6" /> 👔 Laundry Hydra</label>
-        <label class="tool-btn" id="tool-trash-mimic"><input type="radio" name="tool" value="7" /> 🗑️ Trash Mimic</label>
-      </div>
-      <div class="map-legend">
-        <div class="legend-item"><div class="legend-hex green"></div><span>SAFE ZONE</span></div>
-        <div class="legend-item"><div class="legend-hex gold">▶</div><span>STAIRS UP</span></div>
-        <div class="legend-item"><div class="legend-hex blue">▼</div><span>STAIRS DOWN</span></div>
-        <div class="legend-item"><div class="legend-red"></div><span>Event DANGER</span></div>
-      </div>
-      <div class="minimap-title">Floor 7B-2 — Subway Tunnels</div>
-      <div class="minimap">
-        <canvas id="minimap" width="160" height="160"></canvas>
-      </div>
-    </footer>
+<!-- ===== GAME APP ===== -->
+<div id="app" style="display:none;">
 
-    <!-- REAL CHORE LOG DRAWER -->
-    <div id="chore-log-panel">
-      <div class="panel-header">
-        <span class="panel-title">📋 Real Chore Log</span>
-        <button class="panel-close" id="chore-log-close">✕</button>
+  <!-- TOP INFO PANEL -->
+  <header class="top-panel">
+    <div class="top-bar">
+      <div class="floor-block">
+        <div class="floor-label">Floor</div>
+        <div class="floor-num" id="floor-display">01 <span class="sep">|</span> <span id="subfloor-display">Living Room</span></div>
       </div>
-      <div class="form-group">
-        <label for="chore-type">Chore Type</label>
-        <select id="chore-type">
-          <option value="Dishes">🍽️ Dishes</option>
-          <option value="Laundry">👕 Laundry</option>
-          <option value="Trash">🗑️ Trash</option>
-          <option value="Custom">✏️ Custom</option>
-        </select>
-      </div>
-      <div class="form-group" id="chore-custom-group" style="display:none;">
-        <label for="chore-custom">Custom Chore</label>
-        <input type="text" id="chore-custom" placeholder="Describe your chore..." />
-      </div>
-      <button class="btn-complete" id="chore-complete">✅ Mark Complete</button>
-      <div class="timer-section">
-        <button class="btn-timer" id="chore-timer-btn">⏱️ Start Timer</button>
-        <span class="timer-display" id="chore-timer-display">00:00</span>
-      </div>
-      <div class="log-section">
-        <div class="log-section-title">Recent Completions</div>
-        <div class="log-list" id="chore-log-list">
-          <div class="log-empty">No chores logged yet</div>
-        </div>
+      <div class="location-box">
+        <div class="loc-title">Living Room</div>
+        <div style="color:#888;font-size:10px;">Cozy Home Basement</div>
       </div>
     </div>
+    <div class="game-hud-actions builder-actions">
+      <button id="builder-menu-btn">🏠 Menu</button>
+      <button id="builder-palette-btn">🎨 Asset Palette</button>
+      <button id="builder-chores-btn">📋 Chores</button>
+      <button id="builder-play-btn">▶️ Play</button>
+      <span class="builder-selected-wrap">Tile: <b id="builder-selected">Floor</b></span>
+    </div>
+    <div class="stats-row">
+      <div class="keystat">
+        <div class="ks-label">Gold</div>
+        <div class="ks-value gold" id="hud-gold">0</div>
+      </div>
+      <div class="keystat">
+        <div class="ks-label">Chores Done</div>
+        <div class="ks-value teal" id="hud-chores">0</div>
+      </div>
+    </div>
+    <div class="bars-row">
+      <div class="vital-bar">
+        <div class="bar-label">HP</div>
+        <div class="bar-track"><div id="hud-hp" class="bar-fill" style="width:100%;background:#ef4444;"></div></div>
+        <div class="bar-value"><span id="hp-text">100/100</span></div>
+      </div>
+      <div class="vital-bar">
+        <div class="bar-label">MP</div>
+        <div class="bar-track"><div id="hud-mp" class="bar-fill" style="width:100%;background:teal;"></div></div>
+        <div class="bar-value"><span id="mp-text">100/100</span></div>
+      </div>
+      <div class="vital-bar">
+        <div class="bar-label">XP</div>
+        <div class="bar-track"><div id="hud-xp" class="bar-fill" style="width:0%;"></div></div>
+        <div class="bar-value"><span id="hud-xp-max">0/100</span></div>
+      </div>
+      <div class="vital-bar">
+        <div class="bar-label">Class</div>
+        <div class="bar-value"><span id="hud-class">Rogue</span></div>
+      </div>
+      <div class="vital-bar">
+        <div class="bar-label">Level</div>
+        <div class="bar-value"><span id="level-display">1</span></div>
+      </div>
+    </div>
+    <div class="level-row">
+      <div class="level-disc">
+        <canvas id="leveldisk" width="120" height="120"></canvas>
+        <div class="level-label">Level <span id="level-label-text">1</span></div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-btn"><div class="skill-icon">⚔️</div><div class="skill-label">Attack</div></div>
+        <div class="skill-btn"><div class="skill-icon">💨</div><div class="skill-label">Dodge</div></div>
+        <div class="skill-btn"><div class="skill-icon">🌀</div><div class="skill-label">Dash</div></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAP CANVAS -->
+  <div class="map-wrap">
+    <canvas id="map" width="640" height="640"></canvas>
   </div>
 
-  <script>
-    // ============================================================
-    //  DAILY HAVEN QUEST — TWO-TIERED MATRIX EDITOR + HERO / QUEST LOOP
-    // ============================================================
+  <!-- BOTTOM INTERACTION PANEL -->
+  <footer class="bottom-panel">
+    <div class="inv-grid">
+      <div class="inv-slot">🧪<div class="inv-label">Red Potion</div><div class="inv-count">3</div></div>
+      <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div><div class="inv-count">1</div></div>
+      <div class="inv-slot">🗝️<div class="inv-label">Key</div><div class="inv-count">1</div></div>
+      <div class="inv-slot">🧪<div class="inv-label">Red Potion</div></div>
+      <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
+      <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
+      <div class="inv-slot">🧪<div class="inv-label">Red Potion</div></div>
+      <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
+      <div class="inv-slot">🧪<div class="inv-label">Blue Potion</div></div>
+    </div>
+    <div class="equip-row">
+      <div class="equip-slot">
+        <div class="equip-icon">🔪</div>
+        <div class="equip-label">Equipped Weapon</div>
+        <div class="equip-sub">Dagger</div>
+      </div>
+      <div class="equip-slot">
+        <div class="equip-icon">🗝️</div>
+        <div class="equip-label">Consumable</div>
+        <div class="equip-sub">Red Potion 3</div>
+      </div>
+      <div class="equip-slot">
+        <div class="equip-icon">🗝️</div>
+        <div class="equip-label">Key Item</div>
+        <div class="equip-sub">Hidden Key</div>
+      </div>
+      <div class="equip-slot">
+        <div class="equip-icon">🗑️</div>
+        <div class="equip-label">Discard</div>
+      </div>
+    </div>
+    <div class="map-legend">
+      <div class="legend-item"><div class="legend-hex green"></div><span>SAFE ZONE</span></div>
+      <div class="legend-item"><div class="legend-hex gold">▶</div><span>STAIRS UP</span></div>
+      <div class="legend-item"><div class="legend-hex blue">▼</div><span>STAIRS DOWN</span></div>
+      <div class="legend-item"><div class="legend-red"></div><span>Event DANGER</span></div>
+    </div>
+    <div class="minimap-title">Floor 01 — Living Room</div>
+    <div class="minimap">
+      <canvas id="minimap" width="160" height="160"></canvas>
+    </div>
+  </footer>
+</div>
 
-    const GRID_SIZE = 16;
-    const TILE_SIZE = 40; // 16 * 40 = 640 (matches canvas)
+<!-- ===== REAL CHORE LOG DRAWER ===== -->
+<div id="chore-log-panel">
+  <div class="chore-panel-header">
+    <span class="panel-title">📋 Real Chore Log</span>
+    <button class="panel-close" id="chore-log-close">✕</button>
+  </div>
+  <div class="chore-form-group">
+    <label for="chore-type">Chore Type</label>
+    <select id="chore-type">
+      <option value="Dishes">🍽️ Dishes</option>
+      <option value="Laundry">👕 Laundry</option>
+      <option value="Trash">🗑️ Trash</option>
+      <option value="Custom">✏️ Custom</option>
+    </select>
+  </div>
+  <div class="chore-form-group" id="chore-custom-group" style="display:none;">
+    <label for="chore-custom">Custom Chore</label>
+    <input type="text" id="chore-custom" placeholder="Describe your chore..." />
+  </div>
+  <button class="chore-btn" id="chore-complete">✅ Mark Complete</button>
+  <div class="timer-section">
+    <button class="chore-btn tiny" id="chore-timer-btn">⏱️ Start Timer</button>
+    <span class="timer-display" id="chore-timer-display">00:00</span>
+  </div>
+  <div class="chore-log-section">
+    <div class="chore-log-section-title">Recent Completions</div>
+    <div class="chore-log-list" id="chore-log-list">
+      <div class="log-empty">No chores logged yet</div>
+    </div>
+  </div>
+</div>
 
-    const canvas = document.getElementById("map");
-    const ctx = canvas.getContext("2d");
+<!-- ===== ASSET BROWSER WINDOW ===== -->
+<div id="asset-browser">
+  <div class="browser-header">
+    <h2 id="browser-title">🎨 Asset Browser</h2>
+    <button id="browser-close" class="browser-close">✕</button>
+  </div>
+  <div class="browser-body">
+    <div class="browser-tabs">
+      <button class="tab active" data-category="all">All</button>
+      <button class="tab" data-category="terrain">Terrain</button>
+      <button class="tab" data-category="furniture">Furniture</button>
+      <button class="tab" data-category="environment">Environment</button>
+      <button class="tab" data-category="monsters">Monsters</button>
+    </div>
+    <div class="asset-grid" id="asset-grid">
+      <div class="grid-loading">Loading Kenney assets...</div>
+    </div>
+    <div class="browser-info" id="browser-info">
+      <h3>Pick a tile, then click the map to place it</h3>
+      <p>Building is free. Sinks, laundry, trash cans and lawns wake chore monsters when you play.</p>
+    </div>
+  </div>
+</div>
 
-    // ---- DATA DICTIONARY & COLOR ENCODING ----
-    // terrainMap: 0 = Empty, 1 = Floor, 2 = Wall
-    // entityMap:  0 = None, 3 = Bed, 4 = Sink, 5 = Dish Slime, 6 = Laundry Hydra, 7 = Trash Mimic
+<!-- ===== GAMEPLAY MODE OVERLAY ===== -->
+<div id="gameplay-overlay">
+  <div class="game-hud">
+    <div class="game-hud-top">
+      <div class="room-name">
+        <span id="game-room-name">Living Room</span>
+        <div class="sub">Floor 01 · Sub Level: Living Room</div>
+      </div>
+      <div class="game-hud-stats">
+        <div class="stat">
+          <div class="label">Gold</div>
+          <div class="value gold" id="game-gold">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">XP</div>
+          <div class="value xp" id="game-xp">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Level</div>
+          <div class="value" id="game-level">1</div>
+        </div>
+        <div class="stat">
+          <div class="label">HP</div>
+          <div class="value" id="game-hp">100/100</div>
+        </div>
+      </div>
+    </div>
+    <div class="game-hud-bars">
+      <div class="bar">
+        <div class="label">HP</div>
+        <div class="track"><div class="fill hp" id="game-hp-fill" style="width:100%"></div></div>
+      </div>
+      <div class="bar">
+        <div class="label">MP</div>
+        <div class="track"><div class="fill mp" id="game-mp-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+    <div class="game-hud-actions">
+      <button id="menu-btn">🏠 Menu</button>
+      <button id="chore-log-btn">📋 Chores</button>
+      <button id="toggle-edit">🛠️ Edit Dungeon</button>
+      <button id="surfactant-btn">⚔️ Surfactant Blast</button>
+    </div>
+  </div>
+  <div class="game-play-area">
+    <canvas class="room-canvas" id="room-canvas" width="640" height="640"></canvas>
+    <div class="move-indicator" id="move-indicator">▼</div>
+    <div class="monster-spawn" id="monster-spawn">👾</div>
+  </div>
+</div>
 
-    const TERRAIN_COLORS = {
-      0: "transparent",
-      1: "#b45309",   // floor
-      2: "#64748b",   // wall
-      8: "#2d6a4f",   // tree (RPG Urban)
-      9: "#4a5568",   // rock (RPG Urban)
-      10: "#8b9a3a",  // grass (RPG Urban)
-      11: "#bae6fd",  // sky (RPG Urban)
-    };
+<!-- ===== AMBUSH POPUP ===== -->
+<div id="ambush-overlay">
+  <div class="ambush-box">
+    <h2 class="ambush-title">AMBUSH!</h2>
+    <p class="ambush-text">A monster appeared!</p>
+    <div class="ambush-actions">
+      <button id="ambush-fight">⛏️ Fight</button>
+      <button id="ambush-run">🏃 Run</button>
+      <button id="ambush-hide">🕳️ Hide</button>
+    </div>
+  </div>
+</div>
 
-    const ENTITY_COLORS = {
-      0: "transparent",
-      3: "#38bdf8",   // bed
-      4: "#06b6d4",   // sink
-      5: "#ec4899",   // dish slime
-      6: "#a855f7",   // laundry hydra
-      7: "#f97316",   // trash mimic
-      8: "#2d6a4f",   // tree (RPG Urban)
-      9: "#4a5568",   // rock (RPG Urban)
-      10: "#8b9a3a",  // grass (RPG Urban)
-      11: "#bae6fd",  // sky (RPG Urban)
-    };
+<!-- ===== TOAST ===== -->
+<div id="toast"></div>
 
-    const ENTITY_SYMBOLS = {
-      3: "🛏️",
-      4: "🚰",
-      5: "🦠",
-      6: "👔",
-      7: "🗑️",
-      8: "🌳",
-      9: "🪨",
-      10: "🌿",
-      11: "🌤️",
-    };
+<!-- ===== LEVEL CLEAR POPUP ===== -->
+<div id="level-clear">
+  <div class="level-clear-box">
+    <h1 class="title">FLOOR COMPLETED!</h1>
+    <div class="sub">You finished all the chores in this room.</div>
+    <div class="loot">Rewards: <span id="level-xp">+500</span> XP <span id="level-gold">+150</span> Gold</div>
+    <div class="actions">
+      <button id="level-continue">⬇️ Go Downstairs</button>
+      <button id="level-menu">🏠 Main Menu</button>
+    </div>
+  </div>
+</div>
 
-    // ---- STATE CONFIGURATION ----
-    let isPlayMode = false;
-    let player = { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
-    const monsterStats = {
-      5: { name: "Dish Slime", hp: 30, maxHp: 30, chore: "Wash the dishes in the kitchen sink", xpReward: 20, goldReward: 20, lore: "" },
-      6: { name: "Laundry Hydra", hp: 60, maxHp: 60, chore: "Fold a full basket of clean clothes", xpReward: 50, goldReward: 50, lore: "Forgotten laundry is not merely untidy—it is a biome. Within the tangled fibers of a neglected basket, cotton and synthetic blends become substrate. Sweat crystallizes into microscopic salt berms; skin cells, shed by the millions, carpet every crease. Ambient humidity, trapped by the pile's own mass, incubates a bloom of Aspergillus and Penicillium spores. Dust mites (Dermatophagoides) colonize the seams, their frass a potent allergen that aerates with every disturbed fold. Over days, the organic acids from microbial metabolism weaken tensile strength; colors bleed along capillary channels of moisture. The basket becomes a living stratigraphy: each layer a sediment of yesterday's exertion, bound by biofilm. To fold it is not housekeeping—it is necropsy." },
-      7: { name: "Trash Mimic", hp: 80, maxHp: 80, chore: "Take out the kitchen trash and wipe the bin", xpReward: 70, goldReward: 70, lore: "A kitchen bin is a sealed bioreactor. Food waste—peels, rinds, bones, coffee grounds—ferments in anaerobic darkness. Lactic acid bacteria and yeasts race through sugars, exuding ethanol and CO₂; proteobacteria follow, cleaving proteins into putrescine and cadaverine, the signature perfume of decay. Plastic liners, stressed by weight and heat, leach phthalates and microplastic shards into the leachate. This nutrient slurry seeps into micro-tears, seeding biofilms on the bin's inner walls. Flies (Musca domestica) detect the volatiles from 50 meters; a single gravid female deposits 150 eggs that hatch in 8 hours. Larvae liquefy solids, accelerating the melt. Rodents follow the insect plume. Methanogens, thriving in the deep anoxic core, exhale CH₄—a greenhouse gas 28× CO₂'s potency. The bin does not merely hold trash; it cultures a succession of ecologies, each more resilient than the last. To empty it is to break the cycle before the mimic wakes." }
-    };
-    let activeMonsterInstance = null;
-    let currentMonster = null; // { col, row }
+<script>
+// ============================================================
+// DAILY HAVEN QUEST — COZY HOME-BUILDER
+// Build mode: tilemap editor + asset browser
+// Play mode: one-room, click-to-move, chore-triggered monsters
+// ============================================================
 
-    // ---- EQUIPMENT MODIFIER SYSTEM ----
-    const equipment_modifiers = {
-      "🧼 Soap-Shield of Cleansing": {
-        chaos_daily_increment_multiplier: 0.5,
-        gold_bonus_vs_slime_pct: 10
-      },
-      "🧺 Fabric Softener Cloak": {
-        move_interval_multiplier: 0.75,
-        xp_bonus_laundry_flat: 15
-      },
-      "🪶 Feather Duster of Swiftness": {
-        global_gold_multiplier: 1.2,
-        dash_charge_per_steps: 10
-      },
-      "😷 Spore Mask of Immunity": {
-        chaos_debuff_threshold: 95,
-        missed_day_chaos_immunity_count: 2
+// ---- CONFIG ----
+const GRID_SIZE = 16;
+const TILE_SIZE = 40; // 16 * 40 = 640
+
+// ---- CANVAS ----
+const mapCanvas = document.getElementById("map");
+const mapCtx = mapCanvas.getContext("2d");
+const roomCanvas = document.getElementById("room-canvas");
+const roomCtx = roomCanvas.getContext("2d");
+
+function initMaps() {
+  terrainMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+  entityMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+}
+
+function init() {
+  loadKenneySprites();
+  parseManifest();
+  initMaps();
+  if (!loadGameData()) seedStarterRoom();
+  renderChoreLog();
+  showScreen("menu");
+}
+
+// Starter room shell (walls around a floor) so a fresh map is visible and playable
+function seedStarterRoom() {
+  for (let col = 0; col < GRID_SIZE; col++) {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      const edge = col === 0 || row === 0 || col === GRID_SIZE - 1 || row === GRID_SIZE - 1;
+      terrainMap[col][row] = edge ? 2 : 1;
+    }
+  }
+}
+
+// ---- STATE ----
+let currentMode = "building"; // "building" or "play"
+let selectedTileType = "floor";
+let terrainMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+let entityMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+let player = { x: 0, y: 0, roomX: 0, roomY: 0 };
+let playerHp = 100;
+let playerMp = 100;
+let playerGold = 0;
+let playerXp = 0;
+let playerLevel = 1;
+let playerClass = "Rogue";
+let currentRoom = { x: 0, y: 0 };
+let currentRoomName = "Living Room";
+let activeRooms = {};
+let doors = [];
+let monsters = [];
+let dailyChores = [];
+let chores = [];
+let chaosMeter = 0;
+let isPlayMode = false;
+let moveDirection = null;
+let moveTimer = null;
+let isMoving = false;
+let monsterSpawnTimer = null;
+let levelCleared = false;
+let animationFrame = null;
+
+// ---- DATA DICTIONARY ----
+const TERRAIN_COLORS = {
+  0: "transparent",
+  1: "#b45309",   // floor
+  2: "#64748b",   // wall
+  8: "#2d6a4f",   // tree
+  9: "#4a5568",   // rock
+  10: "#8b9a3a",  // grass
+  11: "#bae6fd",  // sky
+};
+
+const ENTITY_COLORS = {
+  0: "transparent",
+  3: "#38bdf8",   // bed
+  4: "#06b6d4",   // sink
+  5: "#ec4899",   // dish slime
+  6: "#a855f7",   // laundry hydra
+  7: "#f97316",   // trash mimic
+  12: "#a78bfa",  // laundry basket
+  13: "#94a3b8",  // trash can
+  8: "#2d6a4f",   // tree
+  9: "#4a5568",   // rock
+  10: "#8b9a3a",  // grass
+  11: "#bae6fd",  // sky
+};
+
+const ENTITY_SYMBOLS = {
+  3: "🛏️",
+  4: "🚰",
+  5: "🦠",
+  6: "👔",
+  7: "🗑️",
+  12: "🧺",
+  13: "🚮",
+  8: "🌳",
+  9: "🪨",
+  10: "🌿",
+  11: "🌤️",
+};
+
+const CHORES = {
+  dishes: {
+    id: "dishes",
+    name: "Dish Slime",
+    symbol: "🦠",
+    type: "monster",
+    hp: 30,
+    maxHp: 30,
+    chore: "Wash the dishes in the kitchen sink",
+    xpReward: 20,
+    goldReward: 20,
+    spawnCondition: "sink",
+    spawnRate: 300000,
+    lore: "A microscopic slime that lives in kitchen sinks, feeding on soap scum and food particles.",
+    color: "#ec4899"
+  },
+  laundry: {
+    id: "laundry",
+    name: "Laundry Hydra",
+    symbol: "👔",
+    type: "monster",
+    hp: 60,
+    maxHp: 60,
+    chore: "Fold a full basket of clean clothes",
+    xpReward: 50,
+    goldReward: 50,
+    spawnCondition: "laundry",
+    spawnRate: 600000,
+    lore: "The laundry hydra is born from forgotten, damp laundry that has been sitting too long.",
+    color: "#a855f7"
+  },
+  trash: {
+    id: "trash",
+    name: "Trash Mimic",
+    symbol: "🗑️",
+    type: "monster",
+    hp: 80,
+    maxHp: 80,
+    chore: "Take out the kitchen trash and wipe the bin",
+    xpReward: 70,
+    goldReward: 70,
+    spawnCondition: "trash",
+    spawnRate: 900000,
+    lore: "A kitchen bin is a sealed bioreactor. Food waste ferments in anaerobic darkness, breeding a mimic that mimics the very bin it lives in.",
+    color: "#f97316"
+  },
+  mow: {
+    id: "mow",
+    name: "Lawn Mimic",
+    symbol: "🌿",
+    type: "monster",
+    hp: 50,
+    maxHp: 50,
+    chore: "Mow the lawn",
+    xpReward: 40,
+    goldReward: 40,
+    spawnCondition: "lawn",
+    spawnRate: 1800000,
+    lore: "The lawn is a razor grass field. It grows back overnight and the monsters nest in the tall grass.",
+    color: "#22c55e"
+  },
+  yard_trash: {
+    id: "yard_trash",
+    name: "Trash Mimic",
+    symbol: "🗑️",
+    type: "monster",
+    hp: 60,
+    maxHp: 60,
+    chore: "Take out the yard trash",
+    xpReward: 50,
+    goldReward: 50,
+    spawnCondition: "yard_trash",
+    spawnRate: 1200000,
+    lore: "The backyard bin is a beacon. Raccoons, mice, and trash mimics all gather around it.",
+    color: "#f97316"
+  }
+};
+
+// ---- CANVAS ASSET LOADING ----
+let kenneySprites = {};
+let manifestData = {};
+
+// Kenney sheets used for palette swatches + furniture sprites
+const SHEETS = {
+  rougelike: { src: "assets/roguelike_transparent.png", stride: 17, w: 458, h: 305 }, // 16px tiles, 1px margin
+  rpg_urban: { src: "assets/rpg_urban_tilemap.png", stride: 16, w: 432, h: 288 }     // 16px tiles, no margin
+};
+
+// Palette id -> real tile value. layer "terrain" writes terrainMap, "entity" writes entityMap.
+const TILE_DEFS = {
+  floor:         { value: 1,  layer: "terrain", cat: "terrain",     label: "Floor",          sheet: "rougelike", col: 24, row: 1 },
+  wall:          { value: 2,  layer: "terrain", cat: "terrain",     label: "Wall",           sheet: "rpg_urban", col: 9,  row: 1 },
+  grass:         { value: 10, layer: "terrain", cat: "environment", label: "Lawn",           sheet: "rpg_urban", col: 6,  row: 12 },
+  sky:           { value: 11, layer: "terrain", cat: "environment", label: "Patio",          emoji: "🌤️" },
+  tree:          { value: 8,  layer: "terrain", cat: "environment", label: "Tree",           sheet: "rpg_urban", col: 17, row: 9 },
+  rock:          { value: 9,  layer: "terrain", cat: "environment", label: "Rock",           emoji: "🪨" },
+  bed:           { value: 3,  layer: "entity",  cat: "furniture",   label: "Bed",            sheet: "rougelike", col: 13, row: 0 },
+  sink:          { value: 4,  layer: "entity",  cat: "furniture",   label: "Sink",           sheet: "rougelike", col: 8,  row: 13 },
+  laundry:       { value: 12, layer: "entity",  cat: "furniture",   label: "Laundry",        sheet: "rougelike", col: 17, row: 2 },
+  trashcan:      { value: 13, layer: "entity",  cat: "furniture",   label: "Trash Can",      sheet: "rpg_urban", col: 10, row: 9 },
+  dish_slime:    { value: 5,  layer: "entity",  cat: "monsters",    label: "Dish Slime",     emoji: "🦠" },
+  laundry_hydra: { value: 6,  layer: "entity",  cat: "monsters",    label: "Laundry Hydra",  emoji: "👔" },
+  trash_mimic:   { value: 7,  layer: "entity",  cat: "monsters",    label: "Trash Mimic",    emoji: "🗑️" },
+  eraser:        { value: "clear", layer: "clear", cat: "terrain",  label: "Eraser",         emoji: "🧽" }
+};
+
+// Tiles that wake a chore monster when the player steps onto / next to them
+const TRIGGER_ENTITIES = { 4: "dishes", 5: "dishes", 12: "laundry", 6: "laundry", 13: "trash", 7: "trash" };
+const TRIGGER_TERRAIN = { 10: "mow" };
+const BLOCKING_TERRAIN = [0, 2, 8, 9]; // void, wall, tree, rock
+
+function spriteFor(layer, value) {
+  for (const def of Object.values(TILE_DEFS)) {
+    if (def.layer === layer && def.value === value && def.sheet) return def;
+  }
+  return null;
+}
+
+function loadKenneySprites() {
+  const redraw = () => {
+    if (typeof currentScreen === "undefined") return;
+    if (currentScreen === "build") drawMap();
+    if (currentScreen === "play") drawRoom();
+  };
+  const img1 = new Image();
+  img1.onload = () => {
+    kenneySprites.rougelike = img1;
+    redraw();
+  };
+  img1.src = SHEETS.rougelike.src;
+
+  const img2 = new Image();
+  img2.onload = () => {
+    kenneySprites.rpg_urban = img2;
+    redraw();
+  };
+  img2.src = SHEETS.rpg_urban.src;
+}
+
+// ---- MANIFEST PARSING ----
+// The manifest documents the Kenney packs; the palette itself comes from TILE_DEFS (the manifest pos values are not real crops).
+function parseManifest() {
+  fetch("assets/kenney_manifest.json")
+    .then(response => response.json())
+    .then(data => { manifestData = data; })
+    .catch(err => console.warn("Kenney manifest not loaded:", err))
+    .finally(() => loadAssetGrid());
+}
+
+// ---- TILE SELECTION ----
+function selectTile(type) {
+  if (!TILE_DEFS[type]) return;
+  selectedTileType = type;
+  document.querySelectorAll(".asset-item").forEach(el => el.classList.toggle("selected", el.dataset.tile === type));
+  const label = document.getElementById("builder-selected");
+  if (label) label.textContent = TILE_DEFS[type].label;
+}
+
+// ---- TILE PAINTING (free) ----
+function paintTile(col, row, tileId) {
+  const def = TILE_DEFS[tileId];
+  if (!def) return false;
+  if (def.layer === "clear") {
+    if (entityMap[col][row]) { entityMap[col][row] = 0; return true; }
+    if (terrainMap[col][row]) { terrainMap[col][row] = 0; return true; }
+    return false;
+  }
+  if (def.layer === "terrain") {
+    if (terrainMap[col][row] === def.value) return false;
+    terrainMap[col][row] = def.value;
+    if (BLOCKING_TERRAIN.includes(def.value)) entityMap[col][row] = 0; // walls/trees replace furniture
+    return true;
+  }
+  if (entityMap[col][row] === def.value) return false;
+  entityMap[col][row] = def.value;
+  if (BLOCKING_TERRAIN.includes(terrainMap[col][row])) terrainMap[col][row] = 1; // furniture sits on floor
+  return true;
+}
+
+// ---- TOAST ----
+let toastTimer = null;
+function showToast(msg, ms = 2200) {
+  const el = document.getElementById("toast");
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add("open");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("open"), ms);
+}
+
+// ---- CHECK EMPTY ENTITY MAP ----
+function isEmptyEntityMap() {
+  return entityMap.every((row) => row.every((v) => v === 0));
+}
+
+// ---- DOOR SYSTEM ----
+function addDoor(col, row, direction) {
+  doors.push({ col, row, direction });
+}
+
+function isDoor(col, row) {
+  return doors.some(d => d.col === col && d.row === row);
+}
+
+// ---- ROOM MANAGEMENT ----
+function roomKey(x, y) {
+  return `${x},${y}`;
+}
+
+function getRoom(x, y) {
+  return activeRooms[roomKey(x, y)];
+}
+
+function addRoom(x, y, name) {
+  activeRooms[roomKey(x, y)] = {
+    x, y, name,
+    terrain: terrainMap.map(row => [...row]),
+    entity: entityMap.map(row => [...row])
+  };
+}
+
+function currentRoomData() {
+  return getRoom(currentRoom.x, currentRoom.y);
+}
+
+function isWalkable(col, row) {
+  const room = currentRoomData();
+  if (!room || col < 0 || row < 0 || col >= GRID_SIZE || row >= GRID_SIZE) return false;
+  return !BLOCKING_TERRAIN.includes(room.terrain[col][row]) && room.entity[col][row] === 0;
+}
+
+// Which chore monster (if any) a tile in the current room belongs to (tile coords, not room coords)
+function triggerAt(col, row) {
+  const room = currentRoomData();
+  if (!room || col < 0 || row < 0 || col >= GRID_SIZE || row >= GRID_SIZE) return null;
+  return TRIGGER_ENTITIES[room.entity[col][row]] || TRIGGER_TERRAIN[room.terrain[col][row]] || null;
+}
+
+// ---- MONSTER SPAWNING ----
+function spawnMonster(choreKey, col, row) {
+  const chore = CHORES[choreKey];
+  if (!chore) return null;
+  const monster = {
+    col, row,
+    type: choreKey,
+    name: chore.name,
+    symbol: chore.symbol,
+    hp: chore.maxHp,
+    maxHp: chore.maxHp,
+    xpReward: chore.xpReward,
+    goldReward: chore.goldReward,
+    color: chore.color,
+    spawnTime: Date.now()
+  };
+  monsters.push(monster);
+  return monster;
+}
+
+// One monster per chore type whose trigger tile exists in the room, lurking at the first such tile
+function spawnRandomMonsters(roomX, roomY) {
+  monsters = [];
+  for (let col = 0; col < GRID_SIZE; col++) {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      const type = triggerAt(col, row);
+      if (type && !monsters.some(m => m.type === type)) spawnMonster(type, col, row);
+    }
+  }
+}
+
+// ---- CANVAS RENDERING ----
+function drawTiles(ctx, terrain, entity) {
+  ctx.imageSmoothingEnabled = false;
+  // Terrain layer
+  for (let col = 0; col < GRID_SIZE; col++) {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      const color = TERRAIN_COLORS[terrain[col][row]] || "transparent";
+      if (color !== "transparent") {
+        ctx.fillStyle = color;
+        ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
       }
-    };
-
-    // Helper to compute active equipment modifiers
-    function getActiveModifiers() {
-      const mods = {
-        chaos_daily_increment_multiplier: 1.0,
-        gold_bonus_vs_slime_pct: 0,
-        move_interval_multiplier: 1.0,
-        xp_bonus_laundry_flat: 0,
-        global_gold_multiplier: 1.0,
-        dash_charge_per_steps: 0,
-        chaos_debuff_threshold: CHAOS_DEBUFF_THRESHOLD,
-        missed_day_chaos_immunity_count: 0
-      };
-      player.equipment.forEach(item => {
-        const m = equipment_modifiers[item];
-        if (m) {
-          Object.keys(m).forEach(k => {
-            if (k === "chaos_daily_increment_multiplier" || k === "move_interval_multiplier" || k === "global_gold_multiplier") {
-              mods[k] *= m[k];
-            } else {
-              mods[k] += m[k];
-            }
-          });
-        }
-      });
-      return mods;
     }
-
-    // ---- MILESTONE 3.1: TIME-CLOCK + CHAOS LOOP STATE ----
-    const SAVE_SCHEMA_VERSION = 2; // bump when the save payload shape changes
-    const CHAOS_MAX = 100;
-    const CHAOS_DEBUFF_THRESHOLD = 80;
-    const CHAOS_DAILY_INCREMENT = 20;
-    const CHAOS_SLAY_DECREMENT = 25;
-
-    let chaosMeter = 0;
-    let lastLoginDate = null;
-    let clutterDebuffActive = false;
-
-    // ---- EDITOR / TOOL STATE ----
-    let terrainMap = [];
-    let entityMap = [];
-    let activeTool = "floor";
-    let selectedTileType = "floor";
-
-    // ---- MOVEMENT / KEYS (play mode) ----
-    const MOVE_INTERVAL = { "Rogue": 150, "Warrior": 300, "Mage": 300 };
-    const keys = {};
-    let moveTimer = null;
-
-    // ---- DALLAS HUD / POPUP DOM REFERENCES ----
-    const hudLevel = document.getElementById("hud-level");
-    const hudXp = document.getElementById("hud-xp");
-    const hudXpMax = document.getElementById("hud-xp-max");
-    const hudGold = document.getElementById("hud-gold");
-    const hudClass = document.getElementById("hud-class");
-    const heroSelector = document.getElementById("hero-selector");
-    const heroToggle = document.getElementById("hero-toggle");
-    const heroSelect = document.getElementById("hero-select");
-    const modeToggle = document.getElementById("mode-toggle");
-    const questPopup = document.getElementById("quest-popup");
-    const popupIcon = document.getElementById("popup-icon");
-    const popupName = document.getElementById("popup-name");
-    const popupChore = document.getElementById("popup-chore");
-    const popupHp = document.getElementById("popup-hp");
-    const slayBtn = document.getElementById("slay-btn");
-    const cancelBtn = document.getElementById("cancel-btn");
-
-    // ---- MILESTONE 3.1: CHAOS HUD DOM REFS + SAVE/RESET BTN REFS (were undefined) ----
-    const chaosBar = document.getElementById("chaos-bar");
-    const chaosFill = document.getElementById("chaos-fill");
-    const chaosPct = document.getElementById("chaos-pct");
-    const chaosDebuff = document.getElementById("chaos-debuff");
-    const saveBtn = document.getElementById("save-btn");
-    const resetBtn = document.getElementById("reset-btn");
-    const saveStatusEl = document.getElementById("save-status");
-    const ambushBtn = document.getElementById("ambush-btn");
-    const ambushOverlay = document.getElementById("ambush-overlay");
-    const surfactantBtn = document.getElementById("surfactant-btn");
-    const vaultItems = document.getElementById("vault-items");
-
-    // ---- INIT ----
-    function initMaps() {
-      terrainMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
-      entityMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+  }
+  // Entity layer: Kenney sprite when loaded, otherwise colored inset + symbol
+  for (let col = 0; col < GRID_SIZE; col++) {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      const value = entity[col][row];
+      if (!value) continue;
+      const def = spriteFor("entity", value);
+      const img = def && kenneySprites[def.sheet];
+      if (img) {
+        const s = SHEETS[def.sheet];
+        ctx.drawImage(img, def.col * s.stride, def.row * s.stride, 16, 16, col * TILE_SIZE + 2, row * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+        continue;
+      }
+      const color = ENTITY_COLORS[value] || "transparent";
+      if (color === "transparent") continue;
+      const inset = 4;
+      ctx.fillStyle = color;
+      ctx.fillRect(col * TILE_SIZE + inset, row * TILE_SIZE + inset, TILE_SIZE - inset * 2, TILE_SIZE - inset * 2);
+      ctx.fillStyle = "#0a0c10";
+      ctx.font = `${TILE_SIZE - 12}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const symbol = ENTITY_SYMBOLS[value];
+      if (symbol) ctx.fillText(symbol, col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2 + 3);
     }
+  }
+}
 
-    // ---- TOOL LOGIC ----
-    function setTool(name) {
-      activeTool = name;
-      document.querySelectorAll('.controls input[name="tool"]')
-        .forEach((el) => el.closest("label").classList.toggle("active", el.value === name));
-      // Disable brush during play mode
-      if (isPlayMode) {
-        document.querySelectorAll('.controls input[name="tool"]').forEach((el) => el.disabled = true);
-      } else {
-        document.querySelectorAll('.controls input[name="tool"]').forEach((el) => el.disabled = false);
+function drawGrid(ctx, canvas) {
+  ctx.strokeStyle = "#1e222b";
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= GRID_SIZE; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * TILE_SIZE, 0);
+    ctx.lineTo(i * TILE_SIZE, canvas.height);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, i * TILE_SIZE);
+    ctx.lineTo(canvas.width, i * TILE_SIZE);
+    ctx.stroke();
+  }
+}
+
+function drawMap() {
+  mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+  drawTiles(mapCtx, terrainMap, entityMap);
+  drawGrid(mapCtx, mapCanvas);
+  drawMinimap();
+}
+
+function drawRoom() {
+  roomCtx.clearRect(0, 0, roomCanvas.width, roomCanvas.height);
+  const room = currentRoomData();
+  if (!room) return;
+  drawTiles(roomCtx, room.terrain, room.entity);
+
+  // Lurking chore monsters: badge on their trigger tile
+  for (const m of monsters) {
+    const cx = m.col * TILE_SIZE + TILE_SIZE - 10;
+    const cy = m.row * TILE_SIZE + 10;
+    roomCtx.fillStyle = "rgba(239, 68, 68, 0.85)";
+    roomCtx.beginPath();
+    roomCtx.arc(cx, cy, 10, 0, Math.PI * 2);
+    roomCtx.fill();
+    roomCtx.font = "13px sans-serif";
+    roomCtx.textAlign = "center";
+    roomCtx.textBaseline = "middle";
+    roomCtx.fillText(m.symbol, cx, cy + 1);
+  }
+
+  // Player
+  if (isPlayMode) {
+    const cls = playerClass;
+    const symbol = cls === "Warrior" ? "⚔️" : cls === "Rogue" ? "🥷" : "🧙";
+    roomCtx.fillStyle = "#f5c542";
+    roomCtx.font = `${TILE_SIZE - 12}px sans-serif`;
+    roomCtx.textAlign = "center";
+    roomCtx.textBaseline = "middle";
+    roomCtx.fillText(symbol, player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2 + 3);
+    roomCtx.strokeStyle = "rgba(245, 197, 66, 0.4)";
+    roomCtx.lineWidth = 3;
+    roomCtx.beginPath();
+    roomCtx.arc(player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 2 - 4, 0, Math.PI * 2);
+    roomCtx.stroke();
+  }
+  drawGrid(roomCtx, roomCanvas);
+}
+
+// Small minimap of the house in the builder sidebar
+function drawMinimap() {
+  const c = document.getElementById("minimap");
+  if (!c) return;
+  const ctx = c.getContext("2d");
+  const cell = c.width / GRID_SIZE;
+  ctx.fillStyle = "#0a0a0f";
+  ctx.fillRect(0, 0, c.width, c.height);
+  for (let col = 0; col < GRID_SIZE; col++) {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      const e = entityMap[col][row];
+      const color = e ? ENTITY_COLORS[e] : TERRAIN_COLORS[terrainMap[col][row]];
+      if (color && color !== "transparent") {
+        ctx.fillStyle = color;
+        ctx.fillRect(col * cell, row * cell, cell, cell);
       }
     }
+  }
+  ctx.fillStyle = "#f5c542";
+  ctx.beginPath();
+  ctx.arc((player.x + 0.5) * cell, (player.y + 0.5) * cell, cell / 2.5, 0, Math.PI * 2);
+  ctx.fill();
+}
 
-    // ---- ASSET PALETTE ----
-    function selectTile(type) {
-      selectedTileType = type;
-      setTool(type);
-      document.querySelectorAll('.palette-item').forEach((el) => {
-        el.classList.toggle('active', el.dataset.tileType === type);
-      });
+// XP ring around the level number
+function drawLevelDisc() {
+  const c = document.getElementById("leveldisk");
+  if (!c) return;
+  const ctx = c.getContext("2d");
+  const w = c.width, h = c.height, r = w / 2 - 10;
+  ctx.clearRect(0, 0, w, h);
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = "#2a2a35";
+  ctx.beginPath();
+  ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#f5c542";
+  ctx.beginPath();
+  ctx.arc(w / 2, h / 2, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, playerXp / 100));
+  ctx.stroke();
+  ctx.fillStyle = "#f0e68c";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 34px 'Courier New', monospace";
+  ctx.fillText(String(playerLevel), w / 2, h / 2 - 4);
+  ctx.fillStyle = "#8b8f98";
+  ctx.font = "11px 'Courier New', monospace";
+  ctx.fillText(`${playerXp}/100 XP`, w / 2, h / 2 + 22);
+}
+
+// ---- GAMEPLAY CONTROLS ----
+let walkTimer = null;
+let prevPos = { x: 0, y: 0 };
+let ambushSuppressed = new Set();
+let activeAmbush = null;
+let roomRewards = { xp: 0, gold: 0 };
+
+function stopWalking() {
+  if (walkTimer) clearInterval(walkTimer);
+  walkTimer = null;
+  isMoving = false;
+  document.getElementById("move-indicator").style.display = "none";
+}
+
+// Step one tile (arrow keys / WASD and each click-to-move step); walls and furniture block
+function tryMove(dx, dy) {
+  if (!isPlayMode || activeAmbush) return false;
+  const nx = player.x + dx, ny = player.y + dy;
+  if (!isWalkable(nx, ny)) return false;
+  prevPos = { x: player.x, y: player.y };
+  player.x = nx;
+  player.y = ny;
+  drawRoom();
+  checkAmbush();
+  return true;
+}
+
+// Shortest walkable path (BFS) to the clicked tile, or to the nearest tile beside it if it is furniture/wall
+function findPath(tx, ty) {
+  const goals = isWalkable(tx, ty) ? [[tx, ty]]
+    : [[tx + 1, ty], [tx - 1, ty], [tx, ty + 1], [tx, ty - 1]].filter(([c, r]) => isWalkable(c, r));
+  if (!goals.length) return null;
+  const key = (c, r) => c * GRID_SIZE + r;
+  const prev = new Map([[key(player.x, player.y), null]]);
+  const queue = [[player.x, player.y]];
+  while (queue.length) {
+    const [c, r] = queue.shift();
+    if (goals.some(([gc, gr]) => gc === c && gr === r)) {
+      const path = [];
+      let k = key(c, r);
+      while (prev.get(k) !== null) {
+        path.unshift([Math.floor(k / GRID_SIZE), k % GRID_SIZE]);
+        k = prev.get(k);
+      }
+      return path;
     }
-
-    // ---- CUSTOM MAP PERSISTENCE ----
-    const CUSTOM_MAP_KEY = 'daily_haven_custom_map';
-
-    function saveCustomMap() {
-      const payload = { terrainMap, entityMap, selectedTileType };
-      localStorage.setItem(CUSTOM_MAP_KEY, JSON.stringify(payload));
-      if (saveStatusEl) {
-        saveStatusEl.textContent = '💾 Custom Map Saved!';
-        saveStatusEl.classList.add('show');
-        setTimeout(() => saveStatusEl.classList.remove('show'), 1800);
+    for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nc = c + dc, nr = r + dr;
+      if (isWalkable(nc, nr) && !prev.has(key(nc, nr))) {
+        prev.set(key(nc, nr), key(c, r));
+        queue.push([nc, nr]);
       }
     }
+  }
+  return null;
+}
 
-    function loadCustomMap() {
-      try {
-        const raw = localStorage.getItem(CUSTOM_MAP_KEY);
-        if (!raw) { alert('No custom map found.'); return; }
-        const data = JSON.parse(raw);
-        if (data.terrainMap && data.entityMap) {
-          terrainMap = data.terrainMap;
-          entityMap = data.entityMap;
-          if (data.selectedTileType) selectTile(data.selectedTileType);
-          drawMap();
-          updateHUD();
-        }
-      } catch (e) { alert('Failed to load custom map.'); }
+function placeMoveIndicator(col, row) {
+  const indicator = document.getElementById("move-indicator");
+  const area = roomCanvas.parentElement.getBoundingClientRect();
+  const rect = roomCanvas.getBoundingClientRect();
+  const scale = roomCanvas.clientWidth / roomCanvas.width;
+  indicator.style.left = (rect.left - area.left + roomCanvas.clientLeft + (col + 0.5) * TILE_SIZE * scale) + "px";
+  indicator.style.top = (rect.top - area.top + roomCanvas.clientTop + (row + 0.5) * TILE_SIZE * scale) + "px";
+  indicator.textContent = "▼";
+  indicator.style.display = "block";
+}
+
+function handleRoomClick(col, row) {
+  if (!isPlayMode || activeAmbush) return;
+  stopWalking();
+  const path = findPath(col, row);
+  if (!path) {
+    showToast("Can't reach that spot.");
+    return;
+  }
+  if (!path.length) return;
+  placeMoveIndicator(col, row);
+  isMoving = true;
+  walkTimer = setInterval(() => {
+    const next = path.shift();
+    if (!next || !tryMove(next[0] - player.x, next[1] - player.y) || activeAmbush || !path.length) stopWalking();
+  }, 110);
+}
+
+function enterRoom(col, row, direction) {
+  currentRoom.x = col;
+  currentRoom.y = row;
+  currentRoomName = `Room ${col}, ${row}`;
+  document.getElementById("game-room-name").textContent = currentRoomName;
+  spawnRandomMonsters(currentRoom.x, currentRoom.y);
+  player.x = 8;
+  player.y = 8;
+  stopWalking();
+  drawRoom();
+}
+
+// ---- REWARDS ----
+function addRewards(gold, xp) {
+  playerGold += gold;
+  playerXp += xp;
+  let leveled = false;
+  while (playerXp >= 100) {
+    playerXp -= 100;
+    playerLevel += 1;
+    leveled = true;
+  }
+  if (leveled) {
+    playerHp = 100;
+    playerMp = 100;
+    setTimeout(() => showToast(`⭐ Level up! You are now level ${playerLevel}.`), 1200);
+  }
+  if (isPlayMode) {
+    roomRewards.gold += gold;
+    roomRewards.xp += xp;
+  }
+  updateHUD();
+  updateGameHUD();
+}
+
+// ---- COMBAT ----
+// Resolves one fight: the monster is defeated, rewards are granted exactly once here (never in showLevelClear)
+function resolveCombat(monster, opts = {}) {
+  if (!monsters.includes(monster)) return;
+  monsters = monsters.filter(m => m !== monster);
+  if (!opts.noDamage) playerHp = Math.max(0, playerHp - Math.round(monster.maxHp / 4));
+  addRewards(monster.goldReward, monster.xpReward);
+  showToast(`${monster.symbol} ${monster.name} defeated! +${monster.goldReward} Gold, +${monster.xpReward} XP`);
+  if (playerHp <= 0) {
+    playerHp = 50;
+    showToast("You fainted... a real chore break restores you. HP 50.");
+  }
+  updateGameHUD();
+  saveGameData();
+  drawRoom();
+  if (monsters.length === 0) showLevelClear(roomRewards.xp, roomRewards.gold);
+}
+
+// ---- AMBUSH SYSTEM ----
+// Stepping onto or next to a chore trigger tile (sink, laundry, trash can, lawn...) wakes its monster
+function checkAmbush() {
+  const spots = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => [player.x + dx, player.y + dy]);
+  const near = new Set(spots.map(([c, r]) => triggerAt(c, r)).filter(Boolean));
+  for (const type of [...ambushSuppressed]) if (!near.has(type)) ambushSuppressed.delete(type);
+  for (const type of near) {
+    const monster = monsters.find(m => m.type === type);
+    if (monster && !ambushSuppressed.has(type)) {
+      triggerAmbush(monster);
+      return;
     }
+  }
+}
 
-    function clearCustomMap() {
-      localStorage.removeItem(CUSTOM_MAP_KEY);
-      if (saveStatusEl) {
-        saveStatusEl.textContent = '🗑️ Custom Map Cleared!';
-        saveStatusEl.classList.add('show');
-        setTimeout(() => saveStatusEl.classList.remove('show'), 1800);
-      }
-    }
+function triggerAmbush(monster) {
+  if (!monster) monster = monsters[0];
+  if (!monster) return;
+  stopWalking();
+  activeAmbush = monster;
+  const chore = CHORES[monster.type] || {};
+  document.querySelector("#ambush-overlay .ambush-title").textContent = `AMBUSH! ${monster.symbol} ${monster.name}`;
+  document.querySelector("#ambush-overlay .ambush-text").textContent =
+    `A ${monster.name} (HP ${monster.hp}) bursts out! Real chore: ${chore.chore || "clean up"}. Reward: +${monster.goldReward} Gold, +${monster.xpReward} XP.`;
+  const spawn = document.getElementById("monster-spawn");
+  spawn.textContent = monster.symbol;
+  placeSpawnMarker(monster.col, monster.row);
+  document.getElementById("ambush-overlay").classList.add("open");
+}
 
-    // ---- PAINTING (protected: play mode does not brush) ----
-    function paintTile(col, row, value) {
-      if (isPlayMode) return;
+function placeSpawnMarker(col, row) {
+  const spawn = document.getElementById("monster-spawn");
+  const area = roomCanvas.parentElement.getBoundingClientRect();
+  const rect = roomCanvas.getBoundingClientRect();
+  const scale = roomCanvas.clientWidth / roomCanvas.width;
+  spawn.style.left = (rect.left - area.left + roomCanvas.clientLeft + (col + 0.5) * TILE_SIZE * scale) + "px";
+  spawn.style.top = (rect.top - area.top + roomCanvas.clientTop + (row + 0.5) * TILE_SIZE * scale) + "px";
+  spawn.style.display = "none";
+  void spawn.offsetWidth; // restart the flash animation
+  spawn.style.display = "block";
+  setTimeout(() => { spawn.style.display = "none"; }, 1500);
+}
 
-      if (value === "clear") {
-        entityMap[col][row] = 0;
-        if (isEmptyEntityMap()) terrainMap[col][row] = 0;
-        return;
-      }
+function closeAmbush() {
+  document.getElementById("ambush-overlay").classList.remove("open");
+  activeAmbush = null;
+}
 
-      const num = parseInt(value, 10);
-      if (num >= 1 && num <= 2) {
-        terrainMap[col][row] = num; // floor / wall (Roguelike In/Outs)
-      } else if (num >= 8 && num <= 11) {
-        terrainMap[col][row] = num; // tree / rock / grass / sky (RPG Urban)
-      } else if (num >= 3 && num <= 7) {
-        entityMap[col][row] = num; // bed / sink / slime / hydra / trash mimic — entity layer only
-      }
-    }
+function ambushFight() {
+  const monster = activeAmbush;
+  closeAmbush();
+  if (monster) resolveCombat(monster);
+}
 
-    function isEmptyEntityMap() {
-      return entityMap.every((row) => row.every((v) => v === 0));
-    }
+function ambushRun() {
+  const monster = activeAmbush;
+  closeAmbush();
+  if (!monster) return;
+  ambushSuppressed.add(monster.type);
+  player.x = prevPos.x;
+  player.y = prevPos.y;
+  drawRoom();
+  checkAmbush();
+  showToast(`You ran from the ${monster.name}. It's still lurking.`);
+}
 
-    // ---- PLAYER MOVEMENT ----
-    function tryMove() {
-      const dirs = {
-        w: [0, -1], "arrowup": [0, -1],
-        s: [0, 1], "arrowdown": [0, 1],
-        a: [-1, 0], "arrowleft": [-1, 0],
-        d: [1, 0], "arrowright": [1, 0]
-      };
-      let moved = false;
-      for (const [key, dir] of Object.entries(dirs)) {
-        if (keys[key]) {
-          const nx = player.x + dir[0];
-          const ny = player.y + dir[1];
-          if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && terrainMap[nx][ny] !== 2) {
-            player.x = nx;
-            player.y = ny;
-            moved = true;
-            const ent = entityMap[nx][ny];
-            if (ent >= 3) triggerInteraction(nx, ny);
-          }
-        }
-      }
-      if (moved) drawMap();
-      return moved;
-    }
+function ambushHide() {
+  const monster = activeAmbush;
+  closeAmbush();
+  if (!monster) return;
+  ambushSuppressed.add(monster.type);
+  showToast(`You hide. The ${monster.name} loses track of you... for now.`);
+}
 
-    // ---- INTERACTION (walk into monster) ----
-    function triggerInteraction(col, row) {
-      const entity = entityMap[col][row];
-      if (entity === 5 || entity === 6 || entity === 7) {
-        currentMonster = { col, row, stat: monsterStats[entity] };
-        showQuestPopup(entity, col, row);
-      } else if (entity >= 3 && entity <= 4) {
-        // Furniture: informational only
-        console.log("Furniture at " + col + "/" + row + " — place furniture or clear it.");
-      }
-    }
+// Spends MP to defeat the monster you're facing (or one within 2 tiles) without taking damage
+function castSurfactantBlast() {
+  if (!isPlayMode) return;
+  const target = activeAmbush || monsters.find(m => Math.max(Math.abs(m.col - player.x), Math.abs(m.row - player.y)) <= 2);
+  if (!target) { showToast("No chore monster in range."); return; }
+  if (playerMp < 25) { showToast("Not enough MP. Log a real chore to recharge."); return; }
+  playerMp -= 25;
+  closeAmbush();
+  resolveCombat(target, { noDamage: true });
+}
 
-    function showQuestPopup(entity, col, row) {
-      const stat = monsterStats[entity];
-      if (!stat) return;
-      if (entity === 5) popupIcon.textContent = "🦠";
-      else if (entity === 6) popupIcon.textContent = "👔";
-      else if (entity === 7) popupIcon.textContent = "🗑️";
-      popupName.textContent = stat.name;
-      popupChore.textContent = stat.chore;
-      const hpPct = (stat.hp / stat.maxHp) * 100;
-      popupHp.style.width = hpPct + "%";
-      activeMonsterInstance = { col, row, stat, hp: stat.hp };
-      questPopup.classList.add("open");
-    }
+// ---- LEVEL CLEAR ----
+// Display only: rewards were already granted per fight/chore
+function showLevelClear(xp, gold) {
+  document.getElementById("level-xp").textContent = `+${xp}`;
+  document.getElementById("level-gold").textContent = `+${gold}`;
+  document.getElementById("level-clear").classList.add("open");
+}
 
-    function closeQuestPopup() {
-      questPopup.classList.remove("open");
-      activeMonsterInstance = null;
-      currentMonster = null;
-    }
+function hideLevelClear() {
+  document.getElementById("level-clear").classList.remove("open");
+}
 
-    // ---- COMBAT RESOLUTION ----
-    function resolveCombat() {
-      if (!activeMonsterInstance) return;
-      const { col, row, stat, hp } = activeMonsterInstance;
-      const entity = entityMap[col][row];
+// ---- SCREEN STATE MACHINE ----
+// Base screens: "menu" (start page), "build" (#app map editor), "play" (#gameplay-overlay).
+// Overlays (asset palette, chore log, ambush, level clear) open on top and are closed on every screen change.
+let currentScreen = "menu";
 
-      // Flash effect on canvas
-      flashCanvas();
+function closeOverlays() {
+  closeAssetBrowser();
+  closeChoreLog();
+  closeAmbush();
+  hideLevelClear();
+}
 
-      // Clear the monster from the map
-      entityMap[col][row] = 0;
+function showScreen(name) {
+  currentScreen = name;
+  closeOverlays();
+  document.getElementById("start-page").classList.toggle("open", name === "menu");
+  document.getElementById("app").style.display = name === "build" ? "" : "none";
+  document.getElementById("gameplay-overlay").classList.toggle("open", name === "play");
+  isPlayMode = name === "play";
+  currentMode = name === "play" ? "play" : "building";
+  if (name === "menu") {
+    showMainMenu();
+  } else if (name === "build") {
+    updateHUD();
+    drawMap();
+  } else if (name === "play") {
+    prepareCurrentRoom();
+    updateGameHUD();
+    drawRoom();
+  }
+}
 
-      // MILESTONE 3.1: slaying a chore monster scrubs chaos (floor 0)
-      reduceChaos(CHAOS_SLAY_DECREMENT);
-
-      // Rewards
-      const mods = getActiveModifiers();
-      let goldAdd = stat.goldReward;
-      let xpAdd = stat.xpReward;
-      if (player.class === "Warrior") goldAdd += 10;
-      if (player.class === "Mage") xpAdd *= 2;
-      // Equipment: gold bonus vs slime (entity 5)
-      if (entity === 5 && mods.gold_bonus_vs_slime_pct > 0) {
-        goldAdd = Math.round(goldAdd * (1 + mods.gold_bonus_vs_slime_pct / 100));
-      }
-      // Equipment: XP bonus for laundry (entity 6)
-      if (entity === 6 && mods.xp_bonus_laundry_flat > 0) {
-        xpAdd += mods.xp_bonus_laundry_flat;
-      }
-      // Equipment: global gold multiplier
-      if (mods.global_gold_multiplier !== 1.0) {
-        goldAdd = Math.round(goldAdd * mods.global_gold_multiplier);
-      }
-
-      player.gold += goldAdd;
-      player.xp += xpAdd;
-
-      // Leveling
-      while (player.xp >= 100) {
-        player.xp -= 100;
-        player.level += 1;
-      }
-
-      activeMonsterInstance = null;
-      currentMonster = null;
-      closeQuestPopup();
-      updateHUD();
-      drawMap();
-      // ---- AUTO-SAVE on chore completion ----
-      saveGameData();
-      console.log("Chore cleared: " + stat.chore);
-    }
-
-    // ---- CANVAS FLASH ----
-    function flashCanvas() {
-      const overlay = document.createElement("div");
-      overlay.style.cssText =
-        "position:fixed;inset:0;z-index:9999;background:rgba(255,255,255,0.55);pointer-events:none;";
-      document.body.appendChild(overlay);
-      setTimeout(() => overlay.remove(), 250);
-    }
-
-    // ---- AMBUSH SYSTEM ----
-    function triggerAmbush() {
-      ambushOverlay.classList.add("open");
-    }
-
-    function castSurfactantBlast() {
-      flashCanvas();
-      ambushOverlay.classList.remove("open");
-
-      // Rewards
-      const mods = getActiveModifiers();
-      let goldAdd = 50;
-      let xpAdd = 50;
-      if (mods.global_gold_multiplier !== 1.0) {
-        goldAdd = Math.round(goldAdd * mods.global_gold_multiplier);
-      }
-
-      player.gold += goldAdd;
-      player.xp += xpAdd;
-
-      // Leveling
-      while (player.xp >= 100) {
-        player.xp -= 100;
-        player.level += 1;
-      }
-
-      // Permanent loot
-      const lootItem = "🧼 Soap-Shield of Cleansing";
-      if (!player.equipment.includes(lootItem)) {
-        player.equipment.push(lootItem);
-      }
-
-      updateHUD();
-      renderVault();
-      drawMap();
-      saveGameData();
-      console.log("Surfactant Blast cast! +" + goldAdd + " gold, +50 XP, Soap-Shield acquired.");
-    }
-
-    function renderVault() {
-      if (!vaultItems) return;
-      vaultItems.innerHTML = "";
-      if (player.equipment.length === 0) {
-        vaultItems.innerHTML = '<span style="color:var(--muted);font-size:12px;">No equipment yet</span>';
-        return;
-      }
-      const mods = getActiveModifiers();
-      player.equipment.forEach((item) => {
-        const el = document.createElement("span");
-        el.className = "vault-item";
-        el.textContent = item;
-        // Add modifier tooltip
-        const itemMods = equipment_modifiers[item];
-        if (itemMods) {
-          const modText = Object.entries(itemMods).map(([k, v]) => {
-            const prettyKey = k.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-            return `${prettyKey}: ${v}`;
-          }).join("; ");
-          el.title = modText;
-          el.style.cursor = "help";
-        }
-        vaultItems.appendChild(el);
-      });
-      // Show active combined modifiers summary
-      if (player.equipment.length > 0) {
-        const summary = document.createElement("div");
-        summary.style.cssText = "font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5;";
-        const activeModLines = [];
-        if (mods.chaos_daily_increment_multiplier !== 1.0) activeModLines.push(`Daily Chaos ×${mods.chaos_daily_increment_multiplier}`);
-        if (mods.gold_bonus_vs_slime_pct > 0) activeModLines.push(`+${mods.gold_bonus_vs_slime_pct}% Gold vs Slime`);
-        if (mods.move_interval_multiplier !== 1.0) activeModLines.push(`Move Speed ×${(1/mods.move_interval_multiplier).toFixed(2)}`);
-        if (mods.xp_bonus_laundry_flat > 0) activeModLines.push(`+${mods.xp_bonus_laundry_flat} XP vs Laundry`);
-        if (mods.global_gold_multiplier !== 1.0) activeModLines.push(`Global Gold ×${mods.global_gold_multiplier}`);
-        if (mods.chaos_debuff_threshold !== CHAOS_DEBUFF_THRESHOLD) activeModLines.push(`Clutter Threshold: ${mods.chaos_debuff_threshold}%`);
-        if (mods.missed_day_chaos_immunity_count > 0) activeModLines.push(`Missed Day Immunity: ${mods.missed_day_chaos_immunity_count}`);
-        if (activeModLines.length > 0) {
-          summary.textContent = "Active: " + activeModLines.join(" · ");
-          vaultItems.appendChild(summary);
-        }
+// Snapshot the built map into the current room, put the player on a walkable tile and wake its chore monsters
+function prepareCurrentRoom() {
+  addRoom(currentRoom.x, currentRoom.y, currentRoomName);
+  document.getElementById("game-room-name").textContent = currentRoomName;
+  stopWalking();
+  activeAmbush = null;
+  ambushSuppressed = new Set();
+  roomRewards = { xp: 0, gold: 0 };
+  if (!isWalkable(player.x, player.y)) {
+    const mid = Math.floor(GRID_SIZE / 2);
+    let best = null;
+    for (let col = 0; col < GRID_SIZE; col++) {
+      for (let row = 0; row < GRID_SIZE; row++) {
+        const d = Math.abs(col - mid) + Math.abs(row - mid);
+        if (isWalkable(col, row) && (!best || d < best.d)) best = { col, row, d };
       }
     }
+    player.x = best ? best.col : mid;
+    player.y = best ? best.row : mid;
+  }
+  prevPos = { x: player.x, y: player.y };
+  spawnRandomMonsters(currentRoom.x, currentRoom.y);
+  // already standing beside a chore tile: don't ambush instantly, wait until the player moves away and back
+  [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+    const t = triggerAt(player.x + dx, player.y + dy);
+    if (t) ambushSuppressed.add(t);
+  });
+}
 
-    // ---- RENDERING ----
-    function drawMap() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+// ---- MAIN MENU ----
+function showMainMenu() {
+  document.getElementById("start-page").classList.add("open");
+  document.getElementById("menu-gold").textContent = playerGold;
+  document.getElementById("menu-xp").textContent = playerXp;
+  document.getElementById("menu-level").textContent = playerLevel;
+  document.getElementById("menu-rooms").textContent = Object.keys(activeRooms).length;
+}
 
-      // 1. Terrain layer (background first)
-      for (let col = 0; col < GRID_SIZE; col++) {
-        for (let row = 0; row < GRID_SIZE; row++) {
-          const terrain = terrainMap[col][row];
-          const color = TERRAIN_COLORS[terrain] || "transparent";
-          if (color !== "transparent") {
-            ctx.fillStyle = color;
-            ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-          }
-        }
-      }
+function hideMainMenu() {
+  document.getElementById("start-page").classList.remove("open");
+}
 
-      // 2. Entity layer on top
-      for (let col = 0; col < GRID_SIZE; col++) {
-        for (let row = 0; row < GRID_SIZE; row++) {
-          const entity = entityMap[col][row];
-          const color = ENTITY_COLORS[entity] || "transparent";
-          if (color !== "transparent") {
-            const inset = 4;
-            ctx.fillStyle = color;
-            ctx.fillRect(
-              col * TILE_SIZE + inset,
-              row * TILE_SIZE + inset,
-              TILE_SIZE - inset * 2,
-              TILE_SIZE - inset * 2
-            );
-            ctx.fillStyle = "#0a0c10";
-            ctx.font = `${TILE_SIZE - 12}px sans-serif`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            const symbol = ENTITY_SYMBOLS[entity];
-            if (symbol) {
-              ctx.fillText(symbol, col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2 + 3);
-            }
-          }
-        }
-      }
+// ---- GAMEPLAY OVERLAY ----
+function showGameplay() {
+  document.getElementById("gameplay-overlay").classList.add("open");
+  updateGameHUD();
+  isPlayMode = true;
+  drawRoom();
+}
 
-      // 3. Player avatar (play mode only)
-      if (isPlayMode) {
-        const cls = player.class;
-        const symbol = cls === "Warrior" ? "⚔️" : cls === "Rogue" ? "🥷" : "🧙";
-        ctx.fillStyle = "#f5c542";
-        ctx.font = `${TILE_SIZE - 12}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(symbol, player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2 + 3);
+function hideGameplay() {
+  document.getElementById("gameplay-overlay").classList.remove("open");
+  isPlayMode = false;
+  moveDirection = null;
+  isMoving = false;
+  if (moveTimer) {
+    clearInterval(moveTimer);
+    moveTimer = null;
+  }
+  drawRoom();
+}
 
-        // Gold ring around player
-        ctx.strokeStyle = "rgba(245, 197, 66, 0.4)";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(
-          player.x * TILE_SIZE + TILE_SIZE / 2,
-          player.y * TILE_SIZE + TILE_SIZE / 2,
-          TILE_SIZE / 2 - 4,
-          0, Math.PI * 2
-        );
-        ctx.stroke();
-      }
+// ---- HUD UPDATES ----
+function updateHUD() {
+  document.getElementById("hud-gold").textContent = playerGold;
+  document.getElementById("hud-chores").textContent = chores.length;
+  document.getElementById("hud-xp").style.width = Math.min(100, playerXp) + "%";
+  document.getElementById("hud-xp-max").textContent = `${playerXp}/100`;
+  document.getElementById("hud-hp").style.width = playerHp + "%";
+  document.getElementById("hud-mp").style.width = playerMp + "%";
+  document.getElementById("mp-text").textContent = `${playerMp}/100`;
+  document.getElementById("hud-class").textContent = playerClass;
+  document.getElementById("hp-text").textContent = `${playerHp}/100`;
+  document.getElementById("level-display").textContent = playerLevel;
+  document.getElementById("level-label-text").textContent = playerLevel;
+  // floor-display contains the subfloor span, so only update the span (setting its textContent removed the span)
+  document.getElementById("subfloor-display").textContent = currentRoomName;
+  drawLevelDisc();
+  drawMinimap();
+}
 
-      // 4. Grid lines
-      ctx.strokeStyle = "#1e222b";
-      ctx.lineWidth = 1;
-      for (let i = 0; i <= GRID_SIZE; i++) {
-        ctx.beginPath();
-        ctx.moveTo(i * TILE_SIZE, 0);
-        ctx.lineTo(i * TILE_SIZE, canvas.height);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(0, i * TILE_SIZE);
-        ctx.lineTo(canvas.width, i * TILE_SIZE);
-        ctx.stroke();
-      }
+function updateGameHUD() {
+  document.getElementById("game-gold").textContent = playerGold;
+  document.getElementById("game-xp").textContent = playerXp;
+  document.getElementById("game-level").textContent = playerLevel;
+  document.getElementById("game-hp").textContent = `${playerHp}/100`;
+  document.getElementById("game-hp-fill").style.width = playerHp + "%";
+  document.getElementById("game-mp-fill").style.width = playerMp + "%";
+}
+
+// ---- BUILDING MODE (TILE EDITOR) ----
+function startBuilding() {
+  if (currentScreen !== "build") showScreen("build");
+  openAssetBrowser();
+}
+
+function openAssetBrowser() {
+  loadAssetGrid();
+  document.getElementById("asset-browser").classList.add("open");
+}
+
+function closeAssetBrowser() {
+  document.getElementById("asset-browser").classList.remove("open");
+}
+
+// Palette grid for the active tab, with the real Kenney sprite crop (or an emoji for monsters)
+function loadAssetGrid() {
+  const assetGrid = document.getElementById("asset-grid");
+  assetGrid.innerHTML = '';
+  const activeCategory = document.querySelector('.tab.active').dataset.category;
+  for (const [tileId, def] of Object.entries(TILE_DEFS)) {
+    if (activeCategory !== "all" && def.cat !== activeCategory && tileId !== "eraser") continue;
+    const cell = document.createElement('div');
+    cell.className = 'asset-item';
+    cell.dataset.tile = tileId;
+    cell.dataset.category = def.cat;
+    const swatch = document.createElement('div');
+    swatch.className = 'swatch';
+    if (def.sheet) {
+      const s = SHEETS[def.sheet];
+      swatch.classList.add('kenny-asset');
+      swatch.style.backgroundImage = `url('${s.src}')`;
+      swatch.style.backgroundSize = `${s.w * 2}px ${s.h * 2}px`;
+      swatch.style.backgroundPosition = `-${def.col * s.stride * 2}px -${def.row * s.stride * 2}px`;
+    } else {
+      swatch.classList.add('emoji-swatch');
+      swatch.textContent = def.emoji;
     }
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = def.label;
+    cell.append(swatch, label);
+    cell.addEventListener('click', () => {
+      selectTile(tileId);
+      closeAssetBrowser();
+      showToast(`${def.label} selected: click the map to place it.`);
+    });
+    assetGrid.appendChild(cell);
+  }
+  selectTile(selectedTileType);
+}
 
-    // ---- MILESTONE 3.1: DATE HELPER (local machine date, YYYY-MM-DD) ----
-    function todayDateString() {
-      const d = new Date();
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      return `${yyyy}-${mm}-${dd}`;
+// ---- CHORE LOG ----
+let choreTimerStart = null;
+let choreTimerInterval = null;
+let lastTimedSeconds = 0;
+
+function openChoreLog() {
+  renderChoreLog();
+  document.getElementById('chore-log-panel').classList.add('open');
+}
+
+function closeChoreLog() {
+  document.getElementById('chore-log-panel').classList.remove('open');
+}
+
+function formatMMSS(sec) {
+  return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
+}
+
+function toggleChoreTimer() {
+  const btn = document.getElementById('chore-timer-btn');
+  const display = document.getElementById('chore-timer-display');
+  if (choreTimerStart === null) {
+    choreTimerStart = Date.now();
+    lastTimedSeconds = 0;
+    display.textContent = '00:00';
+    btn.textContent = '⏹️ Stop Timer';
+    choreTimerInterval = setInterval(() => {
+      display.textContent = formatMMSS(Math.floor((Date.now() - choreTimerStart) / 1000));
+    }, 250);
+  } else {
+    stopChoreTimer();
+    showToast(`Timed ${formatMMSS(lastTimedSeconds)}. Mark Complete to log it (+1 Gold per minute).`);
+  }
+}
+
+function stopChoreTimer() {
+  if (choreTimerStart === null) return;
+  lastTimedSeconds = Math.floor((Date.now() - choreTimerStart) / 1000);
+  clearInterval(choreTimerInterval);
+  choreTimerInterval = null;
+  choreTimerStart = null;
+  document.getElementById('chore-timer-display').textContent = formatMMSS(lastTimedSeconds);
+  document.getElementById('chore-timer-btn').textContent = '⏱️ Start Timer';
+}
+
+function renderChoreLog() {
+  const logList = document.getElementById("chore-log-list");
+  logList.innerHTML = "";
+  if (!chores.length) {
+    logList.innerHTML = '<div class="log-empty">No chores logged yet</div>';
+    return;
+  }
+  for (const c of chores) {
+    const entry = document.createElement("div");
+    entry.className = "chore-log-entry";
+    const t = document.createElement("div"); t.className = "log-time"; t.textContent = `[${c.time}]`;
+    const n = document.createElement("div"); n.className = "log-chore"; n.textContent = c.label;
+    const r = document.createElement("div"); r.className = "log-rewards";
+    r.textContent = `+${c.gold} Gold · +${c.xp} XP` + (c.timed ? ` · ⏱ ${formatMMSS(c.timed)}` : "");
+    entry.append(t, n, r);
+    logList.appendChild(entry);
+  }
+}
+
+// A REAL chore earns gold + XP (once), restores HP/MP, and banishes that chore's monster in the current room
+function completeChore(type, customText) {
+  const key = type.toLowerCase();
+  const chore = CHORES[key];
+  const text = (customText || "").trim();
+  if (type === "Custom" && !text) {
+    showToast("Describe your custom chore first.");
+    return false;
+  }
+  if (choreTimerStart !== null) stopChoreTimer();
+  const timed = lastTimedSeconds;
+  lastTimedSeconds = 0;
+  const bonus = Math.min(10, Math.floor(timed / 60));
+  const gold = (chore ? chore.goldReward : 15) + bonus;
+  const xp = chore ? chore.xpReward : 15;
+
+  const now = new Date();
+  const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+  chores.unshift({ time, type, label: type === "Custom" ? text : (chore ? `${type}: ${chore.chore}` : type), gold, xp, timed });
+  chores = chores.slice(0, 30);
+
+  playerHp = Math.min(100, playerHp + 20);
+  playerMp = Math.min(100, playerMp + 25);
+  addRewards(gold, xp);
+  renderChoreLog();
+  showToast(`✅ Real chore logged: +${gold} Gold, +${xp} XP`);
+
+  if (isPlayMode && chore) {
+    const monster = monsters.find(m => m.type === key);
+    if (monster) {
+      monsters = monsters.filter(m => m !== monster);
+      setTimeout(() => showToast(`Your real chore banished the ${monster.name}!`), 1400);
+      drawRoom();
+      if (monsters.length === 0) showLevelClear(roomRewards.xp, roomRewards.gold);
     }
+  }
+  updateHUD();
+  updateGameHUD();
+  saveGameData();
+  return true;
+}
 
-    // ---- MILESTONE 3.1: CHAOS METER HUD ----
-    function updateChaosHUD() {
-      if (!chaosBar || !chaosFill) return;
-      const pct = Math.max(0, Math.min(CHAOS_MAX, chaosMeter));
-      chaosFill.style.width = pct + "%";
-      if (chaosPct) chaosPct.textContent = pct + "%";
+// ---- PERSISTENCE ----
+function saveGameData() {
+  const payload = {
+    schemaVersion: 1,
+    terrainMap,
+    entityMap,
+    player,
+    currentRoom,
+    monsters,
+    chores,
+    dailyChores,
+    chaosMeter,
+    playerHp,
+    playerMp,
+    playerGold,
+    playerXp,
+    playerLevel,
+    doors
+  };
+  try {
+    localStorage.setItem("daily_dungeons_save", JSON.stringify(payload));
+  } catch (e) {
+    console.error("Failed to save game data:", e);
+  }
+}
 
-      // High-contrast threshold: green/blue below threshold, vibrant orange/red at >= threshold
-      const mods = getActiveModifiers();
-      const threshold = mods.chaos_debuff_threshold;
-      const critical = pct >= threshold;
-      chaosBar.classList.toggle("chaos-critical", critical);
-
-      // The Clutter Debuff status label
-      clutterDebuffActive = critical;
-      if (chaosDebuff) chaosDebuff.classList.toggle("hidden", !critical);
-    }
-
-    // ---- MILESTONE 3.1: CHAOS ADJUSTERS (clamped 0..100) ----
-    function addChaos(amount) {
-      chaosMeter = Math.max(0, Math.min(CHAOS_MAX, chaosMeter + amount));
-      updateChaosHUD();
-      return chaosMeter;
-    }
-
-    function reduceChaos(amount) {
-      return addChaos(-amount);
-    }
-
-    // ---- MILESTONE 3.1: PURCHASE GATE (The Clutter Debuff) ----
-    // Any future purchasing transaction MUST route through this gate first.
-    // Returns true when a purchase is allowed; false (and blocks) while the
-    // chaosMeter is at or above the debuff threshold.
-    function canPurchase() {
-      const mods = getActiveModifiers();
-      const threshold = mods.chaos_debuff_threshold;
-      if (chaosMeter >= threshold) {
-        console.warn("⚠️ CLUTTER DEBUFF ACTIVE — purchasing is frozen until chaos drops below " + threshold + "%.");
-        return false;
-      }
+function loadGameData() {
+  const save = localStorage.getItem("daily_dungeons_save");
+  if (save) {
+    try {
+      const data = JSON.parse(save);
+      terrainMap = data.terrainMap || terrainMap;
+      entityMap = data.entityMap || entityMap;
+      player = data.player || player;
+      currentRoom = data.currentRoom || currentRoom;
+      monsters = data.monsters || monsters;
+      chores = data.chores || chores;
+      dailyChores = data.dailyChores || dailyChores;
+      chaosMeter = data.chaosMeter || 0;
+      playerHp = data.playerHp ?? playerHp;
+      playerMp = data.playerMp ?? playerMp;
+      playerGold = data.playerGold || playerGold;
+      playerXp = data.playerXp || playerXp;
+      playerLevel = data.playerLevel || playerLevel;
+      doors = data.doors || doors;
+      isPlayMode = data.isPlayMode || false;
       return true;
+    } catch (e) {
+      console.error("Failed to load save:", e);
     }
+  }
+  return false;
+}
 
-    // Example guarded purchase path (spends gold only if the gate allows it).
-    function tryPurchase(cost) {
-      if (!canPurchase()) return false;
-      if (player.gold < cost) return false;
-      player.gold -= cost;
-      updateHUD();
-      saveGameData();
-      return true;
-    }
+// ---- MAIN MENU FUNCTIONS ----
+function newMap() {
+  if (!confirm("Start a brand new dungeon?")) return;
+  terrainMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+  entityMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+  doors = [];
+  monsters = [];
+  activeRooms = {};
+  player = { x: 0, y: 0, roomX: 0, roomY: 0 };
+  playerHp = 100;
+  playerMp = 100;
+  playerGold = 0;
+  playerXp = 0;
+  playerLevel = 1;
+  playerClass = "Rogue";
+  currentRoom = { x: 0, y: 0 };
+  currentRoomName = "Living Room";
+  chores = [];
+  chaosMeter = 0;
+  isPlayMode = false;
+  seedStarterRoom();
+  renderChoreLog();
+  saveGameData();
+  showScreen("build");
+}
 
-    // ---- UI BINDINGS ----
-    function updateHUD() {
-      hudLevel.textContent = player.level;
-      hudXp.textContent = player.xp;
-      hudXpMax.textContent = "/" + (player.level * 100);
-      hudGold.textContent = player.gold;
-      hudClass.textContent = player.class;
-      updateChaosHUD();
-    }
+function enterEditMode() {
+  showScreen("build");
+}
 
+function enterPlayMode() {
+  showScreen("play");
+}
 
-    // ---- PERSISTENCE: LOCAL STORAGE ----
-    // opts.quiet suppresses the "💾 Game Saved!" toast (used on auto-load writes).
-    function saveGameData(opts) {
-      const quiet = opts && opts.quiet;
-      const payload = {
-        schemaVersion: SAVE_SCHEMA_VERSION,
-        terrainMap: terrainMap,
-        entityMap: entityMap,
-        player: player,
-        // MILESTONE 3.1: persisted chaos-loop schema
-        chaosMeter: chaosMeter,
-        lastLoginDate: lastLoginDate
-      };
-      // Equipment is nested inside player, so it persists automatically
-      const json = JSON.stringify(payload);
-      localStorage.setItem("daily_haven_quest_save", json);
+// ---- BINDINGS ----
+document.getElementById('asset-palette-toggle').addEventListener('click', startBuilding);
+document.getElementById('menu-btn').addEventListener('click', () => showScreen('menu'));
+document.getElementById('builder-menu-btn').addEventListener('click', () => showScreen('menu'));
+document.getElementById('builder-palette-btn').addEventListener('click', openAssetBrowser);
+document.getElementById('builder-chores-btn').addEventListener('click', openChoreLog);
+document.getElementById('builder-play-btn').addEventListener('click', enterPlayMode);
+document.getElementById('browser-close').addEventListener('click', closeAssetBrowser);
+document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListener('click', () => {
+  document.querySelectorAll('.browser-tabs .tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  loadAssetGrid();
+}));
+document.getElementById('new-map-btn').addEventListener('click', newMap);
+document.getElementById('edit-map-btn').addEventListener('click', enterEditMode);
+document.getElementById('play-map-btn').addEventListener('click', enterPlayMode);
+document.getElementById('chore-log-btn').addEventListener('click', openChoreLog);
+document.getElementById('toggle-edit').addEventListener('click', enterEditMode);
+document.getElementById('surfactant-btn').addEventListener('click', castSurfactantBlast);
+document.getElementById('ambush-fight').addEventListener('click', ambushFight);
+document.getElementById('ambush-run').addEventListener('click', ambushRun);
+document.getElementById('ambush-hide').addEventListener('click', ambushHide);
+document.getElementById('chore-log-close').addEventListener('click', closeChoreLog);
+document.getElementById('level-continue').addEventListener('click', hideLevelClear);
+document.getElementById('level-menu').addEventListener('click', () => showScreen('menu'));
 
-      // Ephemeral save confirmation (auto-fades) — suppressed on quiet auto-writes
-      if (!quiet && saveStatusEl) {
-        saveStatusEl.textContent = "💾 Game Saved!";
-        saveStatusEl.classList.add("show");
-        setTimeout(() => {
-          saveStatusEl.classList.remove("show");
-        }, 1800);
-      }
-      console.log("Game saved.");
-    }
+// Real Chore Log controls
+document.getElementById('chore-type').addEventListener('change', (e) => {
+  document.getElementById('chore-custom-group').style.display = e.target.value === 'Custom' ? '' : 'none';
+});
+document.getElementById('chore-complete').addEventListener('click', () => {
+  const type = document.getElementById('chore-type').value;
+  if (completeChore(type, document.getElementById('chore-custom').value) && type === 'Custom') {
+    document.getElementById('chore-custom').value = '';
+  }
+});
+document.getElementById('chore-timer-btn').addEventListener('click', toggleChoreTimer);
 
-    function loadGameData() {
-      const today = todayDateString();
-      try {
-        const raw = localStorage.getItem("daily_haven_quest_save");
-        if (!raw) {
-          // No save file: gracefully fall back to a clean empty grid
-          initMaps();
-          player = { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
-          chaosMeter = 0;
-          lastLoginDate = today; // stamp the first-ever login
-          updateHUD();
-          drawMap();
-          saveGameData({ quiet: true }); // persist the fresh schema immediately (no toast)
-          console.log("No save found — starting fresh.");
-          return;
-        }
-        const data = JSON.parse(raw);
+function canvasCell(canvas, e) {
+  // measure inside the canvas border so clicks land on the right tile
+  const rect = canvas.getBoundingClientRect();
+  const col = Math.floor((e.clientX - rect.left - canvas.clientLeft) * (canvas.width / canvas.clientWidth) / TILE_SIZE);
+  const row = Math.floor((e.clientY - rect.top - canvas.clientTop) * (canvas.height / canvas.clientHeight) / TILE_SIZE);
+  return (col >= 0 && col < GRID_SIZE && row >= 0 && row < GRID_SIZE) ? { col, row } : null;
+}
 
-        // Overwrite active states
-        terrainMap = data.terrainMap || [];
-        entityMap = data.entityMap || [];
-        player = data.player || { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
-        if (!Array.isArray(player.equipment)) player.equipment = [];
+// Builder: placing tiles is free
+mapCanvas.addEventListener("click", (e) => {
+  const cell = canvasCell(mapCanvas, e);
+  if (!cell || isPlayMode) return;
+  if (paintTile(cell.col, cell.row, selectedTileType)) {
+    drawMap();
+    saveGameData();
+  }
+});
 
-        // MILESTONE 3.1: restore persisted chaos-loop schema
-        chaosMeter = typeof data.chaosMeter === "number" ? data.chaosMeter : 0;
-        lastLoginDate = typeof data.lastLoginDate === "string" ? data.lastLoginDate : null;
+// Play: click anywhere in the house to walk there (BFS around walls/furniture)
+roomCanvas.addEventListener("click", (e) => {
+  const cell = canvasCell(roomCanvas, e);
+  if (cell) handleRoomClick(cell.col, cell.row);
+});
 
-        // MILESTONE 3.1: chronological lifecycle check
-        if (lastLoginDate !== today) {
-          // A new calendar day flipped (or first run with an old save): +20 chaos, capped at 100
-          const mods = getActiveModifiers();
-          // Apply missed day immunity (skip chaos increase for N missed days)
-          if (mods.missed_day_chaos_immunity_count > 0) {
-            // Simple approach: if we have immunity, reduce the daily increment
-            // For game-jam simplicity, we just multiply the increment
-            console.log(`Spore Mask immunity active — daily chaos increment reduced.`);
-          }
-          const dailyIncrement = Math.round(CHAOS_DAILY_INCREMENT * mods.chaos_daily_increment_multiplier);
-          chaosMeter = Math.min(CHAOS_MAX, chaosMeter + dailyIncrement);
-          lastLoginDate = today;
-          console.log(`New day (${today}) — chaos +${dailyIncrement}%. Now ${chaosMeter}%.`);
-        }
+// Optional keyboard: arrows / WASD step one tile
+const MOVE_KEYS = { arrowup: [0, -1], w: [0, -1], arrowdown: [0, 1], s: [0, 1], arrowleft: [-1, 0], a: [-1, 0], arrowright: [1, 0], d: [1, 0] };
+document.addEventListener("keydown", (e) => {
+  if (!isPlayMode) return;
+  if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+  const dir = MOVE_KEYS[e.key.toLowerCase()];
+  if (dir) {
+    e.preventDefault();
+    stopWalking();
+    tryMove(dir[0], dir[1]);
+  }
+});
 
-        // Guard: ensure grid arrays are valid size before render
-        if (terrainMap.length !== GRID_SIZE || terrainMap.some(r => r.length !== GRID_SIZE)) {
-          initMaps();
-          player = { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
-          console.warn("Save grid invalid — resetting to empty.");
-        } else {
-          updateHUD();
-          drawMap();
-        }
-        // Persist the (possibly) bumped date + chaos so the next load is correct.
-        // Quiet: an auto-load write must not flash the "Game Saved!" toast.
-        saveGameData({ quiet: true });
-        console.log("Game loaded.");
-      } catch (err) {
-        // Corrupt or unreadable save: fall back to empty
-        console.warn("Save corrupt, resetting to empty —", err);
-        initMaps();
-        player = { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
-        chaosMeter = 0;
-        lastLoginDate = today;
-        updateHUD();
-        drawMap();
-      }
-    }
-
-    // ---- RESET / CLEAR SAVE ----
-    function resetDungeon() {
-      localStorage.removeItem("daily_haven_quest_save");
-      initMaps();
-      player = { x: 2, y: 2, class: "Rogue", gold: 0, xp: 0, level: 1, equipment: [] };
-      // MILESTONE 3.1: reset the chaos-loop schema too
-      chaosMeter = 0;
-      lastLoginDate = todayDateString();
-      updateHUD();
-      drawMap();
-      // Re-save the wiped state so an immediate refresh doesn't reload a stale
-      // pre-reset save from another tab. Quiet: Reset must not show "Saved!".
-      saveGameData({ quiet: true });
-      console.log("Dungeon reset.");
-    }
-
-    function setMode(play) {
-      isPlayMode = play;
-      modeToggle.textContent = play ? "🛠️ Switch to Edit Mode" : "🔄 Switch to Play Mode";
-      modeToggle.style.background = play ? "#64748b" : "var(--accent)";
-      modeToggle.style.color = play ? "#e8eaed" : "#0a0c10";
-
-      // UI visibility
-      heroSelector.style.display = play ? "none" : "flex";
-      heroToggle.style.display = play ? "none" : "inline-block";
-      document.querySelectorAll('.controls input[name="tool"]').forEach((el) => {
-        el.disabled = play;
-      });
-
-      if (play) {
-        // Disable tools
-        document.querySelectorAll('.controls input[name="tool"]').forEach((el) => el.disabled = true);
-        // Move player to click target during play (handled in handlePaint)
-      } else {
-        document.querySelectorAll('.controls input[name="tool"]').forEach((el) => el.disabled = false);
-      }
-
-      drawMap();
-    }
-
-    function handlePaint(clientX, clientY) {
-      const pos = getGridPos(clientX, clientY);
-      if (pos.col < 0 || pos.col >= GRID_SIZE || pos.row < 0 || pos.row >= GRID_SIZE) return;
-
-      if (isPlayMode) {
-        // In play mode: clicking navigates the player avatar to that tile if walkable
-        if (terrainMap[pos.col][pos.row] !== 2) {
-          player.x = pos.col;
-          player.y = pos.row;
-          const ent = entityMap[pos.col][pos.row];
-          if (ent >= 3) triggerInteraction(pos.col, pos.row);
-          drawMap();
-        }
-        return;
-      }
-
-      paintTile(pos.col, pos.row, activeTool);
-      drawMap();
-    }
-
-    // ---- MOUSE / TOUCH ----
-    function getGridPos(clientX, clientY) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      return {
-        col: Math.floor((clientX - rect.left) * scaleX / TILE_SIZE),
-        row: Math.floor((clientY - rect.top) * scaleY / TILE_SIZE),
-      };
-    }
-
-    function handleDown(e) {
-      handlePaint(e.clientX, e.clientY);
-      canvas.addEventListener("mousemove", handleMove);
-      canvas.addEventListener("mouseup", handleUp);
-      canvas.addEventListener("mouseleave", handleUp);
-    }
-
-    function handleMove(e) {
-      handlePaint(e.clientX, e.clientY);
-    }
-
-    function handleUp() {
-      canvas.removeEventListener("mousemove", handleMove);
-      canvas.removeEventListener("mouseup", handleUp);
-      canvas.removeEventListener("mouseleave", handleUp);
-    }
-
-    function handleTouch(e) {
-      e.preventDefault();
-      const touch = e.touches[0];
-      handlePaint(touch.clientX, touch.clientY);
-    }
-
-    canvas.addEventListener("mousedown", handleDown);
-    canvas.addEventListener("touchstart", handleTouch, { passive: false });
-
-    // ---- KEYBOARD (play mode movement) ----
-    document.addEventListener("keydown", (e) => {
-      if (!isPlayMode) return;
-      keys[e.key.toLowerCase()] = true;
-      if (!moveTimer) {
-        const mods = getActiveModifiers();
-        const baseInterval = MOVE_INTERVAL[player.class] || 300;
-        const adjustedInterval = Math.round(baseInterval * mods.move_interval_multiplier);
-        moveTimer = setInterval(() => tryMove(), adjustedInterval);
-      }
-    });
-
-    document.addEventListener("keyup", (e) => {
-      delete keys[e.key.toLowerCase()];
-      if (Object.keys(keys).length === 0) {
-        clearInterval(moveTimer);
-        moveTimer = null;
-      }
-    });
-
-    // ---- BUTTON BINDINGS ----
-    document.querySelectorAll('.controls input[name="tool"]').forEach((el) => {
-      el.addEventListener("change", () => setTool(el.value));
-    });
-
-    slayBtn.addEventListener("click", resolveCombat);
-    cancelBtn.addEventListener("click", closeQuestPopup);
-    modeToggle.addEventListener("click", () => setMode(!isPlayMode));
-
-    saveBtn.addEventListener("click", saveGameData);
-    resetBtn.addEventListener("click", resetDungeon);
-    ambushBtn.addEventListener("click", triggerAmbush);
-    surfactantBtn.addEventListener("click", castSurfactantBlast);
-
-    // ---- ASSET PALETTE WIRING ----
-    document.querySelectorAll('.palette-item').forEach((el) => {
-      el.addEventListener('click', () => selectTile(el.dataset.tileType));
-    });
-    const assetPaletteToggle = document.getElementById('asset-palette-toggle');
-    const assetPalette = document.getElementById('asset-palette');
-    if (assetPaletteToggle && assetPalette) {
-      assetPaletteToggle.addEventListener('click', () => {
-        assetPalette.classList.toggle('open');
-      });
-    }
-
-    // ---- CUSTOM MAP WIRING ----
-    const saveCustomBtn = document.getElementById('save-custom-btn');
-    const loadCustomBtn = document.getElementById('load-custom-btn');
-    const clearCustomBtn = document.getElementById('clear-custom-btn');
-    if (saveCustomBtn) saveCustomBtn.addEventListener('click', saveCustomMap);
-    if (loadCustomBtn) loadCustomBtn.addEventListener('click', loadCustomMap);
-    if (clearCustomBtn) clearCustomBtn.addEventListener('click', clearCustomMap);
-
-    heroSelect.addEventListener("change", () => {
-      player.class = heroSelect.value;
-      heroToggle.textContent = "⚔️ Hero: " + player.class;
-      // Reset player position nicely
-      player.x = 2;
-      player.y = 2;
-      drawMap();
-      updateHUD();
-    });
-
-    heroToggle.addEventListener("click", () => {
-      if (isPlayMode) return;
-      heroSelector.style.display = heroSelector.style.display === "none" ? "flex" : "none";
-    });
-
-    // ---- REAL CHORE LOG SYSTEM ----
-    const CHORE_LOG_KEY = 'daily_haven_quest_chore_log';
-    let choreLogEntries = [];
-    let choreTimerStart = null;
-    let choreTimerInterval = null;
-
-    function loadChoreLog() {
-      try {
-        const raw = localStorage.getItem(CHORE_LOG_KEY);
-        if (raw) choreLogEntries = JSON.parse(raw);
-      } catch (e) { choreLogEntries = []; }
-    }
-
-    function saveChoreLog() {
-      localStorage.setItem(CHORE_LOG_KEY, JSON.stringify(choreLogEntries));
-    }
-
-    function toggleChoreLog() {
-      const panel = document.getElementById('chore-log-panel');
-      panel.classList.toggle('open');
-    }
-
-    function completeChore() {
-      const typeSelect = document.getElementById('chore-type');
-      const customInput = document.getElementById('chore-custom');
-      const choreType = typeSelect.value;
-      const choreText = choreType === 'Custom' ? customInput.value.trim() : choreType;
-      if (!choreText) { alert('Please enter a custom chore description.'); return; }
-
-      // Timer bonus
-      let timerBonus = 0;
-      if (choreTimerStart) {
-        const elapsedMs = Date.now() - choreTimerStart;
-        const elapsedMin = Math.floor(elapsedMs / 60000);
-        timerBonus = Math.min(elapsedMin * 2, 30);
-        stopTimer();
-      }
-
-      // Rewards
-      const goldReward = 10;
-      const xpReward = 10;
-      const chaosReduction = 25 + timerBonus;
-
-      reduceChaos(chaosReduction);
-      player.gold += goldReward;
-      player.xp += xpReward;
-      while (player.xp >= 100) { player.xp -= 100; player.level += 1; }
-
-      flashCanvas();
-      updateHUD();
-      saveGameData();
-
-      // Log entry
-      const entry = { type: choreType, text: choreText, timestamp: Date.now(), gold: goldReward, xp: xpReward };
-      choreLogEntries.unshift(entry);
-      if (choreLogEntries.length > 20) choreLogEntries = choreLogEntries.slice(0, 20);
-      saveChoreLog();
-      renderChoreLog();
-
-      // Reset custom input
-      customInput.value = '';
-    }
-
-    function startTimer() {
-      choreTimerStart = Date.now();
-      const btn = document.getElementById('chore-timer-btn');
-      const display = document.getElementById('chore-timer-display');
-      btn.textContent = '⏹️ Stop & Log';
-      btn.classList.add('running');
-      choreTimerInterval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - choreTimerStart) / 1000);
-        const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
-        const secs = String(elapsed % 60).padStart(2, '0');
-        display.textContent = `${mins}:${secs}`;
-      }, 1000);
-    }
-
-    function stopTimer() {
-      if (choreTimerInterval) { clearInterval(choreTimerInterval); choreTimerInterval = null; }
-      choreTimerStart = null;
-      const btn = document.getElementById('chore-timer-btn');
-      const display = document.getElementById('chore-timer-display');
-      btn.textContent = '⏱️ Start Timer';
-      btn.classList.remove('running');
-      display.textContent = '00:00';
-    }
-
-    function renderChoreLog() {
-      const list = document.getElementById('chore-log-list');
-      if (choreLogEntries.length === 0) {
-        list.innerHTML = '<div class="log-empty">No chores logged yet</div>';
-        return;
-      }
-      list.innerHTML = '';
-      choreLogEntries.slice(0, 5).forEach(entry => {
-        const div = document.createElement('div');
-        div.className = 'log-entry';
-        const time = new Date(entry.timestamp);
-        const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const dateStr = time.toLocaleDateString([], { month: 'short', day: 'numeric' });
-        div.innerHTML = `<span class="log-time">${dateStr} ${timeStr}</span><span class="log-chore">${entry.text}</span><span class="log-rewards">+${entry.gold}g +${entry.xp}xp</span>`;
-        list.appendChild(div);
-      });
-    }
-
-    // Chore log event listeners
-    document.getElementById('chore-log-toggle').addEventListener('click', toggleChoreLog);
-    document.getElementById('chore-log-close').addEventListener('click', toggleChoreLog);
-    document.getElementById('chore-complete').addEventListener('click', completeChore);
-    document.getElementById('chore-timer-btn').addEventListener('click', () => {
-      if (choreTimerStart) { stopTimer(); } else { startTimer(); }
-    });
-    document.getElementById('chore-type').addEventListener('change', (e) => {
-      document.getElementById('chore-custom-group').style.display = e.target.value === 'Custom' ? 'flex' : 'none';
-    });
-
-    // ---- ASSET BROWSER ----
-    const assetBrowser = document.getElementById('asset-browser');
-    const assetGrid = document.getElementById('asset-grid');
-    const browserInfo = document.getElementById('browser-info');
-    const browserTitle = document.getElementById('browser-title');
-    const tabs = document.querySelectorAll('.browser-tabs .tab');
-    const categoryMap = {
-      all: { label: 'All Tiles' },
-      terrain: { label: 'Terrain', tiles: ['floor', 'wall'] },
-      furniture: { label: 'Furniture', tiles: ['bed', 'sink'] },
-      monsters: { label: 'Monsters', tiles: ['dish_slime', 'laundry_hydra', 'trash_mimic'] },
-      environment: { label: 'Environment', tiles: ['tree', 'rock', 'grass', 'sky'] }
-    };
-
-    function openAssetBrowser() {
-      assetBrowser.classList.add('open');
-      loadAssetGrid();
-    }
-
-    function closeAssetBrowser() {
-      assetBrowser.classList.remove('open');
-      selectTile(currentTileType);
-    }
-
-    function loadAssetGrid() {
-      assetGrid.innerHTML = '';
-      const activeCategory = document.querySelector('.tab.active').dataset.category;
-      const tileIds = categoryMap[activeCategory]?.tiles || [];
-
-      for (const tileId of tileIds) {
-        const cell = document.createElement('div');
-        cell.className = 'asset-item';
-        cell.dataset.tile = tileId;
-        cell.dataset.category = activeCategory;
-        cell.innerHTML = `
-          <div class="swatch kenny-asset" style="background-image: url('../assets/roguelike_transparent.png');"></div>
-          <div class="label">${tileId}</div>
-        `;
-        cell.addEventListener('click', () => {
-          selectTile(tileId);
-          closeAssetBrowser();
-        });
-        assetGrid.appendChild(cell);
-      }
-    }
-
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        loadAssetGrid();
-      });
-    });
-
-    document.getElementById('asset-palette-toggle').addEventListener('click', openAssetBrowser);
-    document.getElementById('browser-close').addEventListener('click', closeAssetBrowser);
-
-    assetBrowser.addEventListener('click', (e) => {
-      if (e.target === assetBrowser) closeAssetBrowser();
-    });
-
-    // ---- START ----
-    loadGameData();
-    loadChoreLog();
-    renderChoreLog();
-    renderVault();
-  </script>
+// ---- BUILD ----
+init();
+</script>
 </body>
 </html>

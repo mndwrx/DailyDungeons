@@ -8,12 +8,82 @@
       "tiles": 442,
       "description": "Flooring, walls, standard furniture. 26x17 grid at 16px with 1px margin."
     },
-    "rpg_urban_pack": {
+    "roguelike_rpg_pack": {
       "file": "assets/rpg_urban_tilemap.png",
       "title": "RPG Urban Pack",
       "license": "CC0",
       "tiles": 400,
       "description": "Appliances, electronics, trash bins. 25x16 grid at 16px with 1px spacing."
+    },
+    "caves_dungeons": {
+      "file": "assets/Spritesheet/roguelikeDungeon_transparent.png",
+      "title": "Caves & Dungeons",
+      "license": "CC0",
+      "tiles": 120,
+      "description": "Cave and dungeon themed terrain, walls, and obstacles. 16x16 tiles."
+    },
+    "roguelike_modern_city": {
+      "file": "assets/Tilesheets/roguelikeIndoor_transparent.png",
+      "title": "Roguelike Modern City",
+      "license": "CC0",
+      "tiles": 200,
+      "description": "Modern city and building tiles. Glass, metal, concrete textures."
+    },
+    "roguelike_characters": {
+      "file": "assets/Spritesheet/roguelikeChar_transparent.png",
+      "title": "Roguelike Characters",
+      "license": "CC0",
+      "tiles": 48,
+      "description": "Character sprites and animations for player and NPCs. 16x16 pixels."
+    },
+    "fantasy_ui_borders": {
+      "file": "assets/PNG/iconCircle_blue.png",
+      "title": "Fantasy UI Borders",
+      "license": "CC0",
+      "tiles": 64,
+      "description": "Decorative UI borders and frames. Character and shield art."
+    },
+    "ui_pack_rpg_expansion": {
+      "file": "assets/Spritesheet/UIpackSheet_transparent.png",
+      "title": "UI Pack RPG Expansion",
+      "license": "CC0",
+      "tiles": 80,
+      "description": "UI expansion with crafting buttons, inventory slots, and menus."
+    },
+    "input_prompts_pixel": {
+      "file": "assets/Tiles/tile_0000.png",
+      "title": "Input Prompts Pixel",
+      "license": "CC0",
+      "tiles": 100,
+      "description": "Pixel art input prompts, text boxes, and interactive UI elements."
+    },
+    "pixel_ui_pack": {
+      "file": "assets/PNG/buttonSquare_blue.png",
+      "title": "Pixel UI Pack",
+      "license": "CC0",
+      "tiles": 150,
+      "description": "Complete UI kit with buttons, sliders, checkboxes, and menus."
+    },
+    "fonts": {
+      "file": "assets/Fonts/Kenney Blocks.ttf",
+      "title": "Kenney Fonts",
+      "license": "CC0",
+      "tiles": 1,
+      "description": "Pixel art font set with 6 font styles for UI headers and text."
+    },
+    "rpg_base": {
+      "file": "assets/Spritesheet/RPGpack_sheet_transparent.png",
+      "title": "RPG Base",
+      "license": "CC0",
+      "tiles": 60,
+      "description": "RPG base tiles for dungeons, caves, and terrain. 16x16 pixels."
+    },
+    "ui_audio": {
+      "file": "assets/Audio/click1.ogg",
+      "title": "UI Audio",
+      "license": "CC0",
+      "tiles": 1,
+      "description": "UI sound effects for clicks, buttons, and feedback. 8 ogg files."
     }
   },
   "tile_palette": {
@@ -100,7 +170,7 @@
         "id": "grass",
         "label": "Grass",
         "source": "rpg_urban_pack",
-        "pos": "0,25",
+        "pos": "26,0",
         "width": 16,
         "height": 16
       },
