@@ -853,6 +853,19 @@
     font-weight: 700;
   }
 
+  .palette-search {
+    margin-left: auto;
+    padding: 5px 8px;
+    border: 1px solid #3b3b4a;
+    background: #16161e;
+    color: var(--text);
+    font-size: 12px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    min-width: 150px;
+  }
+  .palette-search:focus { border-color: var(--gold); outline: none; }
+
   .browser-tabs .tab:hover {
     border-color: var(--gold);
     color: var(--gold);
@@ -1702,10 +1715,16 @@
   <div class="browser-body">
     <div class="browser-tabs">
       <button class="tab active" data-category="all">All</button>
-      <button class="tab" data-category="terrain">Terrain</button>
-      <button class="tab" data-category="furniture">Furniture</button>
-      <button class="tab" data-category="environment">Environment</button>
+      <button class="tab" data-category="floors">Floors &amp; Walls</button>
+      <button class="tab" data-category="kitchen">Kitchen</button>
+      <button class="tab" data-category="bath">Bath</button>
+      <button class="tab" data-category="bedroom">Bedroom</button>
+      <button class="tab" data-category="living">Living</button>
+      <button class="tab" data-category="laundry">Laundry</button>
+      <button class="tab" data-category="yard">Yard</button>
+      <button class="tab" data-category="decor">Decor</button>
       <button class="tab" data-category="monsters">Monsters</button>
+      <input type="search" id="palette-search" class="palette-search" placeholder="Search pieces..." />
     </div>
     <div class="asset-grid" id="asset-grid">
       <div class="grid-loading">Loading Kenney assets...</div>
@@ -1991,37 +2010,171 @@ let manifestData = {};
 // Kenney sheets used for palette swatches + furniture sprites
 const SHEETS = {
   rougelike: { src: "assets/roguelike_transparent.png", stride: 17, w: 458, h: 305 }, // 16px tiles, 1px margin
-  rpg_urban: { src: "assets/rpg_urban_tilemap.png", stride: 16, w: 432, h: 288 }     // 16px tiles, no margin
+  rpg_urban: { src: "assets/rpg_urban_tilemap.png", stride: 16, w: 432, h: 288 },    // 16px tiles, no margin
+  rpg_sheet: { src: "assets/Spritesheet/roguelikeSheet_transparent.png", stride: 17, w: 968, h: 526 } // Roguelike RPG pack (yard, doors, windows, decor)
 };
 
 // Palette id -> real tile value. layer "terrain" writes terrainMap, "entity" writes entityMap.
+// Original 14 entries keep their ids/values/triggers; categories now match the palette tabs.
 const TILE_DEFS = {
-  floor:         { value: 1,  layer: "terrain", cat: "terrain",     label: "Floor",          sheet: "rougelike", col: 24, row: 1 },
-  wall:          { value: 2,  layer: "terrain", cat: "terrain",     label: "Wall",           sheet: "rpg_urban", col: 9,  row: 1 },
-  grass:         { value: 10, layer: "terrain", cat: "environment", label: "Lawn",           sheet: "rpg_urban", col: 6,  row: 12 },
-  sky:           { value: 11, layer: "terrain", cat: "environment", label: "Patio",          emoji: "🌤️" },
-  tree:          { value: 8,  layer: "terrain", cat: "environment", label: "Tree",           sheet: "rpg_urban", col: 17, row: 9 },
-  rock:          { value: 9,  layer: "terrain", cat: "environment", label: "Rock",           emoji: "🪨" },
-  bed:           { value: 3,  layer: "entity",  cat: "furniture",   label: "Bed",            sheet: "rougelike", col: 13, row: 0 },
-  sink:          { value: 4,  layer: "entity",  cat: "furniture",   label: "Sink",           sheet: "rougelike", col: 8,  row: 13 },
-  laundry:       { value: 12, layer: "entity",  cat: "furniture",   label: "Laundry",        sheet: "rougelike", col: 17, row: 2 },
-  trashcan:      { value: 13, layer: "entity",  cat: "furniture",   label: "Trash Can",      sheet: "rpg_urban", col: 10, row: 9 },
-  dish_slime:    { value: 5,  layer: "entity",  cat: "monsters",    label: "Dish Slime",     emoji: "🦠" },
-  laundry_hydra: { value: 6,  layer: "entity",  cat: "monsters",    label: "Laundry Hydra",  emoji: "👔" },
-  trash_mimic:   { value: 7,  layer: "entity",  cat: "monsters",    label: "Trash Mimic",    emoji: "🗑️" },
-  eraser:        { value: "clear", layer: "clear", cat: "terrain",  label: "Eraser",         emoji: "🧽" }
+  floor:         { value: 1,  layer: "terrain", cat: "floors",   label: "Floor",          sheet: "rougelike", col: 24, row: 1 },
+  wall:          { value: 2,  layer: "terrain", cat: "floors",   label: "Wall",           sheet: "rpg_urban", col: 9,  row: 1 },
+  grass:         { value: 10, layer: "terrain", cat: "yard",     label: "Lawn",           sheet: "rpg_urban", col: 6,  row: 12 },
+  sky:           { value: 11, layer: "terrain", cat: "yard",     label: "Patio",          emoji: "🌤️" },
+  tree:          { value: 8,  layer: "terrain", cat: "yard",     label: "Tree",           sheet: "rpg_urban", col: 17, row: 9 },
+  rock:          { value: 9,  layer: "terrain", cat: "yard",     label: "Rock",           emoji: "🪨" },
+  bed:           { value: 3,  layer: "entity",  cat: "bedroom",  label: "Bed",            sheet: "rougelike", col: 13, row: 0 },
+  sink:          { value: 4,  layer: "entity",  cat: "kitchen",  label: "Sink",           sheet: "rougelike", col: 8,  row: 13 },
+  laundry:       { value: 12, layer: "entity",  cat: "laundry",  label: "Laundry",        sheet: "rougelike", col: 17, row: 2 },
+  trashcan:      { value: 13, layer: "entity",  cat: "kitchen",  label: "Trash Can",      sheet: "rpg_urban", col: 10, row: 9 },
+  dish_slime:    { value: 5,  layer: "entity",  cat: "monsters", label: "Dish Slime",     emoji: "🦠" },
+  laundry_hydra: { value: 6,  layer: "entity",  cat: "monsters", label: "Laundry Hydra",  emoji: "👔" },
+  trash_mimic:   { value: 7,  layer: "entity",  cat: "monsters", label: "Trash Mimic",    emoji: "🗑️" },
+  eraser:        { value: "clear", layer: "clear", cat: "floors", label: "Eraser",        emoji: "🧽" },
+  ...houseDefs()
 };
 
-// Tiles that wake a chore monster when the player steps onto / next to them
-const TRIGGER_ENTITIES = { 4: "dishes", 5: "dishes", 12: "laundry", 6: "laundry", 13: "trash", 7: "trash" };
+// ~90 hand-picked house pieces. Sheets: I = Roguelike Indoors ("rougelike"), R = Roguelike RPG ("rpg_sheet"), U = RPG Urban ("rpg_urban").
+// Flags: block (terrain that stops walking), walk (furniture you can walk over), wall (wall decor: keeps the wall under it),
+//        base (color drawn under a transparent sprite).
+function houseDefs() {
+  const S = { I: "rougelike", R: "rpg_sheet", U: "rpg_urban" };
+  const T = "terrain", E = "entity";
+  const rows = [
+    // id, value, layer, cat, label, sheet, col, row, flags
+    ["oak_planks",       20, T, "floors",  "Oak Planks",          "R", 8, 3],
+    ["orange_planks",    21, T, "floors",  "Orange Planks",       "I", 24, 0],
+    ["stone_tile",       22, T, "floors",  "Stone Tile",          "R", 6, 2],
+    ["cream_tile",       23, T, "floors",  "Cream Tile",          "R", 7, 2],
+    ["white_tile",       25, T, "floors",  "White Tile",          "R", 4, 26],
+    ["green_carpet",     27, T, "floors",  "Green Carpet",        "I", 24, 5],
+    ["rust_carpet",      28, T, "floors",  "Rust Carpet",         "R", 13, 26],
+    ["teal_carpet",      29, T, "floors",  "Teal Carpet",         "R", 16, 26],
+    ["plaster_wall",     30, T, "floors",  "Plaster Wall",        "R", 14, 13, { block: 1 }],
+    ["gray_wall",        31, T, "floors",  "Gray Stone Wall",     "R", 21, 13, { block: 1 }],
+    ["wood_wall",        32, T, "floors",  "Wood Wall",           "R", 35, 13, { block: 1 }],
+    ["window_wood",      33, T, "floors",  "Wood Window",         "R", 40, 0, { block: 1, base: "#64748b" }],
+    ["window_white",     34, T, "floors",  "White Window",        "R", 41, 0, { block: 1, base: "#64748b" }],
+    ["window_round",     35, T, "floors",  "Round Window",        "R", 44, 0, { block: 1, base: "#64748b" }],
+    ["door_wood",        36, T, "floors",  "Wood Door",           "R", 32, 0, { base: "#b45309" }],
+    ["door_glass",       37, T, "floors",  "Door w/ Window",      "R", 33, 0, { base: "#b45309" }],
+    ["door_teal",        38, T, "floors",  "Teal Door",           "R", 36, 3, { base: "#b45309" }],
+    ["door_double",      39, T, "floors",  "Double Door",         "R", 44, 7, { base: "#b45309" }],
+
+    ["cabinet_counter",  40, E, "kitchen", "Cabinet Counter",     "I", 0, 12],
+    ["drawer_counter",   41, E, "kitchen", "Drawer Counter",      "I", 1, 13],
+    ["dish_rack",        42, E, "kitchen", "Dish Rack Counter",   "I", 4, 12],
+    ["bottle_counter",   43, E, "kitchen", "Bottle Counter",      "I", 5, 12],
+    ["stove",            44, E, "kitchen", "Stove Top",           "I", 14, 14],
+    ["oven",             45, E, "kitchen", "Oven",                "I", 14, 15],
+    ["fridge",           46, E, "kitchen", "Fridge",              "I", 11, 15],
+    ["farm_sink",        47, E, "kitchen", "Farmhouse Sink",      "R", 28, 0],
+    ["kitchen_table",    49, E, "kitchen", "Kitchen Table",       "I", 4, 4],
+    ["round_table",      50, E, "kitchen", "Round Table",         "I", 7, 0],
+    ["kitchen_chair",    51, E, "kitchen", "Kitchen Chair",       "I", 0, 2],
+    ["set_table",        53, E, "kitchen", "Set Table",           "R", 11, 4],
+
+    ["toilet",           54, E, "bath",    "Toilet",              null, 0, 0, { emoji: "🚽" }],
+    ["bathtub",          55, E, "bath",    "Bathtub",             null, 0, 0, { emoji: "🛁" }],
+    ["shower",           56, E, "bath",    "Shower",              null, 0, 0, { emoji: "🚿" }],
+    ["toilet_paper",     61, E, "bath",    "Toilet Paper",        null, 0, 0, { emoji: "🧻", walk: 1 }],
+    ["wall_mirror",      57, E, "bath",    "Wall Mirror",         "I", 22, 14, { wall: 1, walk: 1 }],
+    ["round_mirror",     58, E, "bath",    "Round Mirror",        "R", 24, 8, { wall: 1, walk: 1 }],
+    ["vanity_cabinet",   59, E, "bath",    "Vanity Cabinet",      "I", 9, 12],
+    ["bath_mat",         60, E, "bath",    "Bath Mat",            "I", 19, 14, { walk: 1 }],
+
+    ["single_bed_orange",62, E, "bedroom", "Single Bed (Orange)", "I", 14, 10],
+    ["single_bed_green", 63, E, "bedroom", "Single Bed (Green)",  "I", 14, 12],
+    ["quilt_bed",        64, E, "bedroom", "Quilt Bed",           "R", 12, 1],
+    ["dresser",          66, E, "bedroom", "Dresser",             "R", 23, 5],
+    ["nightstand",       67, E, "bedroom", "Nightstand",          "R", 25, 5],
+    ["wardrobe",         68, E, "bedroom", "Wardrobe",            "R", 26, 6],
+    ["chest_drawers",    69, E, "bedroom", "Chest of Drawers",    "R", 23, 6],
+    ["vanity_table",     70, E, "bedroom", "Vanity Table",        "R", 29, 4],
+    ["toy_chest",        71, E, "bedroom", "Toy Chest",           "R", 37, 9],
+    ["green_rug",        72, E, "bedroom", "Green Rug",           "I", 19, 12, { walk: 1 }],
+
+    ["bench",            73, E, "living",  "Cushioned Bench",     "I", 5, 7],
+    ["sofa",             81, E, "living",  "Sofa",                null, 0, 0, { emoji: "🛋️" }],
+    ["armchair_orange",  74, E, "living",  "Armchair (Orange)",   "I", 25, 11],
+    ["armchair_green",   75, E, "living",  "Armchair (Green)",    "I", 25, 15],
+    ["tv",               76, E, "living",  "TV",                  null, 0, 0, { emoji: "📺" }],
+    ["bookshelf",        77, E, "living",  "Bookshelf",           "I", 19, 17],
+    ["full_bookshelf",   78, E, "living",  "Full Bookshelf",      "R", 43, 12],
+    ["orange_rug",       79, E, "living",  "Orange Rug",          "I", 19, 13, { walk: 1 }],
+    ["teal_rug",         80, E, "living",  "Teal Rug",            "I", 21, 16, { walk: 1 }],
+    ["candle_stand",     82, E, "living",  "Candle Stand",        "I", 19, 3],
+    ["potted_plant",     83, E, "living",  "Potted Plant",        "I", 16, 0],
+    ["brick_fireplace",  84, E, "living",  "Brick Fireplace",     "R", 54, 8],
+    ["stone_fireplace",  85, E, "living",  "Stone Fireplace",     "R", 54, 10],
+    ["piano",            86, E, "living",  "Piano",               "I", 23, 8],
+    ["pouf",             88, E, "living",  "Pouf",                "I", 17, 3],
+
+    ["washer",           89, E, "laundry", "Washing Machine",     "I", 14, 16],
+    ["laundry_basket",   90, E, "laundry", "Laundry Basket",      null, 0, 0, { emoji: "🧺" }],
+    ["clothesline",      91, E, "laundry", "Clothesline",         "R", 51, 13],
+    ["drying_line",      92, E, "laundry", "Drying Line (Green)", "I", 16, 2],
+
+    ["grass_plain",      94, T, "yard",    "Grass",               "R", 5, 0],
+    ["gravel_path",      96, T, "yard",    "Gravel Path",         "R", 7, 0],
+    ["garden_stones",    97, T, "yard",    "Garden Stones",       "R", 9, 1],
+    ["red_flowerbed",    98, T, "yard",    "Red Flower Bed",      "R", 0, 6],
+    ["blue_flowerbed",  100, T, "yard",    "Blue Flower Bed",     "R", 0, 12],
+    ["pond",            101, T, "yard",    "Pond",                "R", 11, 8, { block: 1 }],
+    ["oak_tree",        102, E, "yard",    "Oak Tree",            "R", 13, 9],
+    ["pine_tree",       103, E, "yard",    "Pine Tree",           "R", 16, 9],
+    ["bush",            105, E, "yard",    "Bush",                "R", 21, 9],
+    ["berry_bush",      106, E, "yard",    "Berry Bush",          "R", 24, 9],
+    ["red_flowers",     107, E, "yard",    "Red Flowers",         "R", 29, 9, { walk: 1 }],
+    ["purple_flowers",  108, E, "yard",    "Purple Flowers",      "R", 30, 9, { walk: 1 }],
+    ["wood_fence",      110, E, "yard",    "Wood Fence",          "R", 47, 23],
+    ["fence_gate",      111, E, "yard",    "Fence Gate",          "R", 46, 23, { walk: 1 }],
+    ["mailbox",         112, E, "yard",    "Mailbox",             "U", 8, 11],
+    ["recycling_bin",   113, E, "yard",    "Recycling Bin",       "U", 9, 9],
+    ["rain_barrel",     114, E, "yard",    "Rain Barrel",         "R", 23, 0],
+
+    ["chandelier",      117, E, "decor",   "Chandelier",          "I", 19, 0, { walk: 1 }],
+    ["candelabra",      119, E, "decor",   "Candelabra",          "I", 16, 7],
+    ["small_plant",     120, E, "decor",   "Small Plant",         "I", 17, 0],
+    ["landscape_art",   122, E, "decor",   "Landscape Painting",  "R", 29, 10, { wall: 1, walk: 1 }],
+    ["sunset_art",      123, E, "decor",   "Sunset Painting",     "R", 30, 10, { wall: 1, walk: 1 }],
+    ["photo_frames",    124, E, "decor",   "Photo Frames",        "I", 16, 12, { wall: 1, walk: 1 }],
+    ["curtains_orange", 125, E, "decor",   "Orange Curtains",     "R", 54, 0, { wall: 1, walk: 1 }],
+    ["curtains_teal",   126, E, "decor",   "Teal Curtains",       "R", 56, 0, { wall: 1, walk: 1 }],
+    ["teapot",          127, E, "decor",   "Teapot",              "R", 55, 15],
+    ["cuckoo_clock",    128, E, "decor",   "Cuckoo Clock",        "R", 26, 8, { wall: 1, walk: 1 }],
+    ["produce_crate",   130, E, "decor",   "Produce Crate",       "R", 14, 7]
+  ];
+  const out = {};
+  for (const [id, value, layer, cat, label, sheet, col, row, flags = {}] of rows) {
+    out[id] = { value, layer, cat, label, ...(sheet ? { sheet: S[sheet], col, row } : {}),
+      ...(flags.emoji ? { emoji: flags.emoji } : {}),
+      ...(flags.block ? { block: true } : {}), ...(flags.walk ? { walk: true } : {}),
+      ...(flags.wall ? { wall: true } : {}), ...(flags.base ? { base: flags.base } : {}) };
+  }
+  return out;
+}
+
+// value -> def lookups for rendering, walking and the minimap
+const TERRAIN_DEFS = {}, ENTITY_DEFS = {};
+for (const def of Object.values(TILE_DEFS)) {
+  if (def.layer === "terrain") TERRAIN_DEFS[def.value] = def;
+  if (def.layer === "entity") ENTITY_DEFS[def.value] = def;
+}
+
+// Tiles that wake a chore monster when the player steps onto / next to them.
+// Extra sinks/washers/bins share the existing chore types (no new chores).
+const TRIGGER_ENTITIES = { 4: "dishes", 5: "dishes", 12: "laundry", 6: "laundry", 13: "trash", 7: "trash",
+  47: "dishes", 89: "laundry", 90: "laundry", 91: "laundry", 92: "laundry", 113: "trash" };
 const TRIGGER_TERRAIN = { 10: "mow" };
-const BLOCKING_TERRAIN = [0, 2, 8, 9]; // void, wall, tree, rock
+// void, wall, tree, rock + new walls/windows/pond
+const BLOCKING_TERRAIN = [0, 2, 8, 9, ...Object.values(TERRAIN_DEFS).filter(d => d.block).map(d => d.value)];
+// Original terrain values keep their flat-color look; new terrain draws its Kenney sprite
+const COLOR_TERRAIN = [1, 2, 8, 9, 10, 11];
 
 function spriteFor(layer, value) {
-  for (const def of Object.values(TILE_DEFS)) {
-    if (def.layer === layer && def.value === value && def.sheet) return def;
-  }
-  return null;
+  const def = layer === "terrain" ? TERRAIN_DEFS[value] : ENTITY_DEFS[value];
+  return def && def.sheet ? def : null;
 }
 
 function loadKenneySprites() {
@@ -2043,6 +2196,13 @@ function loadKenneySprites() {
     redraw();
   };
   img2.src = SHEETS.rpg_urban.src;
+
+  const img3 = new Image();
+  img3.onload = () => {
+    kenneySprites.rpg_sheet = img3;
+    redraw();
+  };
+  img3.src = SHEETS.rpg_sheet.src;
 }
 
 // ---- MANIFEST PARSING ----
@@ -2081,6 +2241,7 @@ function paintTile(col, row, tileId) {
   }
   if (entityMap[col][row] === def.value) return false;
   entityMap[col][row] = def.value;
+  if (def.wall && terrainMap[col][row]) return true; // paintings/curtains/mirrors can hang on a wall
   if (BLOCKING_TERRAIN.includes(terrainMap[col][row])) terrainMap[col][row] = 1; // furniture sits on floor
   return true;
 }
@@ -2134,7 +2295,8 @@ function currentRoomData() {
 function isWalkable(col, row) {
   const room = currentRoomData();
   if (!room || col < 0 || row < 0 || col >= GRID_SIZE || row >= GRID_SIZE) return false;
-  return !BLOCKING_TERRAIN.includes(room.terrain[col][row]) && room.entity[col][row] === 0;
+  const e = room.entity[col][row];
+  return !BLOCKING_TERRAIN.includes(room.terrain[col][row]) && (e === 0 || !!(ENTITY_DEFS[e] && ENTITY_DEFS[e].walk));
 }
 
 // Which chore monster (if any) a tile in the current room belongs to (tile coords, not room coords)
@@ -2176,41 +2338,59 @@ function spawnRandomMonsters(roomX, roomY) {
 }
 
 // ---- CANVAS RENDERING ----
+function drawSprite(ctx, def, col, row, inset) {
+  const img = def && def.sheet && kenneySprites[def.sheet];
+  if (!img) return false;
+  const s = SHEETS[def.sheet];
+  ctx.drawImage(img, def.col * s.stride, def.row * s.stride, 16, 16,
+    col * TILE_SIZE + inset, row * TILE_SIZE + inset, TILE_SIZE - inset * 2, TILE_SIZE - inset * 2);
+  return true;
+}
+
+function drawEmoji(ctx, symbol, col, row) {
+  ctx.font = `${TILE_SIZE - 12}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#0a0c10";
+  ctx.fillText(symbol, col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2 + 3);
+}
+
 function drawTiles(ctx, terrain, entity) {
   ctx.imageSmoothingEnabled = false;
-  // Terrain layer
+  // Terrain layer: original values keep their flat colors, new floors/walls/doors draw their sprite
   for (let col = 0; col < GRID_SIZE; col++) {
     for (let row = 0; row < GRID_SIZE; row++) {
-      const color = TERRAIN_COLORS[terrain[col][row]] || "transparent";
-      if (color !== "transparent") {
-        ctx.fillStyle = color;
-        ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      const value = terrain[col][row];
+      if (!value) continue;
+      const def = TERRAIN_DEFS[value];
+      if (COLOR_TERRAIN.includes(value) || !def) {
+        const color = TERRAIN_COLORS[value] || "transparent";
+        if (color !== "transparent") {
+          ctx.fillStyle = color;
+          ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        }
+        continue;
       }
+      ctx.fillStyle = def.base || "#8b6b4a";
+      ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      drawSprite(ctx, def, col, row, 0);
     }
   }
-  // Entity layer: Kenney sprite when loaded, otherwise colored inset + symbol
+  // Entity layer: Kenney sprite when loaded; monsters keep their colored inset + symbol; other emoji pieces draw the emoji
   for (let col = 0; col < GRID_SIZE; col++) {
     for (let row = 0; row < GRID_SIZE; row++) {
       const value = entity[col][row];
       if (!value) continue;
-      const def = spriteFor("entity", value);
-      const img = def && kenneySprites[def.sheet];
-      if (img) {
-        const s = SHEETS[def.sheet];
-        ctx.drawImage(img, def.col * s.stride, def.row * s.stride, 16, 16, col * TILE_SIZE + 2, row * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-        continue;
+      const def = ENTITY_DEFS[value];
+      if (def && def.sheet && drawSprite(ctx, def, col, row, 2)) continue;
+      const color = ENTITY_COLORS[value];
+      if (color && color !== "transparent") {
+        const inset = 4;
+        ctx.fillStyle = color;
+        ctx.fillRect(col * TILE_SIZE + inset, row * TILE_SIZE + inset, TILE_SIZE - inset * 2, TILE_SIZE - inset * 2);
       }
-      const color = ENTITY_COLORS[value] || "transparent";
-      if (color === "transparent") continue;
-      const inset = 4;
-      ctx.fillStyle = color;
-      ctx.fillRect(col * TILE_SIZE + inset, row * TILE_SIZE + inset, TILE_SIZE - inset * 2, TILE_SIZE - inset * 2);
-      ctx.fillStyle = "#0a0c10";
-      ctx.font = `${TILE_SIZE - 12}px sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      const symbol = ENTITY_SYMBOLS[value];
-      if (symbol) ctx.fillText(symbol, col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2 + 3);
+      const symbol = ENTITY_SYMBOLS[value] || (def && def.emoji);
+      if (symbol) drawEmoji(ctx, symbol, col, row);
     }
   }
 }
@@ -2286,7 +2466,9 @@ function drawMinimap() {
   for (let col = 0; col < GRID_SIZE; col++) {
     for (let row = 0; row < GRID_SIZE; row++) {
       const e = entityMap[col][row];
-      const color = e ? ENTITY_COLORS[e] : TERRAIN_COLORS[terrainMap[col][row]];
+      const t = terrainMap[col][row];
+      const color = e ? (ENTITY_COLORS[e] || "#cbd5e1")
+        : (TERRAIN_COLORS[t] || (t ? (BLOCKING_TERRAIN.includes(t) ? "#64748b" : "#a16207") : null));
       if (color && color !== "transparent") {
         ctx.fillStyle = color;
         ctx.fillRect(col * cell, row * cell, cell, cell);
@@ -2702,8 +2884,10 @@ function loadAssetGrid() {
   const assetGrid = document.getElementById("asset-grid");
   assetGrid.innerHTML = '';
   const activeCategory = document.querySelector('.tab.active').dataset.category;
+  const query = (document.getElementById('palette-search').value || '').trim().toLowerCase();
   for (const [tileId, def] of Object.entries(TILE_DEFS)) {
-    if (activeCategory !== "all" && def.cat !== activeCategory && tileId !== "eraser") continue;
+    if (query) { if (!def.label.toLowerCase().includes(query)) continue; } // search spans all tabs
+    else if (activeCategory !== "all" && def.cat !== activeCategory && tileId !== "eraser") continue;
     const cell = document.createElement('div');
     cell.className = 'asset-item';
     cell.dataset.tile = tileId;
@@ -2941,6 +3125,7 @@ document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListe
   tab.classList.add('active');
   loadAssetGrid();
 }));
+document.getElementById('palette-search').addEventListener('input', loadAssetGrid);
 document.getElementById('new-map-btn').addEventListener('click', newMap);
 document.getElementById('edit-map-btn').addEventListener('click', enterEditMode);
 document.getElementById('play-map-btn').addEventListener('click', enterPlayMode);

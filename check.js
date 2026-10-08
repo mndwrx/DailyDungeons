@@ -48,7 +48,23 @@ for (const key of ['dishes', 'laundry', 'trash']) {
   ? pass('Palette ids map to tile values (TILE_DEFS)') : fail('TILE_DEFS missing palette ids');
 (script.includes('7: "#f97316"') && script.includes('🗑️')) ? pass('Trash Mimic color/symbol present') : fail('Trash Mimic color/symbol missing');
 
-// 6. Design rules: no Tile Tokens, no blocking alerts
+
+// 6. Palette: hand-picked house pieces, category tabs, search, all sheets exist
+const houseRows = [...script.matchAll(/^\s*\["(\w+)",\s*(\d+),\s*[TE],\s*"(\w+)",\s*"[^"]+",\s*(?:"([IRU])"|null)/gm)];
+const tileVals = [...script.matchAll(/\b\w+:\s*\{\s*value:\s*(\d+),/g)].map(m => +m[1]).concat(houseRows.map(m => +m[2]));
+houseRows.length >= 90 ? pass(`${houseRows.length} house pieces in TILE_DEFS`) : fail(`only ${houseRows.length} house pieces`);
+new Set(tileVals).size === tileVals.length ? pass(`All ${tileVals.length} tile values unique`) : fail('Duplicate tile values');
+const cats = ['all', 'floors', 'kitchen', 'bath', 'bedroom', 'living', 'laundry', 'yard', 'decor', 'monsters'];
+const missingTabs = cats.filter(c => !html.includes(`data-category="${c}"`));
+missingTabs.length ? fail('Missing palette tabs: ' + missingTabs.join(', ')) : pass(`${cats.length} palette tabs present`);
+const badCat = houseRows.filter(m => !cats.includes(m[3])).map(m => m[1]);
+badCat.length ? fail('Pieces with unknown tab: ' + badCat.join(', ')) : pass('Every piece belongs to a palette tab');
+ids.has('palette-search') ? pass('Palette search box present') : fail('Palette search box missing');
+const sheetSrcs = [...script.matchAll(/src:\s*"(assets\/[^"]+\.png)"/g)].map(m => m[1]);
+const missingSheets = sheetSrcs.filter(f => !fs.existsSync(f));
+sheetSrcs.length >= 3 && !missingSheets.length ? pass(`${sheetSrcs.length} sprite sheets exist (${sheetSrcs.join(', ')})`) : fail('Missing sprite sheets: ' + missingSheets.join(', '));
+
+// 7. Design rules: no Tile Tokens, no blocking alerts
 /token/i.test(html) ? fail('Tile Token references remain') : pass('No Tile Token references');
 /\balert\s*\(/.test(script) ? fail('alert() still used') : pass('No blocking alert() calls');
 
