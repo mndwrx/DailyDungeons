@@ -1874,6 +1874,23 @@ function blankRotGrid() {
   return Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
 }
 
+// Old saves stored doors/windows (33-39) and trees/rocks (8, 9) on the terrain layer, which replaced the tile under them.
+// Move them to the entity layer: doors/windows over a wall, trees/rocks over the plain Floor.
+const LEGACY_TERRAIN_PIECES = { 8: 1, 9: 1, 33: 2, 34: 2, 35: 2, 36: 2, 37: 2, 38: 2, 39: 2 };
+function migrateLayers() {
+  let moved = 0;
+  for (let col = 0; col < GRID_SIZE; col++)
+    for (let row = 0; row < GRID_SIZE; row++) {
+      const t = terrainMap[col][row];
+      if (!(t in LEGACY_TERRAIN_PIECES)) continue;
+      if (!entityMap[col][row]) { entityMap[col][row] = t; entityRot[col][row] = terrainRot[col][row]; }
+      terrainMap[col][row] = entityMap[col][row] === t ? LEGACY_TERRAIN_PIECES[t] : DEFAULT_FLOOR;
+      terrainRot[col][row] = 0;
+      moved++;
+    }
+  return moved;
+}
+
 // Old saves have no rotation: anything missing or malformed loads as 0
 function validRotGrid(grid) {
   const out = blankRotGrid();
@@ -1958,10 +1975,6 @@ const ENTITY_COLORS = {
   7: "#f97316",   // trash mimic
   12: "#a78bfa",  // laundry basket
   13: "#94a3b8",  // trash can
-  8: "#2d6a4f",   // tree
-  9: "#4a5568",   // rock
-  10: "#8b9a3a",  // grass
-  11: "#bae6fd",  // sky
 };
 
 const ENTITY_SYMBOLS = {
@@ -2074,8 +2087,8 @@ const TILE_DEFS = {
   wall:          { value: 2,  layer: "terrain", cat: "floors",   label: "Wall",           sheet: "rpg_urban", col: 9,  row: 1 },
   grass:         { value: 10, layer: "terrain", cat: "yard",     label: "Lawn",           sheet: "rpg_urban", col: 6,  row: 12 },
   sky:           { value: 11, layer: "terrain", cat: "yard",     label: "Patio",          emoji: "🌤️" },
-  tree:          { value: 8,  layer: "terrain", cat: "yard",     label: "Tree",           sheet: "rpg_urban", col: 17, row: 9 },
-  rock:          { value: 9,  layer: "terrain", cat: "yard",     label: "Rock",           emoji: "🪨" },
+  tree:          { value: 8,  layer: "entity",  cat: "yard",     label: "Tree",           sheet: "rpg_urban", col: 17, row: 9 }, // layered over the ground (old saves migrate)
+  rock:          { value: 9,  layer: "entity",  cat: "yard",     label: "Rock",           emoji: "🪨" },
   bed:           { value: 3,  layer: "entity",  cat: "bedroom",  label: "Bed",            sheet: "rougelike", col: 13, row: 0 },
   sink:          { value: 4,  layer: "entity",  cat: "kitchen",  label: "Sink",           sheet: "rougelike", col: 8,  row: 13 },
   laundry:       { value: 12, layer: "entity",  cat: "laundry",  label: "Laundry",        sheet: "rougelike", col: 17, row: 2 },
@@ -2088,8 +2101,9 @@ const TILE_DEFS = {
 };
 
 // ~90 hand-picked house pieces. Sheets: I = Roguelike Indoors ("rougelike"), R = Roguelike RPG ("rpg_sheet"), U = RPG Urban ("rpg_urban").
-// Flags: block (terrain that stops walking), walk (furniture you can walk over), wall (wall decor: keeps the wall under it),
-//        base (color drawn under a transparent sprite).
+// Flags: block (terrain that stops walking), walk (furniture you can walk over), wall (wall piece: survives a wall being painted under it),
+//        door (walkable even on a wall), base (color drawn under a transparent terrain sprite).
+// Every entity piece is layered over whatever terrain is already in the cell.
 function houseDefs() {
   const S = { I: "rougelike", R: "rpg_sheet", U: "rpg_urban" };
   const T = "terrain", E = "entity";
@@ -2106,13 +2120,14 @@ function houseDefs() {
     ["plaster_wall",     30, T, "floors",  "Plaster Wall",        "R", 14, 13, { block: 1 }],
     ["gray_wall",        31, T, "floors",  "Gray Stone Wall",     "R", 21, 13, { block: 1 }],
     ["wood_wall",        32, T, "floors",  "Wood Wall",           "R", 35, 13, { block: 1 }],
-    ["window_wood",      33, T, "floors",  "Wood Window",         "R", 40, 0, { block: 1, base: "#64748b" }],
-    ["window_white",     34, T, "floors",  "White Window",        "R", 41, 0, { block: 1, base: "#64748b" }],
-    ["window_round",     35, T, "floors",  "Round Window",        "R", 44, 0, { block: 1, base: "#64748b" }],
-    ["door_wood",        36, T, "floors",  "Wood Door",           "R", 32, 0, { base: "#b45309" }],
-    ["door_glass",       37, T, "floors",  "Door w/ Window",      "R", 33, 0, { base: "#b45309" }],
-    ["door_teal",        38, T, "floors",  "Teal Door",           "R", 36, 3, { base: "#b45309" }],
-    ["door_double",      39, T, "floors",  "Double Door",         "R", 44, 7, { base: "#b45309" }],
+    // windows + doors sit on top of the wall (entity layer); doors can be walked through, windows can't
+    ["window_wood",      33, E, "floors",  "Wood Window",         "R", 40, 0, { wall: 1 }],
+    ["window_white",     34, E, "floors",  "White Window",        "R", 41, 0, { wall: 1 }],
+    ["window_round",     35, E, "floors",  "Round Window",        "R", 44, 0, { wall: 1 }],
+    ["door_wood",        36, E, "floors",  "Wood Door",           "R", 32, 0, { wall: 1, door: 1 }],
+    ["door_glass",       37, E, "floors",  "Door w/ Window",      "R", 33, 0, { wall: 1, door: 1 }],
+    ["door_teal",        38, E, "floors",  "Teal Door",           "R", 36, 3, { wall: 1, door: 1 }],
+    ["door_double",      39, E, "floors",  "Double Door",         "R", 44, 7, { wall: 1, door: 1 }],
 
     ["cabinet_counter",  40, E, "kitchen", "Cabinet Counter",     "I", 0, 12],
     ["drawer_counter",   41, E, "kitchen", "Drawer Counter",      "I", 1, 13],
@@ -2171,8 +2186,8 @@ function houseDefs() {
     ["grass_plain",      94, T, "yard",    "Grass",               "R", 5, 0],
     ["gravel_path",      96, T, "yard",    "Gravel Path",         "R", 7, 0],
     ["garden_stones",    97, T, "yard",    "Garden Stones",       "R", 9, 1],
-    ["red_flowerbed",    98, T, "yard",    "Red Flower Bed",      "R", 0, 6],
-    ["blue_flowerbed",  100, T, "yard",    "Blue Flower Bed",     "R", 0, 12],
+    ["red_flowerbed",    98, T, "yard",    "Red Flower Bed",      "R", 3, 7],
+    ["blue_flowerbed",  100, T, "yard",    "Blue Flower Bed",     "R", 3, 13],
     ["pond",            101, T, "yard",    "Pond",                "R", 11, 8, { block: 1 }],
     ["oak_tree",        102, E, "yard",    "Oak Tree",            "R", 13, 9],
     ["pine_tree",       103, E, "yard",    "Pine Tree",           "R", 16, 9],
@@ -2203,7 +2218,7 @@ function houseDefs() {
     out[id] = { value, layer, cat, label, ...(sheet ? { sheet: S[sheet], col, row } : {}),
       ...(flags.emoji ? { emoji: flags.emoji } : {}),
       ...(flags.block ? { block: true } : {}), ...(flags.walk ? { walk: true } : {}),
-      ...(flags.wall ? { wall: true } : {}), ...(flags.base ? { base: flags.base } : {}) };
+      ...(flags.wall ? { wall: true } : {}), ...(flags.door ? { door: true } : {}), ...(flags.base ? { base: flags.base } : {}) };
   }
   return out;
 }
@@ -2322,6 +2337,7 @@ function fillSwatch(el, def, scale) {
 }
 
 // ---- TILE PAINTING (free) ----
+const DEFAULT_FLOOR = 1; // plain "Floor" (same tile as the starter room) used only under pieces placed in an empty cell
 function paintTile(col, row, tileId, rot = selectedRotation) {
   const def = TILE_DEFS[tileId];
   if (!def) return false;
@@ -2334,14 +2350,15 @@ function paintTile(col, row, tileId, rot = selectedRotation) {
     if (terrainMap[col][row] === def.value && terrainRot[col][row] === rot) return false;
     terrainMap[col][row] = def.value;
     terrainRot[col][row] = rot;
-    if (BLOCKING_TERRAIN.includes(def.value)) { entityMap[col][row] = 0; entityRot[col][row] = 0; } // walls/trees replace furniture
+    const onTop = ENTITY_DEFS[entityMap[col][row]];
+    if (BLOCKING_TERRAIN.includes(def.value) && !(onTop && onTop.wall)) { entityMap[col][row] = 0; entityRot[col][row] = 0; } // walls replace furniture, doors/windows/wall decor stay
     return true;
   }
   if (entityMap[col][row] === def.value && entityRot[col][row] === rot) return false;
   entityMap[col][row] = def.value;
   entityRot[col][row] = rot;
-  if (def.wall && terrainMap[col][row]) return true; // paintings/curtains/mirrors can hang on a wall
-  if (BLOCKING_TERRAIN.includes(terrainMap[col][row])) { terrainMap[col][row] = 1; terrainRot[col][row] = 0; } // furniture sits on floor
+  // Pieces are layered over the existing tile (wall, floor, carpet, grass...). Only a truly empty cell gets the plain Floor.
+  if (!terrainMap[col][row]) { terrainMap[col][row] = DEFAULT_FLOOR; terrainRot[col][row] = 0; }
   return true;
 }
 
@@ -2397,7 +2414,9 @@ function isWalkable(col, row) {
   const room = currentRoomData();
   if (!room || col < 0 || row < 0 || col >= GRID_SIZE || row >= GRID_SIZE) return false;
   const e = room.entity[col][row];
-  return !BLOCKING_TERRAIN.includes(room.terrain[col][row]) && (e === 0 || !!(ENTITY_DEFS[e] && ENTITY_DEFS[e].walk));
+  const piece = ENTITY_DEFS[e];
+  if (piece && piece.door) return true; // a door opens the wall it sits on
+  return !BLOCKING_TERRAIN.includes(room.terrain[col][row]) && (e === 0 || !!(piece && piece.walk));
 }
 
 // Which chore monster (if any) a tile in the current room belongs to (tile coords, not room coords)
@@ -2500,9 +2519,12 @@ function drawTiles(ctx, terrain, entity, tRot, eRot) {
       if (def && def.sheet && drawSprite(ctx, def, col, row, 2, rot)) continue;
       const color = ENTITY_COLORS[value];
       if (color && color !== "transparent") {
-        const inset = 4;
-        ctx.fillStyle = color;
-        ctx.fillRect(col * TILE_SIZE + inset, row * TILE_SIZE + inset, TILE_SIZE - inset * 2, TILE_SIZE - inset * 2);
+        // monster marker: a colored ring, so the tile underneath still shows through
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 2 - 4, 0, Math.PI * 2);
+        ctx.stroke();
       }
       const symbol = ENTITY_SYMBOLS[value] || (def && def.emoji);
       if (symbol) drawEmoji(ctx, symbol, col, row, rot);
@@ -3167,6 +3189,7 @@ function loadGameData() {
       entityMap = data.entityMap || entityMap;
       terrainRot = validRotGrid(data.terrainRot);
       entityRot = validRotGrid(data.entityRot);
+      migrateLayers();
       player = data.player || player;
       currentRoom = data.currentRoom || currentRoom;
       monsters = data.monsters || monsters;

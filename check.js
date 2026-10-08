@@ -86,7 +86,17 @@ missingRot.length ? fail('Rotation/eraser pieces missing: ' + missingRot.join(',
   ? pass('Builder map and play room both draw rotations') : fail('Rotation not drawn in builder and play');
 /function isWalkable[^}]*Rot/.test(script) || /function triggerAt[^}]*Rot/.test(script) ? fail('Rotation leaks into gameplay rules') : pass('Blocking/triggers ignore rotation');
 
-// 9. Design rules: no Tile Tokens, no blocking alerts
+// 9. Layering: doors/windows/trees are pieces on top of the tile, not replacements
+const layerRows = Object.fromEntries(houseRows.map(m => [m[1], m[0]]));
+['window_wood', 'window_white', 'window_round', 'door_wood', 'door_glass', 'door_teal', 'door_double'].every(id => layerRows[id] && /,\s*E,/.test(layerRows[id]))
+  ? pass('Doors and windows are on the entity layer') : fail('Doors/windows still on the terrain layer');
+/tree:\s*\{\s*value: 8,\s*layer: "entity"/.test(script) && /rock:\s*\{\s*value: 9,\s*layer: "entity"/.test(script) ? pass('Tree/rock keep values 8/9 on the entity layer') : fail('Tree/rock still replace the ground');
+/base: "#b45309"/.test(script) ? fail('Orange base color still drawn under pieces') : pass('No orange base color under doors');
+/if \(!terrainMap\[col\]\[row\]\) \{ terrainMap\[col\]\[row\] = DEFAULT_FLOOR/.test(script) ? pass('Default floor only goes into empty cells') : fail('Pieces still replace the tile under them');
+/piece && piece\.door\) return true/.test(script) ? pass('Doors are walkable through walls') : fail('Doors not walkable');
+/function migrateLayers/.test(script) && /migrateLayers\(\);/.test(script) ? pass('Old saves migrate terrain doors/windows/trees to the entity layer') : fail('No legacy layer migration');
+
+// 10. Design rules: no Tile Tokens, no blocking alerts
 /token/i.test(html) ? fail('Tile Token references remain') : pass('No Tile Token references');
 /\balert\s*\(/.test(script) ? fail('alert() still used') : pass('No blocking alert() calls');
 
