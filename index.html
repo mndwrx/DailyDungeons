@@ -1083,6 +1083,8 @@
 
   .game-hud-bars .bar .fill.hp { background: #ef4444; }
   .game-hud-bars .bar .fill.mp { background: var(--teal); }
+  .game-hud-bars .bar .fill.grime { background: linear-gradient(90deg, #6b8f2a, #9bc53d); transition: width .4s; }
+  #gameplay-overlay.in-maze .room-canvas { box-shadow: 0 0 0 3px #3b2a52, 0 0 28px rgba(90, 60, 140, .55); }
 
   .game-hud-actions {
     display: flex;
@@ -2121,6 +2123,10 @@
           <div class="label">Potions</div>
           <div class="value" id="game-potions">2</div>
         </div>
+        <div class="stat">
+          <div class="label">Streak</div>
+          <div class="value gold" id="game-streak">0 days</div>
+        </div>
       </div>
     </div>
     <div class="game-hud-bars">
@@ -2132,6 +2138,10 @@
         <div class="label">MP</div>
         <div class="track"><div class="fill mp" id="game-mp-fill" style="width:100%"></div></div>
       </div>
+      <div class="bar">
+        <div class="label">Grime</div>
+        <div class="track"><div class="fill grime" id="game-grime-fill" style="width:0%"></div></div>
+      </div>
     </div>
     <div class="game-hud-actions">
       <button id="menu-btn"><i class="ico ico-door"></i>Menu</button>
@@ -2139,6 +2149,7 @@
       <button id="toggle-edit"><i class="ico ico-pick"></i>Edit Dungeon</button>
       <button id="hud-hero-btn"><i class="ico ico-helmet"></i>Hero</button>
       <button id="shop-btn"><i class="ico ico-gold"></i>Shop</button>
+      <button id="descend-btn"><i class="ico ico-pick"></i>Descend</button>
     </div>
   </div>
   <div class="game-play-area">
@@ -2318,6 +2329,7 @@ let currentRoomName = "Living Room";
 let activeRooms = {};
 let doors = [];
 let monsters = [];
+let maze = null, lastBoss = null; // Stage 2 dungeon below (see MAZE DUNGEON BELOW)
 let dailyChores = [];
 let chores = [];
 let chaosMeter = 0;
@@ -2800,7 +2812,7 @@ function addRoom(x, y, name) {
 }
 
 function currentRoomData() {
-  return getRoom(currentRoom.x, currentRoom.y);
+  return maze ? maze.room : getRoom(currentRoom.x, currentRoom.y);
 }
 
 function isWalkable(col, row) {
@@ -2962,8 +2974,19 @@ function drawRoom() {
   if (!room) return;
   drawTiles(roomCtx, room.terrain, room.entity, room.terrainRot, room.entityRot, room.overlay, room.overlayRot);
 
+  if (maze) { // dungeon shading: walls sink into darkness so the corridors read clearly
+    for (let c = 0; c < GRID_SIZE; c++) for (let r = 0; r < GRID_SIZE; r++) {
+      roomCtx.fillStyle = room.terrain[c][r] === 22 ? "rgba(40, 24, 60, 0.25)" : "rgba(8, 6, 16, 0.78)";
+      roomCtx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    }
+  }
   // Lurking chore monsters: badge on their trigger tile
   for (const m of monsters) {
+    if (maze) { // dungeon foes stand on the floor as full sprites; the boss gets a purple aura
+      if (m.boss) { roomCtx.fillStyle = "rgba(140, 80, 220, 0.45)"; roomCtx.fillRect(m.col * TILE_SIZE, m.row * TILE_SIZE, TILE_SIZE, TILE_SIZE); }
+      drawIconCanvas(roomCtx, monsterIcon(m), m.col * TILE_SIZE + 4, m.row * TILE_SIZE + 4, TILE_SIZE - 8);
+      continue;
+    }
     const cx = m.col * TILE_SIZE + TILE_SIZE - 10;
     const cy = m.row * TILE_SIZE + 10;
     roomCtx.fillStyle = "rgba(239, 68, 68, 0.85)";
@@ -3182,6 +3205,7 @@ function resolveCombat(monster) {
   addRewards(monster.goldReward, monster.xpReward);
   showToast(`${monster.name} defeated! +${monster.goldReward} Gold, +${monster.xpReward} XP`);
   updateGameHUD();
+  if (maze) { drawRoom(); saveGameData(); if (monster.boss) mazeVictory(monster); else if (rng() < 0.08) { const w = dropEpic(); if (w) showToast(`Epic drop: ${w.name}!`, 3000); } return; }
   saveGameData();
   drawRoom();
   if (monsters.length === 0) showLevelClear(roomRewards.xp, roomRewards.gold);
@@ -3190,6 +3214,13 @@ function resolveCombat(monster) {
 // ---- AMBUSH SYSTEM ----
 // Stepping onto or next to a chore trigger tile (sink, laundry, trash can, lawn...) wakes its monster
 function checkAmbush() {
+  if (maze) { // dungeon: walking next to a foe starts its battle; the boss speaks first
+    const m = monsters.find(m => Math.abs(m.col - player.x) + Math.abs(m.row - player.y) <= 1);
+    if (!m) { ambushSuppressed.clear(); return; }
+    if (ambushSuppressed.has(m.type)) return;
+    if (m.boss && !m.met) { m.met = true; stopWalking(); activeAmbush = m; showDialogue(BOSSES[m.boss].intro, () => { activeAmbush = null; triggerAmbush(m); }); return; }
+    return triggerAmbush(m);
+  }
   const spots = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => [player.x + dx, player.y + dy]);
   const near = new Set(spots.map(([c, r]) => triggerAt(c, r)).filter(Boolean));
   for (const type of [...ambushSuppressed]) if (!near.has(type)) ambushSuppressed.delete(type);
@@ -3324,6 +3355,7 @@ function heroTurn(b) {
     dmg = battleDamage(b.st.atk, b.en.def, crit ? 1.5 : 1);
     line = `${name} used ${weapon ? weapon.name : "Mop Swing"}!`; line2 = crit ? "A critical hit!" : "";
   }
+  if (b.monster.boss === "dust_wraith" && rng() < 0.25) { dmg = 0; line2 = "The Dust Wraith dodged!"; }
   b.en.hp = Math.max(0, b.en.hp - dmg);
   battleAnim("b-hero-sprite", "b-lunge-r", 260);
   setTimeout(() => { if (battle !== b) return; battleAnim("b-enemy-sprite", "b-hit", 720); setBattleBar("b-enemy-hp", b.en.hp, b.en.maxHp); }, 200 / battleSpeed);
@@ -3334,6 +3366,8 @@ function heroTurn(b) {
 function enemyTurn(b) {
   const dmg = battleDamage(b.en.atk, b.st.def);
   playerHp = Math.max(0, playerHp - dmg);
+  if (b.monster.boss === "grime_hydra") b.en.atk += 1; // grows a head every turn
+  if (b.monster.boss === "dust_wraith") playerMp = Math.max(0, playerMp - 10); // drains MP
   battleAnim("b-enemy-sprite", "b-lunge-l", 260);
   setTimeout(() => { if (battle !== b) return; battleAnim("b-hero-sprite", "b-hit", 720); updateBattleHero(); }, 200 / battleSpeed);
   battleSay(`${b.en.name} used ${b.en.move}!`, `${hero.name} took ${dmg} damage.`);
@@ -3403,6 +3437,7 @@ function closeOverlays() {
 }
 
 function showScreen(name) {
+  if (maze && !["play", "shop", "hero"].includes(name)) leaveMaze(); // the dungeon only lives in play (banishment returns on the next Play)
   currentScreen = name;
   closeOverlays();
   document.getElementById("start-page").classList.toggle("open", name === "menu");
@@ -3418,7 +3453,7 @@ function showScreen(name) {
     updateHUD();
     drawMap();
   } else if (name === "play") {
-    prepareCurrentRoom();
+    if (!maze) { prepareCurrentRoom(); setTimeout(checkCurse, 300); }
     updateGameHUD();
     drawRoom();
   } else if (name === "hero") {
@@ -3568,6 +3603,7 @@ function updateHUD() {
 }
 
 function updateGameHUD() {
+  updateDailyHUD();
   document.getElementById("game-gold").textContent = playerGold;
   document.getElementById("game-xp").textContent = playerXp;
   document.getElementById("game-level").textContent = playerLevel;
@@ -3719,6 +3755,7 @@ function completeChore(type, customText) {
   showToast(`Real chore logged: +${gold} Gold, +${xp} XP`);
   showLoot(gold, xp, loot);
   questLine(type, 'done');
+  choreDone();
 
   if (isPlayMode && chore) {
     const monster = monsters.find(m => m.type === key);
@@ -3744,7 +3781,7 @@ function rollChoreLoot() {
   if (rng() < 0.30) { potions.mana++; loot.push({ icon: POTION_ICONS.mana, text: "Mana Potion" }); }
   if (rng() < 0.15) { const g = 10 + Math.floor(rng() * 16); addRewards(g, 0); loot.push({ icon: ["R", 45, 10], text: `Bonus ${g} Gold` }); }
   if (rng() < 0.05) {
-    const pool = WEAPONS.filter(w => !hero.owned.includes(w.id) && w.price <= 60 + 40 * playerLevel);
+    const pool = WEAPONS.filter(w => !w.epic && !hero.owned.includes(w.id) && w.price <= 60 + 40 * playerLevel);
     const w = pool[Math.floor(rng() * pool.length)];
     if (w) { hero.owned.push(w.id); persistHero(); loot.push({ icon: w.kind === "shield" ? ["C", 34, 0] : ["C", 44, 6], text: `${w.name} (free!)`, rare: true }); }
   }
@@ -3790,9 +3827,9 @@ function saveGameData() {
     entityRot,
     overlayMap,
     overlayRot,
-    player,
+    player: maze ? maze.stash.player : player,
     currentRoom,
-    monsters,
+    monsters: maze ? maze.stash.monsters : monsters,
     chores,
     dailyChores,
     chaosMeter,
@@ -3892,6 +3929,7 @@ function dialogueNext() {
   const pc = document.getElementById("dlg-portrait"), px = pc.getContext("2d"), k = document.createElement("canvas");
   k.width = k.height = 16; px.imageSmoothingEnabled = false; px.clearRect(0, 0, pc.width, pc.height);
   const who = PORTRAITS[ln.portrait]; if (who) { composeHero(who(), k); px.drawImage(k, 0, 0, 16, 16, 4, 4, 72, 72); }
+  else if (Array.isArray(ln.portrait)) drawIconCanvas(px, ln.portrait, 4, 4, 72); // boss / monster sprite
   document.getElementById("dlg-arrow").classList.remove("on");
   textEl.textContent = ""; dlg.full = false; let n = 0;
   dlg.timer = setInterval(() => { textEl.textContent = ln.text.slice(0, ++n); if (n >= ln.text.length) { clearInterval(dlg.timer); dlg.full = true; dialogueTyped(); } }, 28);
@@ -3919,6 +3957,138 @@ function shopSay(text) {
   document.getElementById("shop-say").textContent = text;
   showDialogue([{ speaker: SPEAKERS.shopkeeper, portrait: "shopkeeper", text }], null, { compact: true });
 }
+
+// ---- DAILY TRACKING + GRIME CURSE (Stage 2) ----
+// Doing chores feeds your power; slacking feeds the curse. Missed day -> Trash King, full grime -> Grime Hydra,
+// broken streak (missed day after a 3+ day streak) -> Dust Wraith. Each banishes the Keeper to the maze below.
+const DAILY_KEY = "dd_daily";
+const dayKey = (off = 0) => { const d = new Date(); d.setDate(d.getDate() + off); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const dayDiff = (a, b) => Math.round((new Date(b + "T12:00") - new Date(a + "T12:00")) / 864e5);
+let daily = (() => { let d = null; try { d = JSON.parse(localStorage.getItem(DAILY_KEY)); } catch (e) {} return Object.assign({ lastDay: null, streak: 0, grime: 0, tick: Date.now(), pending: null }, d || {}); })();
+function saveDaily() { try { localStorage.setItem(DAILY_KEY, JSON.stringify(daily)); } catch (e) {} }
+function updateDailyHUD() {
+  const st = document.getElementById("game-streak"), gf = document.getElementById("game-grime-fill");
+  if (st) st.textContent = `${daily.streak} day${daily.streak === 1 ? "" : "s"}`;
+  if (gf) gf.style.width = Math.round(daily.grime) + "%";
+}
+function tickGrime() { // +2 per hour, +1 more per hour for each lurking chore monster upstairs
+  const now = Date.now(), lurking = (maze ? maze.stash.monsters : monsters).length;
+  daily.grime = Math.min(100, daily.grime + Math.max(0, now - daily.tick) / 36e5 * (2 + lurking));
+  daily.tick = now; saveDaily(); updateDailyHUD();
+}
+function choreDone() {
+  tickGrime();
+  const t = dayKey();
+  if (daily.lastDay !== t) { daily.streak = daily.lastDay === dayKey(-1) ? daily.streak + 1 : 1; daily.lastDay = t; }
+  daily.grime = Math.max(0, daily.grime - 25);
+  saveDaily(); updateDailyHUD();
+}
+function checkCurse() {
+  if (maze || dlg || activeAmbush) return;
+  tickGrime();
+  if (!daily.pending) {
+    const gap = daily.lastDay ? dayDiff(daily.lastDay, dayKey()) : 0;
+    if (gap >= 2) { daily.pending = daily.streak >= 3 ? "dust_wraith" : "trash_king"; daily.streak = 0; daily.lastDay = dayKey(-1); }
+    else if (daily.grime >= 100) daily.pending = "grime_hydra";
+    saveDaily(); updateDailyHUD();
+  }
+  if (daily.pending && currentScreen === "play") banish(daily.pending);
+}
+setInterval(() => { if (currentScreen === "play") checkCurse(); else tickGrime(); }, 60000);
+
+const elder = text => ({ speaker: SPEAKERS.elder, portrait: "elder", text });
+const BOSSES = {
+  trash_king: { name: "Trash King", icon: ["R", 38, 10], stats: [11, 10, 2, "Garbage Avalanche"], hp: 260,
+    banish: [elder("A whole day without a single chore, Keeper..."), elder("The Trash King smells weakness. The floor gives way!")],
+    intro: [{ speaker: "Trash King", portrait: ["R", 38, 10], text: "I AM THE TRASH KING! Your neglect built my throne!" }, elder("He is tanky. Raise your DEF and bring Health Potions!")],
+    win: "The Trash King crumbles into rubbish! Back upstairs, Keeper." },
+  grime_hydra: { name: "Grime Hydra", icon: ["I", 17, 2], stats: [12, 5, 5, "Hydra Bite"], hp: 220,
+    banish: [elder("The grime has piled too high!"), elder("It feeds the Grime Hydra... and it drags you below!")],
+    intro: [{ speaker: "Grime Hydra", portrait: ["I", 17, 2], text: "Cut one head and two more grow! Hssss!" }, elder("It grows a head every turn. Strike fast: burst ATK or fire enchantments!")],
+    win: "The Hydra dissolves into suds. The house breathes again." },
+  dust_wraith: { name: "Dust Wraith", icon: ["R", 53, 16], stats: [9, 4, 14, "Dust Drain"], hp: 200,
+    banish: [elder("Your streak is broken, Keeper..."), elder("From the dust of forgotten days rises the Wraith. Down you go!")],
+    intro: [{ speaker: "Dust Wraith", portrait: ["R", 53, 16], text: "Ssso many dusty days... your magic is mine." }, elder("It dodges and drains MP. Bring SPD, talismans and Mana Potions!")],
+    win: "The Dust Wraith scatters like a sneeze. Your streak lives on!" }
+};
+for (const [k, b] of Object.entries(BOSSES)) ENEMY_STATS[k] = b.stats;
+function banish(boss) { showDialogue(BOSSES[boss].banish, () => enterMaze(boss, true)); }
+
+// ---- MAZE DUNGEON BELOW ----
+// Reuses the play screen: currentRoomData() points at maze.room, monsters at the maze foes; the upstairs room is stashed.
+function genMaze(boss) {
+  const N = GRID_SIZE, WALL = 31, FLOOR = 22, T = Array.from({ length: N }, () => Array(N).fill(WALL));
+  const stack = [[1, 1]], seen = new Set(["1,1"]); T[1][1] = FLOOR;
+  while (stack.length) { // recursive backtracker on odd cells 1..13
+    const [c, r] = stack[stack.length - 1];
+    const nb = [[2, 0], [-2, 0], [0, 2], [0, -2]].map(([dc, dr]) => [c + dc, r + dr]).filter(([x, y]) => x > 0 && y > 0 && x < N - 2 && y < N - 2 && !seen.has(x + "," + y));
+    if (!nb.length) { stack.pop(); continue; }
+    const [x, y] = nb[Math.floor(Math.random() * nb.length)];
+    T[(c + x) / 2][(r + y) / 2] = FLOOR; T[x][y] = FLOOR; seen.add(x + "," + y); stack.push([x, y]);
+  }
+  const dist = { "1,1": 0 }, q = [[1, 1]]; // BFS: boss waits at the farthest cell
+  while (q.length) { const [c, r] = q.shift(); for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const x = c + dc, y = r + dr; if (T[x][y] === FLOOR && dist[x + "," + y] === undefined) { dist[x + "," + y] = dist[c + "," + r] + 1; q.push([x, y]); } } }
+  const cells = Object.keys(dist).map(k => k.split(",").map(Number)).filter(([c, r]) => c % 2 && r % 2);
+  const [bc, br] = cells.reduce((a, b) => dist[b] > dist[a] ? b : a);
+  const B = BOSSES[boss], foes = [{ col: bc, row: br, type: boss, boss, name: B.name, icon: B.icon, hp: B.hp, maxHp: B.hp, xpReward: 150, goldReward: 300 }];
+  const types = ["dishes", "laundry", "trash"];
+  for (const [c, r] of cells.sort(() => Math.random() - 0.5)) { // scattered, not packed: 4+ tiles from the start, the boss and each other
+    if (foes.length > 4) break;
+    if (dist[c + "," + r] < 5 || foes.some(f => Math.abs(f.col - c) + Math.abs(f.row - r) < 5)) continue;
+    const ch = CHORES[types[foes.length % 3]];
+    foes.push({ col: c, row: r, type: ch.id, name: ch.name, icon: ch.icon, hp: ch.maxHp, maxHp: ch.maxHp, xpReward: ch.xpReward, goldReward: ch.goldReward * 2 });
+  }
+  return { room: { name: "The Dungeon Below", terrain: T, entity: Array.from({ length: N }, () => Array(N).fill(0)), terrainRot: blankRotGrid(), entityRot: blankRotGrid(), overlay: blankRotGrid(), overlayRot: blankRotGrid() }, foes };
+}
+function enterMaze(boss, banished) {
+  closeDialogue(); stopWalking();
+  const g = genMaze(boss);
+  maze = { boss, banished, room: g.room, stash: { player: { ...player }, monsters, prevPos } };
+  monsters = g.foes; player.x = 1; player.y = 1; prevPos = { x: 1, y: 1 }; ambushSuppressed = new Set();
+  if (currentScreen !== "play") showScreen("play");
+  document.getElementById("gameplay-overlay").classList.add("in-maze");
+  document.getElementById("game-room-name").textContent = "The Dungeon Below";
+  document.getElementById("descend-btn").lastChild.textContent = "Ascend";
+  drawRoom(); updateGameHUD();
+}
+function leaveMaze() {
+  if (!maze) return;
+  const st = maze.stash;
+  maze = null; stopWalking(); closeAmbush();
+  player = st.player; monsters = st.monsters; prevPos = st.prevPos; ambushSuppressed = new Set();
+  document.getElementById("gameplay-overlay").classList.remove("in-maze");
+  document.getElementById("game-room-name").textContent = currentRoomName;
+  document.getElementById("descend-btn").lastChild.textContent = "Descend";
+  if (currentScreen === "play") { drawRoom(); updateGameHUD(); }
+}
+function dropEpic() {
+  const w = EPIC_WEAPONS.find(w => !hero.owned.includes(w.id));
+  if (!w) { addRewards(150, 0); return null; }
+  hero.owned.push(w.id);
+  if (gearPower(w.kind) < w.power) hero.equip[w.kind] = w.id;
+  persistHero(); composeHero(hero, heroCanvas); updateGameHUD();
+  return w;
+}
+function mazeVictory(m) {
+  const w = dropEpic();
+  if (maze.banished && daily.pending === m.boss) { daily.pending = null; if (m.boss === "grime_hydra") daily.grime = 20; saveDaily(); }
+  lastBoss = { boss: m.boss, epic: w && w.id, banished: maze.banished };
+  showDialogue([elder(BOSSES[m.boss].win), elder(`Your reward: ${m.goldReward} Gold${w ? " and the epic " + w.name : ""}!`)], leaveMaze);
+}
+// Stage 3 hook: replace startBattle(m) for m.boss with a turn-based fight (Attack/Skill/Item/Defend); battleEnd -> resolveCombat -> mazeVictory stays the exit.
+function toggleDescend() {
+  if (maze) { if (maze.banished) return showToast("The curse holds you here. Defeat the boss!"); return leaveMaze(); }
+  if (daily.pending) return banish(daily.pending);
+  const keys = Object.keys(BOSSES), boss = keys[Math.floor(Math.random() * keys.length)];
+  showDialogue([elder("You dare the depths by choice? Epic steel and big gold wait below, Keeper.")], () => enterMaze(boss, false));
+}
+window.ddDebug = { // dev/test hooks
+  missDay() { daily.lastDay = dayKey(-3); daily.streak = 1; saveDaily(); },
+  breakStreak() { daily.lastDay = dayKey(-3); daily.streak = 5; saveDaily(); },
+  fillGrime() { daily.grime = 100; saveDaily(); updateDailyHUD(); },
+  clear() { daily.pending = null; daily.grime = 0; saveDaily(); updateDailyHUD(); },
+  banish: b => banish(b), check: () => checkCurse(), state: () => ({ ...daily, maze: maze && maze.boss })
+};
 
 function newMap() {
   if (!confirm("Start a brand new dungeon?")) return;
@@ -4135,6 +4305,10 @@ const weaponPrice = power => Math.round((power * power / 30 + power * 1.5 + 10) 
 const WEAPONS = WEAPON_ROWS.map(([row, col, name, power, kind = "weapon"]) => ({
   id: name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""), name, power, kind, row, col,
   x: 16 * col, y: 16 * row, price: weaponPrice(power), bb: [16 * col, 16 * row, 16, 16] }));
+// Epic gear: dungeon-only (maze foes 8%, every boss), never in the shop; reuses existing weapon sprites
+const EPIC_WEAPONS = [["Hearthbrand", "spark_sword", 120], ["Grimebane", "leecher", 140], ["Dustveil Aegis", "lion_guard", 110]]
+  .map(([name, base, power]) => ({ ...WEAPONS.find(w => w.id === base), id: name.toLowerCase().replace(/ /g, "_"), name, power, price: 0, epic: true }));
+WEAPONS.push(...EPIC_WEAPONS);
 const WEAPON_BY_ID = Object.fromEntries(WEAPONS.map(w => [w.id, w]));
 const SHOPKEEPER = { body: [0, 1], pants: [3, 0], shoes: [4, 0], shirt: [14, 4], hairStyle: 1, hairColor: 4, hat: [30, 8], shield: null, weapon: null };
 let weaponSheet = null;
@@ -4205,7 +4379,7 @@ function renderShop() {
   document.getElementById("shop-gold").textContent = playerGold;
   const grid = document.getElementById("shop-cards");
   if (!grid.childElementCount) {
-    grid.innerHTML = WEAPONS.map(w => `<div class="shop-card" data-weapon="${w.id}">
+    grid.innerHTML = WEAPONS.filter(w => !w.epic).map(w => `<div class="shop-card" data-weapon="${w.id}">
       <div class="shop-art" style="background-position:-${w.x * 4}px -${w.y * 4}px"></div>
       <div class="shop-name">${w.name}</div>
       <div class="shop-stat"><i class="ico ico-${w.kind === "shield" ? "shield" : "sword"}"></i>+${w.power} · <i class="ico ico-gold"></i>${w.price}</div>
@@ -4276,6 +4450,7 @@ document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListe
 }));
 document.getElementById('palette-search').addEventListener('input', loadAssetGrid);
 document.getElementById('new-map-btn').addEventListener('click', () => maybeIntro(newMap));
+document.getElementById('descend-btn').addEventListener('click', toggleDescend);
 document.getElementById('replay-intro').addEventListener('click', () => showDialogue(INTRO_LINES));
 document.getElementById('dialogue').addEventListener('click', (e) => { if (!dlg || (dlg.compact && !e.target.closest('.dlg-box'))) return; e.stopPropagation(); dialogueNext(); });
 document.addEventListener('keydown', (e) => {
