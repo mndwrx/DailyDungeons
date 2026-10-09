@@ -1862,7 +1862,9 @@
   .qb-edit input[data-f="name"] { flex: 1; min-width: 120px; }
   .qb-edit input[data-f="mins"] { width: 44px; }
   #b-cmds { position: absolute; right: 8px; top: 8px; bottom: 8px; width: 50%; display: none; grid-template-columns: 1fr 1fr; gap: 4px; }
-  #ambush-overlay.boss-mode #b-cmds { display: grid; }
+  #ambush-overlay.boss-mode #b-cmds, #ambush-overlay.chore-mode #b-cmds { display: grid; }
+  #ambush-overlay.chore-mode #battle-speed { display: none; }
+  #ambush-overlay.chore-mode #battle-text { width: 46%; }
   #ambush-overlay.boss-mode #battle-speed { display: none; }
   #ambush-overlay.boss-mode #battle-text { width: 46%; }
   #b-cmds .hero-btn { font-size: 12px; padding: 2px 6px; text-align: left; }
@@ -3225,24 +3227,35 @@ function handleRoomClick(col, row) {
   walkTimer = setInterval(() => {
     const next = path.shift();
     if (!next || !tryMove(next[0] - player.x, next[1] - player.y) || activeAmbush || !path.length) stopWalking();
-  }, 110);
+  }, 240); // slow, deliberate steps
 }
 
 // ---- IDLE HERO (Phase C): left alone, the hero wanders the house and walks into lurking grime monsters ----
 let lastInput = Date.now(), idleOn = true, questWalkType = null, walkLineN = 0;
 const IDLE_MS = 8000;
-function walkPath(path, ms) { // same stepping as click-to-move, slower, no target marker
+function walkPath(path, ms, done) { // same stepping as click-to-move, slower, no target marker; done() on arrival
   stopWalking();
-  if (!path || !path.length) return false;
+  if (!path) return false;
+  if (!path.length) { if (done) done(); return true; }
   isMoving = true;
-  walkTimer = setInterval(() => { const next = path.shift(); if (!next || !tryMove(next[0] - player.x, next[1] - player.y) || activeAmbush || !path.length) stopWalking(); }, ms);
+  walkTimer = setInterval(() => { const next = path.shift(), moved = !!next && tryMove(next[0] - player.x, next[1] - player.y);
+    if (!moved || activeAmbush || !path.length) { stopWalking(); if (moved && !path.length && !activeAmbush && done) done(); } }, ms);
+  return true;
+}
+// ---- WANDERLUST POTION: a rare drop; while active (30 min) the hero roams and auto-fights when the player is idle ----
+const wanderActive = () => Date.now() < (potions.wanderUntil || 0);
+function useWanderlust() {
+  if (wanderActive()) return showToast(`Wanderlust is active: ${Math.ceil((potions.wanderUntil - Date.now()) / 60000)} min left.`), false;
+  if (!potions.wander) return showToast("No Wanderlust Potion. They drop rarely from battles."), false;
+  potions.wander--; potions.wanderUntil = Date.now() + 30 * 60000;
+  saveGameData(); renderInventory(); showToast("Wanderlust! For 30 min your hero roams and fights while you are idle.", 3000);
   return true;
 }
 function idleTick() {
-  if (!idleOn || currentScreen !== "play" || !isPlayMode || maze || walkTimer || activeAmbush || battle || dlg || Date.now() - lastInput < IDLE_MS || document.getElementById("quest-board").classList.contains("open")) return false;
+  if (!idleOn || !wanderActive() || currentScreen !== "play" || !isPlayMode || maze || walkTimer || activeAmbush || battle || dlg || Date.now() - lastInput < IDLE_MS || document.getElementById("quest-board").classList.contains("open")) return false;
   const prey = monsters.filter(m => m.type !== questWalkType), m = prey[Math.floor(Math.random() * prey.length)];
-  if (m && Math.random() < 0.7) return walkPath(findPath(m.col, m.row), 260);
-  for (let k = 0; k < 12; k++) { const c = player.x + Math.round(Math.random() * 8 - 4), r = player.y + Math.round(Math.random() * 8 - 4); if (isWalkable(c, r) && (c !== player.x || r !== player.y)) return walkPath(findPath(c, r), 260); }
+  if (m && Math.random() < 0.7) return walkPath(findPath(m.col, m.row), 480);
+  for (let k = 0; k < 12; k++) { const c = player.x + Math.round(Math.random() * 8 - 4), r = player.y + Math.round(Math.random() * 8 - 4); if (isWalkable(c, r) && (c !== player.x || r !== player.y)) return walkPath(findPath(c, r), 480); }
   return false;
 }
 setInterval(idleTick, 1000);
@@ -3265,7 +3278,46 @@ function choreWalk(c) {
   const mid = Math.floor(GRID_SIZE / 2);
   let best = null;
   for (const [col, row] of choreCells(c.monster)) { const p = findPath(col, row); if (p && (!best || p.length < best.length)) best = p; }
-  return walkPath(best || findPath(mid, mid), 300);
+  return walkPath(best || findPath(mid, mid), 520, () => openChoreBattle(c));
+}
+// ---- CHORE BATTLE: lasts the whole real chore; the monster's HP follows the chore timer ----
+function openChoreBattle(c) {
+  const q = questSt(c.id); if (q.done) return;
+  const ch = CHORES[c.monster] || CHORES.dishes;
+  const m = monsters.find(m => m.chore === c.id) || { col: player.x, row: player.y, type: c.monster, name: ch.name, icon: ch.icon, hp: ch.maxHp, maxHp: ch.maxHp, xpReward: ch.xpReward, goldReward: ch.goldReward, chore: c.id };
+  stopWalking(); closeDialogue(); activeAmbush = m;
+  startBattle(m); clearTimeout(battle.timer);
+  battle.chore = c; document.getElementById("ambush-overlay").classList.add("chore-mode");
+  battleSay(`${ch.name} guards the ${c.name}!`, q.start ? "The fight goes on. Keep at the chore!" : "Press Begin and start the chore for real.");
+  choreBattleTick(battle);
+}
+function choreBattleTick(b) {
+  if (battle !== b) return;
+  const c = b.chore, q = questSt(c.id), left = questLeft(c), total = questMins(c) * 60000 || 1;
+  b.en.hp = !q.start ? b.en.maxHp : Math.max(1, Math.round(b.en.maxHp * Math.min(1, (left || 0) / total)));
+  setBattleBar("b-enemy-hp", b.en.hp, b.en.maxHp);
+  document.getElementById("b-cmds").innerHTML = `<button class="hero-btn" data-chore="begin"${q.start ? " disabled" : ""}>Begin</button><button class="hero-btn" data-chore="finish"${q.start && left === 0 ? "" : " disabled"}>Finish</button><button class="hero-btn" data-chore="leave">Leave</button>`;
+  if (q.start && b.tick) { // slow ambient exchanges while the real chore happens
+    const h = b.tick % 2;
+    battleAnim(h ? "b-hero-sprite" : "b-enemy-sprite", h ? "b-lunge-r" : "b-lunge-l", 260);
+    battleSay(h ? `${hero.name} scrubs at the ${b.en.name}!` : `${b.en.name} used ${b.en.move}!`, left ? `Chore timer: ${Math.floor(left / 60000)}:${String(Math.floor(left / 1000) % 60).padStart(2, "0")} left.` : "The chore timer is up. Deliver the finishing blow!");
+  }
+  b.tick = (b.tick || 0) + 1;
+  b.timer = setTimeout(() => choreBattleTick(b), 3000);
+}
+function choreBattleCmd(kind) {
+  const b = battle; if (!b || !b.chore) return false;
+  const c = b.chore, q = questSt(c.id);
+  if (kind === "begin" && !q.start) { q.start = Date.now(); saveQuests(); renderQuestBoard(); battleAnim("b-hero-sprite", "b-lunge-r", 260); battleSay(`${hero.name} opens with a mighty swing!`, "The chore timer has started. Go do it for real!"); }
+  if (kind === "finish" && q.start && questLeft(c) === 0) {
+    clearTimeout(b.timer); b.en.hp = 0; setBattleBar("b-enemy-hp", 0, b.en.maxHp); battleAnim("b-enemy-sprite", "b-hit", 720);
+    battleSay(`${hero.name} lands the finishing blow!`, `${b.en.name} is banished. Chore complete!`);
+    setTimeout(() => { if (battle === b) closeAmbush(); questWalkType = null; finishQuest(c.id); }, 1500);
+    return true;
+  }
+  if (kind === "leave") { closeAmbush(); questWalkType = null; showToast(q.start ? "The chore battle waits. Come back to finish it." : "Chore battle left."); return true; }
+  clearTimeout(b.timer); b.tick = 0; choreBattleTick(b);
+  return true;
 }
 // ---- AWAY REWARDS: a small, capped idle payout, scaled by chores done recently ----
 const AWAY_KEY = "dd_seen";
@@ -3386,6 +3438,7 @@ function triggerAmbush(monster) {
   stopWalking();
   activeAmbush = monster;
   placeSpawnMarker(monster.col, monster.row);
+  if (monster.chore && (qToday()[monster.chore] || {}).start) { const c = qChores.find(c => c.id === monster.chore); if (c) return openChoreBattle(c); } // a started chore: back to its battle
   if (monster.boss) startBossBattle(monster); else startBattle(monster);
 }
 
@@ -3408,7 +3461,7 @@ const monsterIcon = m => m && (m.icon || (CHORES[m.type] || {}).icon);
 function closeAmbush() {
   if (battle) clearTimeout(battle.timer);
   battle = null;
-  document.getElementById("ambush-overlay").classList.remove("open", "boss-mode");
+  document.getElementById("ambush-overlay").classList.remove("open", "boss-mode", "chore-mode");
   activeAmbush = null;
 }
 
@@ -3466,7 +3519,7 @@ function startBattle(monster) {
   document.getElementById("battle-speed").classList.toggle("on", battleSpeed > 1);
   document.getElementById("ambush-overlay").classList.add("open");
   battleSay(`A wild ${en.name} appeared!`, `Real chore: ${(CHORES[monster.type] || {}).chore || "clean up"}.`);
-  battleWait(1400, battleStep);
+  battleWait(2600, battleStep);
 }
 
 function battleStep() {
@@ -3475,9 +3528,9 @@ function battleStep() {
   if (!b.queue.length) b.queue = b.st.spd >= b.en.spd ? ["hero", "enemy"] : ["enemy", "hero"];
   const who = b.queue.shift();
   if (who === "hero") heroTurn(b); else enemyTurn(b);
-  if (b.en.hp <= 0) return battleWait(1100, () => battleEnd(true));
-  if (playerHp <= 0) return battleWait(1100, () => battleEnd(false));
-  battleWait(1000, battleStep);
+  if (b.en.hp <= 0) return battleWait(1800, () => battleEnd(true));
+  if (playerHp <= 0) return battleWait(1800, () => battleEnd(false));
+  battleWait(2400, battleStep); // slow, readable pacing
 }
 
 function heroTurn(b) {
@@ -3525,8 +3578,9 @@ function battleEnd(won) {
   const b = battle, m = b.monster;
   if (won) {
     document.getElementById("b-enemy-sprite").className = "b-faint";
-    const loot = rng() < 0.3 ? "Health Potion" : "";
-    if (loot) potions.health++;
+    const roll = rng(), loot = roll < 0.04 ? "Wanderlust Potion" : roll < 0.3 ? "Health Potion" : ""; // Wanderlust: rare, never sold
+    if (loot === "Health Potion") potions.health++;
+    if (loot === "Wanderlust Potion") potions.wander = (potions.wander || 0) + 1;
     b.result = "win";
     battleSay(`${b.en.name} fainted!`, `Won ${m.xpReward} XP and ${m.goldReward} Gold!${loot ? " Found a " + loot + "!" : ""}`);
   } else {
@@ -3535,7 +3589,7 @@ function battleEnd(won) {
     b.result = "faint"; b.lost = lost;
     battleSay(`${hero.name} fainted!`, `Dropped ${lost} Gold... Do a chore to heal up!`);
   }
-  battleWait(2200, () => {
+  battleWait(3000, () => {
     if (battle !== b) return;
     closeAmbush();
     lastBattle = { result: b.result, potionsUsed: b.potionsUsed || 0, lost: b.lost || 0, monster: m.name };
@@ -3957,7 +4011,9 @@ function renderInventory() {
     d.append(icon ? spriteSpan(icon, 1) : "", Object.assign(document.createElement("div"), { className: "inv-label", textContent: label }));
     if (count) d.append(Object.assign(document.createElement("div"), { className: "inv-count", textContent: count }));
     return d; };
-  const items = [slot(POTION_ICONS.health, "Health Potion", potions.health), slot(POTION_ICONS.mana, "Mana Potion", potions.mana),
+  const ws = slot(POTION_ICONS.mana, wanderActive() ? `Wanderlust ${Math.ceil((potions.wanderUntil - Date.now()) / 60000)}m left` : "Wanderlust Potion", potions.wander || 0);
+  ws.firstChild.style.filter = "hue-rotate(110deg)"; ws.classList.add("wander-slot"); ws.title = "Use: 30 min of idle roaming and auto-fights"; ws.style.cursor = "pointer"; ws.addEventListener("click", useWanderlust);
+  const items = [slot(POTION_ICONS.health, "Health Potion", potions.health), slot(POTION_ICONS.mana, "Mana Potion", potions.mana), ws,
     ...hero.owned.map(id => WEAPON_BY_ID[id]).filter(Boolean).map(w => slot(w.kind === "shield" ? ["C", 34, 0] : ["C", 44, 6], w.name))];
   while (items.length < 9) items.push(slot(null, "Empty"));
   grid.replaceChildren(...items.slice(0, 9));
@@ -4378,8 +4434,10 @@ const allDueDone = () => dueToday().every(c => (qToday()[c.id] || {}).done);
 const capType = c => c.monster.charAt(0).toUpperCase() + c.monster.slice(1); // "dishes" -> "Dishes" (CHORES rewards + quest lines)
 function startQuest(id) {
   const c = qChores.find(c => c.id === id); if (!c) return;
-  const q = questSt(id); if (q.done || q.start) return;
-  q.start = Date.now(); saveQuests(); if (currentScreen === "play" && !maze) choreWalk(c); else questLine(capType(c), "start"); renderQuestBoard();
+  const q = questSt(id); if (q.done) return;
+  if (currentScreen === "play" && !maze) return choreWalk(c); // walk there; the chore battle's Begin starts the timer (and re-opens a started one)
+  if (q.start) return;
+  q.start = Date.now(); saveQuests(); questLine(capType(c), "start"); renderQuestBoard();
 }
 function finishQuest(id) {
   const c = qChores.find(c => c.id === id), q = c && qToday()[id];
@@ -5030,7 +5088,7 @@ document.getElementById('qb-editor').addEventListener('click', (e) => {
   if (e.target.closest('#qb-add')) { addQuest(); renderQuestEditor(); }
   else if (e.target.closest('[data-act="del"]')) { deleteQuest(e.target.closest('.qb-edit').dataset.id); renderQuestEditor(); }
 });
-document.getElementById('b-cmds').addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (b) bossPick(+b.dataset.i); });
+document.getElementById('b-cmds').addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (b) bossPick(+b.dataset.i); const k = e.target.closest('button[data-chore]'); if (k) choreBattleCmd(k.dataset.chore); });
 document.getElementById('shop-charms').addEventListener('click', (e) => { const b = e.target.closest('.shop-buy'); if (b) buyCharm(b.closest('.charm-card').dataset.charm); });
 document.addEventListener('keydown', (e) => { if (battle && battle.awaiting && /^[1-4]$/.test(e.key) && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) { e.preventDefault(); bossPick(+e.key - 1); } });
 document.getElementById('replay-intro').addEventListener('click', () => showDialogue(INTRO_LINES));
