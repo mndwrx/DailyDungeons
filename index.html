@@ -5177,6 +5177,8 @@ document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListe
   loadAssetGrid();
 }));
 document.getElementById('palette-search').addEventListener('input', loadAssetGrid);
+const ALLOW_BUILDER = false; // v1: no Edit Dungeon / Asset Palette on the menu
+if (!ALLOW_BUILDER) ['edit-map-btn', 'asset-palette-toggle'].forEach(id => document.getElementById(id).style.display = 'none');
 const ALLOW_NEW_MAP = false; // v1: no wipe-everything New Map on the menu
 if (ALLOW_NEW_MAP) document.getElementById('new-map-btn').addEventListener('click', newMap); else document.getElementById('new-map-btn').remove();
 document.getElementById('descend-btn').addEventListener('click', toggleDescend);
