@@ -1927,8 +1927,8 @@
     background: url("assets/ui/war-table.jpg") center / cover no-repeat; filter: blur(6px) brightness(0.55); }
   #stage { position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px; flex: none; transform: translate(-50%, -50%) scale(var(--ss, 1)); transform-origin: 50% 50%; z-index: 1;
     background: url("assets/ui/war-table.jpg") center / cover no-repeat; image-rendering: pixelated; box-shadow: 0 0 40px rgba(0, 0, 0, 0.7); }
-  /* the war table's empty parchment square (x 318-706, y 98-472 of 1024x572) holds the map */
-  #stage .game-play-area { position: absolute; left: 396px; top: 123px; width: 488px; height: 471px; padding: 8px; flex: none; background: none !important; overflow: visible; }
+  /* the war table's parchment (x 275-797, y 61-521 of 1024x573; stage x 342-998, y 77-655) holds the map: full height below the HUD, centered on the parchment */
+  #stage .game-play-area { position: absolute; left: 406px; top: 123px; width: 528px; height: 528px; padding: 4px; flex: none; background: none !important; overflow: visible; }
   #stage .room-canvas { max-width: 100%; max-height: 100%; }
   /* framed HUD over the table's top rail */
   #stage .game-hud { position: absolute; left: 10px; right: 10px; top: 6px; height: 110px; box-sizing: border-box; padding: 2px 6px; gap: 4px 12px;
@@ -1986,11 +1986,11 @@
   #gameplay-overlay.landscape #stage .game-play-area { grid-column: 2; grid-row: 1 / -1; position: relative; left: 0; top: 0; width: auto; height: auto; min-height: 0; min-width: 0; padding: 2px; overflow: hidden;
     background: url("assets/ui/war-table.jpg") center / cover no-repeat !important; image-rendering: pixelated; }
   #gameplay-overlay.portrait #stage .game-play-area { overflow: hidden; }
-  /* candle flicker: additive warm glow over the war table's candle (source ~x75 y215 of 1024x572), stepped for a pixel feel */
+  /* candle flicker: additive warm glow over the war table's candle (flame x 62-85, y 199-233 of 1024x573), stepped for a pixel feel */
   .candle-glow { position: absolute; z-index: 0; pointer-events: none; border-radius: 50%; transform: translate(-50%, -50%); mix-blend-mode: plus-lighter;
     background: radial-gradient(circle, rgba(255, 200, 110, 0.55) 0, rgba(255, 150, 50, 0.28) 30%, rgba(255, 120, 30, 0.1) 52%, rgba(255, 110, 20, 0) 70%);
     animation: candleFlicker 1.7s steps(1, end) infinite; }
-  #stage > .candle-glow { left: 90px; top: 268px; width: 92px; height: 92px; }
+  #stage > .candle-glow { left: 88px; top: 276px; width: 92px; height: 92px; }
   #gameplay-overlay > .candle-glow { filter: blur(6px) brightness(0.55); }
   #gameplay-overlay:is(.portrait, .landscape) #stage > .candle-glow, #gameplay-overlay:not(.portrait):not(.landscape) .game-play-area > .candle-glow { display: none; }
   @keyframes candleFlicker {
@@ -4044,10 +4044,10 @@ function fitStage() {
   window.ddStageScale = s; st.style.setProperty("--ss", s);
   requestAnimationFrame(placeCandles);
 }
-/* put a candle glow where the war table's candle lands in a cover-fit box (image 1024x572, candle flame ~75,215) */
+/* put a candle glow where the war table's candle lands in a cover-fit box (image 1024x573, candle flame ~73,220) */
 function coverGlow(el, x0, y0, W, H) {
-  if (!el) return; const sc = Math.max(W / 1024, H / 572), ox = x0 + (W - 1024 * sc) / 2, oy = y0 + (H - 572 * sc) / 2, d = Math.round(73 * sc);
-  Object.assign(el.style, { left: Math.round(ox + 75 * sc) + "px", top: Math.round(oy + 215 * sc) + "px", width: d + "px", height: d + "px" });
+  if (!el) return; const sc = Math.max(W / 1024, H / 573), ox = x0 + (W - 1024 * sc) / 2, oy = y0 + (H - 573 * sc) / 2, d = Math.round(73 * sc);
+  Object.assign(el.style, { left: Math.round(ox + 73 * sc) + "px", top: Math.round(oy + 220 * sc) + "px", width: d + "px", height: d + "px" });
 }
 function placeCandles() {
   coverGlow(document.getElementById("glow-side"), -20, -20, innerWidth + 40, innerHeight + 40); /* matches #gameplay-overlay::before (inset -20px) */
