@@ -2054,6 +2054,22 @@
   .charm-card { min-width: 0; }
   .charm-card .shop-stat { white-space: normal; text-align: center; overflow-wrap: anywhere; line-height: 1.3; }
   #shop-charms { grid-template-columns: repeat(auto-fill, minmax(min(136px, 100%), 1fr)); }
+  /* HUD final (16:9 desktop only): name | bars | chips share the top row evenly, 9 equal buttons below, everything centered */
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud { top: 4px; height: 117px; padding: 5px 10px; grid-template-columns: 210px minmax(0, 1fr) minmax(0, 1.3fr); grid-template-rows: 43px 38px; gap: 6px 16px; align-content: center; align-items: center; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-top .room-name { align-self: center; font-size: 17px; line-height: 1.15; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-top .room-name .sub { font-size: 10px; margin-top: 3px; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-bars { align-self: center; gap: 14px; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-bars .bar { grid-template-columns: auto minmax(0, 1fr); gap: 8px; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-bars .bar .label { font-size: 12px; text-align: left; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-bars .bar .track { height: 20px; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-stats { align-self: stretch; grid-auto-flow: initial; grid-template-columns: 1fr 1fr 1fr 1.3fr 1.6fr 1.15fr 1.3fr; grid-auto-columns: initial; gap: 6px; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-stats .stat { min-width: 0; height: 43px; box-sizing: border-box; padding: 2px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-stats .stat .label { font-size: 10px; line-height: 1.1; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-stats .stat .value { font-size: 15px; line-height: 1.2; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-actions { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; height: 38px; align-items: center; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-actions button, #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-actions #sound-btn { flex: none; width: auto; height: 36px; font-size: 12px; gap: 6px; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-actions #sound-btn::after { content: "Sound"; }
+  #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-actions #sound-btn.muted::after { content: "Muted"; }
 </style>
 </head>
 <body>
