@@ -5155,7 +5155,7 @@ document.getElementById('menu-btn').addEventListener('click', () => showScreen('
 document.getElementById('builder-menu-btn').addEventListener('click', () => showScreen('menu'));
 document.getElementById('builder-palette-btn').addEventListener('click', openAssetBrowser);
 document.getElementById('builder-chores-btn').addEventListener('click', openChoreLog);
-document.getElementById('builder-play-btn').addEventListener('click', () => { enterPlayMode(); maybeIntro(checkAway); });
+document.getElementById('builder-play-btn').addEventListener('click', () => { enterPlayMode(); checkAway(); });
 document.getElementById('browser-close').addEventListener('click', closeAssetBrowser);
 document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListener('click', () => {
   document.querySelectorAll('.browser-tabs .tab').forEach(t => t.classList.remove('active'));
@@ -5203,13 +5203,17 @@ document.addEventListener('keydown', (e) => {
   e.preventDefault(); e.stopImmediatePropagation(); dialogueNext();
 }, true);
 document.getElementById('edit-map-btn').addEventListener('click', enterEditMode);
-document.getElementById('play-map-btn').addEventListener('click', () => { enterPlayMode(); maybeIntro(checkAway); }); // intro plays right after Play (first time)
+document.getElementById('play-map-btn').addEventListener('click', () => { enterPlayMode(); checkAway(); }); // intro only via Replay intro // intro plays right after Play (first time)
 document.getElementById('chore-log-btn').addEventListener('click', openChoreLog);
 document.getElementById('toggle-edit').addEventListener('click', enterEditMode);
 document.getElementById('battle-speed').addEventListener('click', toggleBattleSpeed); // the only button mid-battle
 document.getElementById('loot-ok').addEventListener('click', hideLoot);
 document.getElementById('chore-log-close').addEventListener('click', closeChoreLog);
-document.getElementById('level-continue').addEventListener('click', hideLevelClear);
+document.getElementById('level-continue').addEventListener('click', () => { // was only hiding the box: "Go Downstairs" never entered the dungeon
+  hideLevelClear(); if (maze) return;
+  if (currentScreen !== 'play') showScreen('play');
+  const k = Object.keys(BOSSES); enterMaze(daily.pending || k[Math.floor(Math.random() * k.length)], !!daily.pending);
+});
 document.getElementById('level-menu').addEventListener('click', () => showScreen('menu'));
 
 // Real Chore Log controls
