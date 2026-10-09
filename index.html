@@ -2070,6 +2070,14 @@
   #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-actions button, #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-actions #sound-btn { flex: none; width: auto; height: 36px; font-size: 12px; gap: 6px; }
   #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-actions #sound-btn::after { content: "Sound"; }
   #gameplay-overlay:not(.portrait):not(.landscape) #stage .game-hud-actions #sound-btn.muted::after { content: "Muted"; }
+  /* battle dialogue: with the command buttons showing (chore/boss) the Speed button is hidden, so the text needs no right gutter;
+     on narrow screens the buttons drop below the text so the line spans the box width and wraps normally */
+  #ambush-overlay:is(.chore-mode, .boss-mode) #battle-text { padding-right: 0; overflow-wrap: break-word; }
+  @media (max-width: 700px) {
+    #ambush-overlay:is(.chore-mode, .boss-mode) .battle-text { display: flex; flex-direction: column; gap: 8px; }
+    #ambush-overlay:is(.chore-mode, .boss-mode) #battle-text { width: auto; min-height: 3em; }
+    #ambush-overlay:is(.chore-mode, .boss-mode) #b-cmds { position: static; width: auto; }
+  }
 </style>
 </head>
 <body>
