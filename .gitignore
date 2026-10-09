@@ -1,2 +1,6 @@
 temp/
 node_modules/
+MAP.md
+.vscode/
+assets/src/
+*.log

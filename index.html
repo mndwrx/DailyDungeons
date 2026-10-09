@@ -2626,9 +2626,9 @@ const SHEETS = {
   char: { src: "assets/Spritesheet/roguelikeChar_transparent.png", stride: 17, w: 918, h: 203 },     // Roguelike characters
   dungeon: { src: "assets/Spritesheet/roguelikeDungeon_transparent.png", stride: 17, w: 492, h: 305 }, // Roguelike dungeon
   fallback: { src: "assets/pixel_fallbacks.png", stride: 17, w: 33, h: 16 }, // hand-made pixel art where Kenney has no match (bathtub, dish slime)
-  hydra: { src: "assets/monsters/laundry-hydra.png", stride: 48, w: 48, h: 48, cell: 48 },            // custom art (checker background keyed out)
+  hydra: { src: "assets/monsters/laundry-hydra.png", stride: 48, w: 48, h: 48, cell: 48 },            // original art
   wraith: { src: "assets/monsters/dust-wraith.png", stride: 48, w: 96, h: 48, cell: 48, frames: 2 },  // 2-frame idle
-  trashking: { src: "assets/monsters/trash-king.png", stride: 96, w: 96, h: 96, cell: 96 }          // boss art (checker background keyed out)
+  trashking: { src: "assets/monsters/trash-king.png", stride: 96, w: 96, h: 96, cell: 96 }          // original boss art
 };
 
 // Palette id -> real tile value. layer "terrain" writes terrainMap, "entity" writes entityMap, "overlay" writes overlayMap (top).
@@ -3940,12 +3940,12 @@ function drawTitleArt() {
   const bbox = c => { const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
     for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (d[(y * c.width + x) * 4 + 3] > 0) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
     return [x0, y0, x1 - x0 + 1, y1 - y0 + 1]; };
-  const art = drawTitleArt.crest || (drawTitleArt.crest = Object.assign(new Image(), { src: "assets/ui/crest.png" })); /* crest art with a soft feathered alpha */
+  const art = drawTitleArt.crest || (drawTitleArt.crest = Object.assign(new Image(), { src: "assets/ui/crest.png" })); /* original crest art */
   if (!art.complete || !art.naturalWidth) { crest.dataset.n = ""; if ((drawTitleArt.tries = (drawTitleArt.tries || 0) + 1) < 60) setTimeout(drawTitleArt, 200); return; }
   { const ch2 = Math.round(cn * 22), cw2 = Math.round(ch2 * art.naturalWidth / art.naturalHeight); /* same height as the old cn-scaled 22px crest */
     crest.width = cw2; crest.height = ch2; crest.style.width = cw2 / zoom + "px"; crest.style.height = ch2 / zoom + "px";
     const cx = crest.getContext("2d"); cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = "high"; cx.drawImage(art, 0, 0, cw2, ch2); }
-  const coins = drawTitleArt.coins || (drawTitleArt.coins = Object.assign(new Image(), { src: "assets/ui/coin-pile.png" })); /* coin-pile art, already tight-cropped with real alpha */
+  const coins = drawTitleArt.coins || (drawTitleArt.coins = Object.assign(new Image(), { src: "assets/ui/coin-pile.png" })); /* original coin-pile art, tight-cropped with real alpha */
   if (!coins.complete || !coins.naturalWidth) { crest.dataset.n = ""; if ((drawTitleArt.tries = (drawTitleArt.tries || 0) + 1) < 60) setTimeout(drawTitleArt, 200); return; }
   { const W = coins.naturalWidth, H = coins.naturalHeight, hw = Math.round(W * 1.3), hh = Math.round(H * 1.55); /* 3 overlapped copies -> one bigger heap */
     heap.width = hw; heap.height = hh; heap.style.width = "26%"; heap.style.height = "auto"; /* sized to the banner, so it scales with the card */
