@@ -1872,7 +1872,6 @@
   .qb-sub { font-size: 12px; color: #6e4b2c; }
   .qb-acts { display: flex; gap: 4px; align-items: center; }
   .qb-acts .hero-btn, .qb-edit .hero-btn, #qb-add { font-size: 12px; padding: 3px 8px; }
-  .qb-thumb { width: 32px; height: 32px; object-fit: cover; border: 2px solid #6e4b2c; }
   .qb-edit { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 6px 0; padding: 4px 6px; border: 8px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 8px; background: #e8d3a3; color: var(--ink); font-size: 12px; }
   .qb-edit input, .qb-edit select { font: inherit; background: #f3e6c8; color: var(--ink); border: 2px solid #6e4b2c; padding: 2px 4px; }
   .qb-edit input[data-f="name"] { flex: 1; min-width: 120px; }
@@ -2248,7 +2247,6 @@
 <div id="quest-board"><div class="qb-panel">
   <div class="qb-head"><h2><i class="ico ico-scroll"></i>Daily Quest Board</h2><button class="hero-btn" id="qb-edit-btn">Edit Chores</button><button class="panel-close" id="qb-close"><i class="ico ico-close"></i></button><span id="qb-date"></span></div>
   <div id="qb-list"></div><div id="qb-editor" hidden></div>
-  <input type="file" id="qb-photo" accept="image/*" capture="environment" hidden>
 </div></div>
 <div id="inv-board"><div class="qb-panel"><div class="qb-head"><h2>Inventory</h2><button class="hero-btn" id="inv-close">Close</button></div><div id="inv-equip"></div><div class="inv-grid2" id="inv-list"></div></div></div>
 <div id="dialogue"><div class="dlg-box" id="dlg-box"><canvas id="dlg-portrait" width="80" height="80"></canvas><div class="dlg-main"><div id="dlg-name"></div><div id="dlg-text"></div><div id="dlg-choices"></div></div><span id="dlg-arrow"></span></div></div>
@@ -4269,7 +4267,7 @@ function closeDialogue() {
 function askYesNo(text, yes, no) { showDialogue([{ speaker: SPEAKERS.elder, portrait: "elder", text }], null, { choices: [["Yes", yes], ["No", no]] }); }
 function maybeIntro(next = () => {}) {
   let seen = false; try { seen = !!localStorage.getItem(INTRO_KEY); localStorage.setItem(INTRO_KEY, "1"); } catch (e) {}
-  if (seen) next(); else showDialogue(INTRO_LINES, next);
+  if (seen) next(); else showDialogue(HONOR_LINES, next);
 }
 function questLine(type, phase) {
   const set = (QUEST_LINES[type] || QUEST_LINES.Custom)[phase], text = set[Math.floor(Math.random() * set.length)];
@@ -4535,8 +4533,8 @@ const DEFAULT_QCHORES = [["dishes", "Dishes", "daily", 0, "dishes"], ["laundry",
   .map(([id, name, freq, day, monster]) => ({ id, name, freq, day, monster, mins: 2 }));
 let qChores = (() => { try { const l = JSON.parse(localStorage.getItem(QCHORES_KEY)); if (Array.isArray(l)) return l.filter(c => c && c.id && c.name); } catch (e) {} return DEFAULT_QCHORES.map(c => ({ ...c })); })();
 let qState = (() => { let q = null; try { q = JSON.parse(localStorage.getItem(QSTATE_KEY)); } catch (e) {} return q && q.status ? q : { day: dayKey(), status: {} }; })();
-let qSkipTimers = false, qbTimer = null, qbEditing = false, qbPhotoId = null;
-function saveQuests() { try { localStorage.setItem(QCHORES_KEY, JSON.stringify(qChores)); localStorage.setItem(QSTATE_KEY, JSON.stringify(qState)); } catch (e) { showToast("Storage is full: the photo was not saved."); } }
+let qSkipTimers = false, qbTimer = null, qbEditing = false;
+function saveQuests() { try { localStorage.setItem(QCHORES_KEY, JSON.stringify(qChores)); localStorage.setItem(QSTATE_KEY, JSON.stringify(qState)); } catch (e) { showToast("Storage is full: quests not saved."); } }
 function qToday() { if (qState.day !== dayKey()) qState = { day: dayKey(), status: {} }; return qState.status; }
 const isDue = (c, d = new Date()) => c.freq !== "weekly" || +c.day === d.getDay();
 const dueToday = () => qChores.filter(c => isDue(c));
@@ -4558,24 +4556,10 @@ function finishQuest(id) {
   q.done = true; saveQuests();
   if (questWalkType === c.monster) questWalkType = null;
   completeChore(capType(c), "", c.name, c.id);
-  if (q.photo && !q.photoPaid) photoBonus(q);
   if (allDueDone() && !qState.chest) { qState.chest = true; dailyChest(); } // 4. daily clear
   saveQuests(); renderQuestBoard();
   return true;
 }
-function photoBonus(q) { q.photoPaid = true; addRewards(10, 5); setTimeout(() => showToast("Photo proof bonus: +10 Gold, +5 XP", 2600), 1800); }
-function attachPhoto(id, file) { // downscaled ~96px JPEG thumbnail keeps localStorage small
-  const img = new Image(), url = URL.createObjectURL(file);
-  img.onload = () => {
-    const k = Math.min(1, 96 / Math.max(img.width, img.height)), c = document.createElement("canvas");
-    c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
-    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
-    setQuestPhoto(id, c.toDataURL("image/jpeg", 0.6));
-  };
-  img.onerror = () => { URL.revokeObjectURL(url); showToast("That photo could not be read."); };
-  img.src = url;
-}
-function setQuestPhoto(id, data) { const q = questSt(id); q.photo = data; if (q.done && !q.photoPaid) photoBonus(q); saveQuests(); renderQuestBoard(); }
 function openQuestBoard() {
   qbEditing = false;
   document.getElementById("quest-board").classList.add("open");
@@ -4596,9 +4580,8 @@ function renderQuestBoard() {
     const status = q.done ? "Done" : left === null ? "Not started" : left > 0 ? `In progress ${formatMMSS(Math.ceil(left / 1000))}` : "Ready to check in";
     row.className = "qb-row" + (q.done ? " done" : ""); row.dataset.id = c.id;
     row.innerHTML = `<span class="qb-ico"></span><div><div class="qb-name"></div><div class="qb-sub">${c.freq === "weekly" ? "Weekly, " + WEEKDAYS[c.day] : "Daily"} · ${(CHORES[c.monster] || {}).name || "Monster"} · <b class="qb-status">${status}</b></div></div>
-      <div class="qb-acts">${q.photo ? '<img class="qb-thumb" alt="Photo proof">' : ""}<button class="hero-btn" data-act="photo">Photo</button>${q.done ? "" : left === null ? '<button class="hero-btn primary" data-act="start">Start Quest</button>' : `<button class="hero-btn primary" data-act="done"${left > 0 ? " disabled" : ""}>I did it</button>`}</div>`;
+      <div class="qb-acts">${q.done ? "" : left === null ? '<button class="hero-btn primary" data-act="start">Start Quest</button>' : `<button class="hero-btn primary" data-act="done"${left > 0 ? " disabled" : ""}>I did it</button>`}</div>`;
     row.querySelector(".qb-name").textContent = c.name;
-    if (q.photo) row.querySelector(".qb-thumb").src = q.photo;
     row.querySelector(".qb-ico").append(spriteSpan((CHORES[c.monster] || CHORES.dishes).icon, 2));
     list.appendChild(row);
   }
@@ -5169,7 +5152,7 @@ document.getElementById('menu-btn').addEventListener('click', () => showScreen('
 document.getElementById('builder-menu-btn').addEventListener('click', () => showScreen('menu'));
 document.getElementById('builder-palette-btn').addEventListener('click', openAssetBrowser);
 document.getElementById('builder-chores-btn').addEventListener('click', openChoreLog);
-document.getElementById('builder-play-btn').addEventListener('click', () => { enterPlayMode(); checkAway(); });
+document.getElementById('builder-play-btn').addEventListener('click', () => { enterPlayMode(); maybeIntro(checkAway); });
 document.getElementById('browser-close').addEventListener('click', closeAssetBrowser);
 document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListener('click', () => {
   document.querySelectorAll('.browser-tabs .tab').forEach(t => t.classList.remove('active'));
@@ -5202,9 +5185,7 @@ document.getElementById('qb-list').addEventListener('click', (e) => {
   const b = e.target.closest('[data-act]'), id = b && b.closest('.qb-row').dataset.id; if (!id || b.disabled) return;
   if (b.dataset.act === 'start') startQuest(id);
   else if (b.dataset.act === 'done') finishQuest(id);
-  else { qbPhotoId = id; document.getElementById('qb-photo').click(); }
 });
-document.getElementById('qb-photo').addEventListener('change', (e) => { const f = e.target.files[0]; if (f && qbPhotoId) attachPhoto(qbPhotoId, f); e.target.value = ''; });
 document.getElementById('qb-editor').addEventListener('change', (e) => { const el = e.target.closest('[data-f]'); if (!el) return; editQuest(el.closest('.qb-edit').dataset.id, el.dataset.f, el.value); if (el.dataset.f === 'freq') renderQuestEditor(); });
 document.getElementById('qb-editor').addEventListener('click', (e) => {
   if (e.target.closest('#qb-add')) { addQuest(); renderQuestEditor(); }
@@ -5213,14 +5194,16 @@ document.getElementById('qb-editor').addEventListener('click', (e) => {
 document.getElementById('b-cmds').addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (b) bossPick(+b.dataset.i); const k = e.target.closest('button[data-chore]'); if (k) choreBattleCmd(k.dataset.chore); });
 document.getElementById('shop-charms').addEventListener('click', (e) => { const b = e.target.closest('.shop-buy'); if (b) buyCharm(b.closest('.charm-card').dataset.charm); });
 document.addEventListener('keydown', (e) => { if (battle && battle.awaiting && /^[1-4]$/.test(e.key) && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) { e.preventDefault(); bossPick(+e.key - 1); } });
-document.getElementById('replay-intro').addEventListener('click', () => showDialogue(INTRO_LINES));
+document.getElementById('replay-intro').addEventListener('click', () => showDialogue(HONOR_LINES));
 document.getElementById('dialogue').addEventListener('click', (e) => { if (!dlg || (dlg.compact && !e.target.closest('.dlg-box'))) return; e.stopPropagation(); dialogueNext(); });
 document.addEventListener('keydown', (e) => {
   if (!dlg || e.code !== 'Space' || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
   e.preventDefault(); e.stopImmediatePropagation(); dialogueNext();
 }, true);
 document.getElementById('edit-map-btn').addEventListener('click', enterEditMode);
-document.getElementById('play-map-btn').addEventListener('click', () => { enterPlayMode(); checkAway(); }); // intro only via Replay intro // intro plays right after Play (first time)
+const HONOR_LINES = ["Hold, Hearth Keeper. Before you begin...", "No eye watches your chores but your own.", "Claim a quest you did not finish, and you cheat no one but yourself.",
+  "The Grime Curse feeds on half-truths. Honesty is your sharpest blade.", "Swear it: every quest you mark done, you truly did.", "Then go. Every chore is an EPIC quest!"].map(text => ({ speaker: SPEAKERS.elder, portrait: "elder", text }));
+document.getElementById('play-map-btn').addEventListener('click', () => { enterPlayMode(); maybeIntro(checkAway); }); // first Play: the honor code (Replay intro shows it again) // intro plays right after Play (first time)
 document.getElementById('chore-log-btn').addEventListener('click', openChoreLog);
 document.getElementById('toggle-edit').addEventListener('click', enterEditMode);
 document.getElementById('battle-speed').addEventListener('click', toggleBattleSpeed); // the only button mid-battle
