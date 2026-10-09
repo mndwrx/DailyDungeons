@@ -1610,10 +1610,10 @@
   #title-banner { display: block; width: 0; min-width: 100%; aspect-ratio: 2.6; object-fit: cover; object-position: center 52%; image-rendering: pixelated; } /* cover-fit, logo fully visible */
   #title-coins { position: absolute; left: 6px; bottom: 2px; z-index: 1; } /* gold pile tucked over the banner's lower-left */
   #title-crest { display: none; } /* crest art is now the card background */
-  #start-page > .scroll-card { position: relative; isolation: isolate; overflow: hidden; min-width: 380px; }
+  #start-page > .scroll-card { position: relative; isolation: isolate; overflow: hidden; min-width: 470px; }
   #start-page > .scroll-card > :not(h1) { text-shadow: -1px 0 #f3e2b8, 1px 0 #f3e2b8, 0 -1px #f3e2b8, 0 1px #f3e2b8, 0 0 4px #f3e2b8; } /* text stays readable over the crest */
-  #start-page > .scroll-card::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.55;
-    background: url(assets/ui/crest.png) center bottom / auto 62% no-repeat; image-rendering: pixelated; } /* pedestal on the card's bottom edge, shield/sword rise behind the buttons */
+  #start-page > .scroll-card::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.9;
+    background: url(assets/ui/crest.png) center bottom 6px / auto 300px no-repeat; image-rendering: pixelated; } /* pedestal on the card's bottom edge, shield/sword rise behind the buttons */
   #start-page .subtitle .epic { color: #b07a12; text-shadow: 1px 1px 0 #f3e2b8; }
   #start-page .scroll-card { padding-top: 10px; padding-bottom: 8px; } /* tightened so the stats fit and the card bottom stays above the heroes */
   #start-page .scroll-card .start-btn { margin-top: 2px; margin-bottom: 2px; padding-top: 2px; padding-bottom: 2px; }
@@ -1845,6 +1845,12 @@
   /* ---- Daily Quest Board ---- */
   .start-row { display: flex; gap: 4px; justify-content: center; }
   #start-page .scroll-card .start-row .start-btn { min-width: 0; flex: 1; padding-left: 8px; padding-right: 8px; }
+  /* menu v3: Hero left of the crest shield, Quests right of it, Play just below it (above the pedestal/stats) */
+  #start-page .scroll-card .start-btn { min-width: 150px; padding: 1px 14px; font-size: 0.9em; }
+  #start-page .scroll-card .start-row { align-self: stretch; justify-content: space-between; align-items: center; min-height: 150px; margin: 0 -14px; }
+  #start-page .scroll-card .start-row .start-btn { flex: none; min-width: 0; padding: 1px 8px; }
+  #start-page #play-map-btn { margin-top: 6px; margin-bottom: 4px; }
+  #start-page .start-stats { background: rgba(243, 226, 184, 0.88); border-radius: 4px; padding: 0 8px; } /* stats readable over the pedestal */
   #dungeon-bar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 4px 6px; font-size: 12px; }
   #dungeon-bar[hidden] { display: none; }
   #dungeon-bar input, #dungeon-bar select { font: inherit; background: #f3e6c8; color: var(--ink); border: 2px solid #6e4b2c; padding: 2px 4px; }
