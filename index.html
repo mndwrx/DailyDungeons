@@ -2638,7 +2638,9 @@ function houseDefs() {
     ["teapot",          127, O, "decor",   "Teapot",              "R", 55, 15],
     ["cuckoo_clock",    128, O, "decor",   "Cuckoo Clock",        "R", 26, 8, { wall: 1, walk: 1 }],
     ["produce_crate",   130, E, "decor",   "Produce Crate",       "R", 14, 7],
-    // Dungeon mode set (only shown in the builder's Dungeon mode); markers are hidden in play
+    // Dungeon mode: the house's own floors/walls/doors/decor + a ladder and two markers (hidden in play).
+    // The old stone set (200-212) stays defined as legacy so stone-tile dungeons still load; it is not in the palette.
+    ["dng_ladder",      215, E, "dungeon", "Ladder Up (Start)",   "I", 21, 10, { walk: 1 }],
     ["dng_floor",       200, T, "dungeon", "Sandstone Floor",     "D", 16, 14],
     ["dng_flagstones",  201, T, "dungeon", "Flagstones",          "D", 16, 11],
     ["dng_wall",        202, T, "dungeon", "Stone Wall",          "D", 17, 0, { block: 1 }],
@@ -2660,7 +2662,8 @@ function houseDefs() {
     out[id] = { value, layer, cat, label, ...(sheet ? { sheet: S[sheet], col, row } : {}),
       ...(flags.emoji ? { emoji: flags.emoji } : {}),
       ...(flags.block ? { block: true } : {}), ...(flags.walk ? { walk: true } : {}),
-      ...(flags.wall ? { wall: true } : {}), ...(flags.door ? { door: true } : {}) };
+      ...(flags.wall ? { wall: true } : {}), ...(flags.door ? { door: true } : {}),
+      ...(value >= 200 && value <= 212 ? { legacy: true } : {}) };
   }
   return out;
 }
@@ -3705,7 +3708,7 @@ function loadAssetGrid() {
   const activeCategory = document.querySelector('.tab.active').dataset.category;
   const query = (document.getElementById('palette-search').value || '').trim().toLowerCase();
   for (const [tileId, def] of Object.entries(TILE_DEFS)) {
-    if (dungeonEdit ? def.cat !== "dungeon" && tileId !== "eraser" : def.cat === "dungeon") continue; // House / Dungeon piece sets
+    if (dungeonEdit ? !(def.cat === "dungeon" && !def.legacy) && !["floors", "decor"].includes(def.cat) && tileId !== "eraser" : def.cat === "dungeon") continue; // Dungeon mode = house floors/walls/doors/decor + ladder + markers
     if (query) { if (!def.label.toLowerCase().includes(query)) continue; } // search spans all tabs
     else if (!dungeonEdit && activeCategory !== "all" && def.cat !== activeCategory && tileId !== "eraser") continue;
     const cell = document.createElement('div');
@@ -4361,19 +4364,27 @@ const GRIDS = ["terrainMap", "entityMap", "terrainRot", "entityRot", "overlayMap
 function gridsNow() { return { terrainMap: copyGrid(terrainMap), entityMap: copyGrid(entityMap), terrainRot: copyGrid(terrainRot), entityRot: copyGrid(entityRot), overlayMap: copyGrid(overlayMap), overlayRot: copyGrid(overlayRot) }; }
 function setGrids(g) { terrainMap = copyGrid(g.terrainMap); entityMap = copyGrid(g.entityMap); terrainRot = copyGrid(g.terrainRot); entityRot = copyGrid(g.entityRot); overlayMap = copyGrid(g.overlayMap); overlayRot = copyGrid(g.overlayRot); }
 const blankGrids = () => ({ terrainMap: blankRotGrid(), entityMap: blankRotGrid(), terrainRot: blankRotGrid(), entityRot: blankRotGrid(), overlayMap: blankRotGrid(), overlayRot: blankRotGrid() });
-function sunkenCellar() { // the shipped example, built from the same pieces
-  const g = blankGrids(), F = DV("dng_floor"), W = DV("dng_wall");
+function sunkenCellar() { // the shipped example, built from the house's urban/indoor pieces (lints clean)
+  const g = blankGrids(), F = DV("oak_planks"), W = DV("gray_wall"), MID = DV("stone_tile"), BOSS = DV("rust_carpet");
   for (let c = 0; c < GRID_SIZE; c++) for (let r = 0; r < GRID_SIZE; r++) g.terrainMap[c][r] = W;
   const carve = (c0, r0, c1, r1, t = F) => { for (let c = c0; c <= c1; c++) for (let r = r0; r <= r1; r++) g.terrainMap[c][r] = t; };
-  carve(1, 1, 4, 4); carve(5, 3, 8, 3); carve(8, 3, 8, 5); carve(6, 5, 9, 9); carve(10, 7, 12, 7); carve(12, 7, 12, 9); carve(11, 9, 14, 14); carve(3, 5, 3, 10); carve(1, 10, 4, 14);
-  const put = (id, c, r) => { g.entityMap[c][r] = DV(id); };
-  put("dng_stairs", 2, 2); put("dng_brazier", 1, 1); put("dng_brazier", 4, 1); put("dng_door", 5, 3); put("dng_gate", 12, 8);
+  carve(1, 1, 4, 4); carve(5, 3, 8, 3); carve(8, 3, 8, 5); carve(6, 5, 9, 9, MID); carve(10, 7, 12, 7); carve(12, 7, 12, 8); carve(11, 9, 14, 13, BOSS); carve(3, 5, 3, 9); carve(1, 10, 4, 13);
+  const put = (id, c, r, rot = 0) => { const d = TILE_DEFS[id]; const [m, rm] = d.layer === "overlay" ? [g.overlayMap, g.overlayRot] : [g.entityMap, g.entityRot]; m[c][r] = d.value; rm[c][r] = rot; };
+  put("dng_ladder", 2, 2); put("candelabra", 1, 1); put("candelabra", 4, 1); put("door_wood", 5, 3, 1); put("door_double", 12, 8);
   put("dng_spawn", 8, 7); put("dng_spawn", 2, 12); put("dng_spawn", 11, 7); put("dng_boss", 13, 12);
-  put("dng_skull", 7, 6); put("dng_bones", 1, 14); put("dng_mushrooms", 4, 13); put("dng_pillar", 11, 10); put("dng_pillar", 14, 10); put("dng_torch", 11, 14); put("dng_torch", 14, 14); put("dng_crate", 9, 9);
+  put("produce_crate", 9, 9); put("small_plant", 6, 5); put("chandelier", 12, 11); put("candelabra", 11, 13); put("candelabra", 14, 13);
   return { name: "Sunken Cellar", ...g };
 }
 function loadDungeons() {
-  try { const l = JSON.parse(localStorage.getItem(DUNGEONS_KEY)); if (Array.isArray(l)) return l.filter(validShape); } catch (e) {}
+  try {
+    const l = JSON.parse(localStorage.getItem(DUNGEONS_KEY));
+    if (Array.isArray(l)) { // migrate the old stone-set example; other stone dungeons keep loading via the legacy pieces
+      let moved = false;
+      const out = l.filter(validShape).map(d => d.name === "Sunken Cellar" && d.terrainMap.flat().includes(DV("dng_wall")) ? (moved = true, sunkenCellar()) : d);
+      if (moved) saveDungeons(out);
+      return out;
+    }
+  } catch (e) {}
   const seed = [sunkenCellar()]; saveDungeons(seed); return seed; // first run: ship the example
 }
 function saveDungeons(list) { try { localStorage.setItem(DUNGEONS_KEY, JSON.stringify(list)); } catch (e) { showToast("Storage is full: dungeon not saved."); } }
@@ -4385,29 +4396,69 @@ function cellWalk(g, c, r) {
   if (!t) return !!(e && piece && piece.walk);
   return !BLOCKING_TERRAIN.includes(t) && (e === 0 || !!(piece && piece.walk));
 }
-function findCells(g, id) { const out = []; for (let c = 0; c < GRID_SIZE; c++) for (let r = 0; r < GRID_SIZE; r++) if (g.entityMap[c][r] === DV(id)) out.push([c, r]); return out; }
-function validateDungeon(g) { // 1 stairs, 1 boss spot, and a walkable path between them
-  const st = findCells(g, "dng_stairs"), bs = findCells(g, "dng_boss");
-  if (st.length !== 1) return `Needs exactly 1 Stairs Up (found ${st.length}).`;
-  if (bs.length !== 1) return `Needs exactly 1 Boss Spot (found ${bs.length}).`;
-  const seen = new Set([st[0].join()]), q = [st[0]];
+function findCells(g, ids) { const vs = [].concat(ids).map(DV), out = []; for (let c = 0; c < GRID_SIZE; c++) for (let r = 0; r < GRID_SIZE; r++) if (vs.includes(g.entityMap[c][r])) out.push([c, r]); return out; }
+const STAIRS = ["dng_ladder", "dng_stairs"]; // ladder (urban set) or the legacy stone stairs
+function pathOpen(g, a, b, extra) { // BFS over walkable cells (extra = one cell treated as open)
+  const seen = new Set([a.join()]), q = [a];
   while (q.length) {
     const [c, r] = q.shift();
-    if (c === bs[0][0] && r === bs[0][1]) return null;
-    for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = [c + dc, r + dr]; if (!seen.has(k.join()) && cellWalk(g, k[0], k[1])) { seen.add(k.join()); q.push(k); } }
+    if (c === b[0] && r === b[1]) return true;
+    for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = [c + dc, r + dr], key = k.join(); if (!seen.has(key) && (cellWalk(g, k[0], k[1]) || key === extra)) { seen.add(key); q.push(k); } }
   }
-  return "No walkable path from the Stairs Up to the Boss Spot.";
+  return false;
+}
+function validateDungeon(g) { // 1 stairs, 1 boss spot, and a walkable path between them
+  const st = findCells(g, STAIRS), bs = findCells(g, "dng_boss");
+  if (st.length !== 1) return `Needs exactly 1 Ladder / Stairs Up (found ${st.length}).`;
+  if (bs.length !== 1) return `Needs exactly 1 Boss Spot (found ${bs.length}).`;
+  return pathOpen(g, st[0], bs[0]) ? null : "No walkable path from the Stairs Up to the Boss Spot.";
 }
 function dungeonToMaze(d, boss) {
   const B = BOSSES[boss], [bc, br] = findCells(d, "dng_boss")[0], types = ["dishes", "laundry", "trash"];
   const foes = [{ col: bc, row: br, type: boss, boss, name: B.name, icon: B.icon, hp: B.hp, maxHp: B.hp, xpReward: 150, goldReward: 300 }];
   findCells(d, "dng_spawn").forEach(([c, r], i) => { const ch = CHORES[types[i % 3]]; foes.push({ col: c, row: r, type: ch.id, name: ch.name, icon: ch.icon, hp: ch.maxHp, maxHp: ch.maxHp, xpReward: ch.xpReward, goldReward: ch.goldReward * 2 }); });
   const entity = copyGrid(d.entityMap).map(col => col.map(v => v === DV("dng_spawn") || v === DV("dng_boss") ? 0 : v)); // markers vanish in play
-  return { start: findCells(d, "dng_stairs")[0], foes, room: { name: d.name, terrain: copyGrid(d.terrainMap), entity, terrainRot: copyGrid(d.terrainRot), entityRot: copyGrid(d.entityRot), overlay: copyGrid(d.overlayMap), overlayRot: copyGrid(d.overlayRot) } };
+  return { start: findCells(d, STAIRS)[0], foes, room: { name: d.name, terrain: copyGrid(d.terrainMap), entity, terrainRot: copyGrid(d.terrainRot), entityRot: copyGrid(d.entityRot), overlay: copyGrid(d.overlayMap), overlayRot: copyGrid(d.overlayRot) } };
 }
 function pickDungeon(boss) {
   const ok = loadDungeons().filter(d => !validateDungeon(d));
   return ok.length ? dungeonToMaze(ok[Math.floor(Math.random() * ok.length)], boss) : null;
+}
+// ---- FACING LINT: each piece exactly as drawn in the asset palette (rotation 0) is 'true north'; metadata lists
+// its open/solid sides as drawn (N,E,S,W) and the placed cell rotation turns them clockwise ----
+// open = passable sides (doors, ladders); face = decorated front that should look at the floor (walls).
+// No corner pieces exist in the set yet; a corner would use face: "SE" (two fronts).
+const FACING = {
+  door_wood: { open: "NS" }, door_glass: { open: "NS" }, door_teal: { open: "NS" }, door_double: { open: "NS" }, dng_door: { open: "NS" }, dng_gate: { open: "NS" },
+  dng_ladder: { open: "S" }, dng_stairs: { open: "S" },
+  wall: { face: "S" }, plaster_wall: { face: "S" }, gray_wall: { face: "S" }, wood_wall: { face: "S" }, dng_wall: { face: "S" }
+};
+const SIDES = "NESW", STEP = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
+const turnSides = (sides, rot) => [...sides].map(x => SIDES[(SIDES.indexOf(x) + (rot || 0)) % 4]);
+const idOf = (layer, v) => Object.keys(TILE_DEFS).find(k => TILE_DEFS[k].layer === layer && TILE_DEFS[k].value === v);
+function lintGrids(g, withPath = true) {
+  const warn = [], N = GRID_SIZE, isVoid = (c, r) => c < 0 || r < 0 || c >= N || r >= N || (!g.terrainMap[c][r] && !g.entityMap[c][r]);
+  for (let c = 0; c < N; c++) for (let r = 0; r < N; r++) {
+    const eid = g.entityMap[c][r] && idOf("entity", g.entityMap[c][r]), ef = FACING[eid];
+    if (ef && ef.open) for (const side of turnSides(ef.open, g.entityRot[c][r])) {
+      const [dc, dr] = STEP[side];
+      if (!cellWalk(g, c + dc, r + dr)) warn.push(`${TILE_DEFS[eid].label} at (${c},${r}): its ${side} side opens into a wall or void (rotate it).`);
+    }
+    const tid = g.terrainMap[c][r] && idOf("terrain", g.terrainMap[c][r]), tf = FACING[tid];
+    if (tf && tf.face && !g.entityMap[c][r]) for (const side of turnSides(tf.face, g.terrainRot[c][r])) {
+      const [dc, dr] = STEP[side];
+      if (isVoid(c + dc, r + dr) && cellWalk(g, c - dc, r - dr)) warn.push(`${TILE_DEFS[tid].label} at (${c},${r}): its front faces the void (${side}) while its back touches the floor (rotate 180).`);
+    }
+  }
+  const st = findCells(g, STAIRS), bs = findCells(g, "dng_boss");
+  if (withPath && st.length === 1 && bs.length === 1 && !pathOpen(g, st[0], bs[0])) {
+    for (let c = 0; c < N; c++) for (let r = 0; r < N; r++) {
+      if (cellWalk(g, c, r) || warn.length > 12 || !pathOpen(g, st[0], bs[0], c + "," + r)) continue;
+      const e = g.entityMap[c][r], t = g.terrainMap[c][r], id = (e && idOf("entity", e)) || (t && idOf("terrain", t));
+      warn.push(`Blocks the stairs-to-boss path: ${id ? TILE_DEFS[id].label : "empty void"} at (${c},${r}).`);
+    }
+  }
+  return warn;
 }
 function dgMsg(text, bad) { const m = document.getElementById("dg-msg"); m.textContent = text; m.classList.toggle("bad", !!bad); if (text) showToast(text, 2600); }
 function renderDungeonBar() {
@@ -4420,12 +4471,13 @@ function openDungeon(d) { setGrids(d); dungeonEdit.name = d.name; renderDungeonB
 function enterDungeonMode() {
   if (dungeonEdit) return;
   dungeonEdit = { house: gridsNow(), name: "" };
+  document.querySelectorAll('.browser-tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.category === 'all'));
   const list = loadDungeons();
   if (dungeonDraft) { setGrids(dungeonDraft); dungeonEdit.name = dungeonDraft.name; } else if (list.length) { setGrids(list[0]); dungeonEdit.name = list[0].name; } else { setGrids(blankGrids()); dungeonEdit.name = "New Dungeon"; }
   document.getElementById("dungeon-bar").hidden = false;
   document.getElementById("dungeon-mode-btn").lastChild.textContent = "House Mode";
   document.querySelector(".browser-tabs").style.display = "none";
-  selectTile("dng_floor"); renderDungeonBar(); dgMsg(""); loadAssetGrid(); drawMap();
+  selectTile("oak_planks"); renderDungeonBar(); dgMsg(""); loadAssetGrid(); drawMap();
 }
 function exitDungeonMode() {
   if (!dungeonEdit) return;
@@ -4439,11 +4491,12 @@ function exitDungeonMode() {
 function saveCurrentDungeon() {
   const name = document.getElementById("dg-name").value.trim().slice(0, 30), g = gridsNow();
   if (!name) return dgMsg("Give the dungeon a name first.", true), false;
-  const err = validateDungeon(g);
-  if (err) return dgMsg("Not saved: " + err, true), false;
+  const err = validateDungeon(g), lint = lintGrids(g);
+  if (err) return dgMsg("Not saved: " + err + (lint.length ? " " + lint.slice(0, 3).join(" ") : ""), true), false;
   const list = loadDungeons().filter(d => d.name !== name);
   list.push({ name, ...g }); saveDungeons(list);
-  dungeonEdit.name = name; renderDungeonBar(); dgMsg(`Saved "${name}". It can now appear when you are banished or Descend.`);
+  dungeonEdit.name = name; renderDungeonBar();
+  dgMsg(`Saved "${name}". It can now appear when you are banished or Descend.` + (lint.length ? ` Warning (${lint.length}): ${lint.slice(0, 3).join(" ")}` : ""));
   return true;
 }
 function deleteDungeon() {
@@ -4476,7 +4529,9 @@ window.ddDebug = { // dev/test hooks (quest timers can be stubbed)
   breakStreak() { daily.lastDay = dayKey(-3); daily.streak = 5; saveDaily(); },
   fillGrime() { daily.grime = 100; saveDaily(); updateDailyHUD(); },
   clear() { daily.pending = null; daily.grime = 0; saveDaily(); updateDailyHUD(); },
-  banish: b => banish(b), check: () => checkCurse(), state: () => ({ ...daily, maze: maze && maze.boss })
+  banish: b => banish(b),
+  lintDungeon(name) { const d = name ? loadDungeons().find(x => x.name === name) : dungeonEdit ? gridsNow() : loadDungeons()[0]; return d ? lintGrids(d) : null; },
+  lintHouse() { return lintGrids(dungeonEdit ? dungeonEdit.house : gridsNow(), false); }, // advisory only: house saves are never blocked check: () => checkCurse(), state: () => ({ ...daily, maze: maze && maze.boss })
 };
 
 function newMap() {
