@@ -3062,6 +3062,22 @@ function getRoom(x, y) {
   return activeRooms[roomKey(x, y)];
 }
 
+/* front-wall curtains (house bottom wall row) were placed rotated 180 and hung upside down: set them upright */
+function fixFrontCurtains(om, orot) {
+  const cur = [TILE_DEFS.curtains_orange.value, TILE_DEFS.curtains_teal.value], r = GRID_SIZE - 2;
+  for (let c = 0; c < GRID_SIZE; c++) if (cur.includes(om[c][r]) && orot[c][r] === 2) orot[c][r] = 0;
+}
+/* top bar: name the house room from the floor under the hero (dungeon rooms keep their own name) */
+const ZONE_NAMES = { cream_tile: "Kitchen", stone_tile: "Laundry", white_tile: "Bathroom", oak_planks: "Living Room", green_carpet: "Bedroom", gravel_path: "Porch" };
+let zoneName = "";
+function updateZoneName(room) {
+  if (maze || !room || !room.terrain[player.x]) return;
+  const t = room.terrain[player.x][player.y], id = Object.keys(ZONE_NAMES).find(k => TILE_DEFS[k].value === t);
+  const name = id ? ZONE_NAMES[id] : zoneName || currentRoomName; /* doorways and walls keep the last room */
+  if (name === zoneName && document.getElementById("game-room-name").textContent === name) return;
+  zoneName = name; document.getElementById("game-room-name").textContent = name;
+  const sub = document.querySelector("#stage .room-name .sub"); if (sub) sub.textContent = `Floor 01 · Sub Level: ${name}`;
+}
 function addRoom(x, y, name) {
   activeRooms[roomKey(x, y)] = {
     x, y, name,
@@ -3242,6 +3258,7 @@ function drawRoom() {
   const room = currentRoomData();
   if (!room) return;
   drawTiles(roomCtx, room.terrain, room.entity, room.terrainRot, room.entityRot, room.overlay, room.overlayRot);
+  updateZoneName(room);
 
   if (maze && !maze.custom) { // generated-maze shading: walls sink into darkness so the corridors read clearly
     for (let c = 0; c < GRID_SIZE; c++) for (let r = 0; r < GRID_SIZE; r++) {
@@ -4366,6 +4383,7 @@ function loadGameData() {
       overlayRot = validRotGrid(data.overlayRot);
       migrateLayers();
       migrateOverlay();
+      fixFrontCurtains(overlayMap, overlayRot);
       player = data.player || player;
       currentRoom = data.currentRoom || currentRoom;
       monsters = data.monsters || monsters;
@@ -4834,7 +4852,7 @@ function starterHouse() { // premade upstairs: kitchen, laundry nook, bath (top)
   // bedroom
   put("wardrobe", 11, 7); put("dresser", 13, 7); put("quilt_bed", 14, 9); put("nightstand", 14, 11); put("teal_rug", 12, 10); put("laundry_basket", 11, 13); put("candle_stand", 14, 13);
   // windows + curtains, porch
-  for (const [c, r] of [[3, 0], [8, 0], [13, 0], [2, 14], [8, 14], [12, 14]]) { put("window_wood", c, r, r ? 2 : 0); put("curtains_orange", c, r, r ? 2 : 0); }
+  for (const [c, r] of [[3, 0], [8, 0], [13, 0], [2, 14], [8, 14], [12, 14]]) { put("window_wood", c, r, r ? 2 : 0); put("curtains_orange", c, r); } // curtains always hang rod-up
   put("mailbox", 3, 15); put("red_flowers", 7, 15); put("bush", 10, 15);
   return g;
 }
