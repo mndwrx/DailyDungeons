@@ -1729,6 +1729,9 @@
   #dialogue.compact #dlg-text { font-size: 14px; min-height: 0; }
   #dlg-arrow { position: absolute; right: 12px; bottom: 6px; width: 0; height: 0; border: 7px solid transparent; border-top: 9px solid #ffd700; border-bottom: 0; visibility: hidden; animation: dlg-blink .8s steps(2) infinite; }
   #dlg-arrow.on { visibility: visible; }
+  #dlg-choices { display: flex; gap: 10px; margin-top: 8px; }
+  #dlg-choices:empty { display: none; }
+  #dlg-choices button { min-width: 84px; }
   @keyframes dlg-blink { 50% { opacity: 0; } }
   #replay-intro { background: none; border: 0; color: #d9b77a; font: inherit; text-decoration: underline; cursor: pointer; padding: 0 0 0 6px; }
   #shop-say { display: none; }
@@ -1971,8 +1974,7 @@
     </div>
     <div id="dungeon-bar" hidden>
       <input id="dg-name" maxlength="30" placeholder="Dungeon name" aria-label="Dungeon name">
-      <select id="dg-list" aria-label="Saved dungeons"></select>
-      <button id="dg-open" class="hero-btn">Open</button><button id="dg-save" class="hero-btn primary">Save</button><button id="dg-new" class="hero-btn">New</button><button id="dg-delete" class="hero-btn">Delete</button>
+      <button id="dg-save" class="hero-btn primary">Save</button><button id="dg-play" class="hero-btn">Play</button>
       <button id="dg-export" class="hero-btn">Export</button><button id="dg-import" class="hero-btn">Import</button><input type="file" id="dg-file" accept=".json,application/json" hidden>
       <span id="dg-msg"></span>
     </div>
@@ -2227,7 +2229,7 @@
   <div id="qb-list"></div><div id="qb-editor" hidden></div>
   <input type="file" id="qb-photo" accept="image/*" capture="environment" hidden>
 </div></div>
-<div id="dialogue"><div class="dlg-box" id="dlg-box"><canvas id="dlg-portrait" width="80" height="80"></canvas><div class="dlg-main"><div id="dlg-name"></div><div id="dlg-text"></div></div><span id="dlg-arrow"></span></div></div>
+<div id="dialogue"><div class="dlg-box" id="dlg-box"><canvas id="dlg-portrait" width="80" height="80"></canvas><div class="dlg-main"><div id="dlg-name"></div><div id="dlg-text"></div><div id="dlg-choices"></div></div><span id="dlg-arrow"></span></div></div>
 <div id="loot-popup"><div class="loot-box"><h2 class="loot-title">Loot!</h2><div class="loot-list" id="loot-list"></div><button class="hero-btn" id="loot-ok">Nice!</button></div></div>
 
 <!-- ===== TOAST ===== -->
@@ -3979,14 +3981,15 @@ const QUEST_LINES = {
 let dlg = null;
 function showDialogue(lines, cb, opts = {}) {
   if (dlg) { clearInterval(dlg.timer); clearTimeout(dlg.auto); }
-  dlg = { lines, i: -1, cb, compact: !!opts.compact, full: true };
+  dlg = { lines, i: -1, cb, compact: !!opts.compact, full: true, choices: opts.choices };
+  document.getElementById("dlg-choices").innerHTML = "";
   const el = document.getElementById("dialogue");
   el.classList.add("open"); el.classList.toggle("compact", dlg.compact);
   if (!dlg.compact) { stopWalking(); if (document.activeElement) document.activeElement.blur(); }
   dialogueNext();
 }
 function dialogueNext() {
-  if (!dlg) return;
+  if (!dlg || (dlg.choices && dlg.full && dlg.i === dlg.lines.length - 1)) return; // Yes/No: wait for a button
   const line = dlg.lines[dlg.i], textEl = document.getElementById("dlg-text");
   if (!dlg.full) { clearInterval(dlg.timer); textEl.textContent = line.text; dlg.full = true; dialogueTyped(); return; } // skip typing
   clearTimeout(dlg.auto);
@@ -4003,16 +4006,23 @@ function dialogueNext() {
 }
 function dialogueTyped() {
   document.getElementById("dlg-arrow").classList.add("on");
+  if (dlg.choices && dlg.i === dlg.lines.length - 1) { // in-game Yes/No: replaces the native browser dialog
+    document.getElementById("dlg-arrow").classList.remove("on");
+    const box = document.getElementById("dlg-choices"), d = dlg;
+    d.choices.forEach(([label, fn], k) => { const b = document.createElement("button"); b.className = "hero-btn" + (k ? "" : " primary"); b.textContent = label;
+      b.addEventListener("click", e => { e.stopPropagation(); if (dlg !== d) return; d.cb = fn; closeDialogue(); }); box.appendChild(b); });
+  }
   if (dlg.compact && dlg.i === dlg.lines.length - 1) { const d = dlg; dlg.auto = setTimeout(() => { if (dlg === d) closeDialogue(); }, 3500); }
 }
 function closeDialogue() {
   if (!dlg) return;
   clearInterval(dlg.timer); clearTimeout(dlg.auto);
-  document.getElementById("dialogue").classList.remove("open", "compact");
+  document.getElementById("dialogue").classList.remove("open", "compact"); document.getElementById("dlg-choices").innerHTML = "";
   const cb = dlg.cb; dlg = null;
   if (cb) cb();
 }
-function maybeIntro(next) {
+function askYesNo(text, yes, no) { showDialogue([{ speaker: SPEAKERS.elder, portrait: "elder", text }], null, { choices: [["Yes", yes], ["No", no]] }); }
+function maybeIntro(next = () => {}) {
   let seen = false; try { seen = !!localStorage.getItem(INTRO_KEY); localStorage.setItem(INTRO_KEY, "1"); } catch (e) {}
   if (seen) next(); else showDialogue(INTRO_LINES, next);
 }
@@ -4107,9 +4117,9 @@ function genMaze(boss) {
   }
   return { room: { name: "The Dungeon Below", terrain: T, entity: Array.from({ length: N }, () => Array(N).fill(0)), terrainRot: blankRotGrid(), entityRot: blankRotGrid(), overlay: blankRotGrid(), overlayRot: blankRotGrid() }, foes };
 }
-function enterMaze(boss, banished) {
+function enterMaze(boss, banished, only) { // only = a specific dungeon (builder Play test)
   closeDialogue(); stopWalking();
-  const g = pickDungeon(boss) || genMaze(boss); // a valid hand-built dungeon at random, else the random maze
+  const g = (only ? dungeonToMaze(only, boss) : pickDungeon(boss)) || genMaze(boss); // a valid hand-built dungeon at random, else the random maze
   maze = { boss, banished, room: g.room, custom: !!g.start, stash: { player: { ...player }, monsters, prevPos } };
   const [sx, sy] = g.start || [1, 1];
   monsters = g.foes; player.x = sx; player.y = sy; prevPos = { x: sx, y: sy }; ambushSuppressed = new Set();
@@ -4378,11 +4388,11 @@ function sunkenCellar() { // the shipped example, built from the house's urban/i
 function loadDungeons() {
   try {
     const l = JSON.parse(localStorage.getItem(DUNGEONS_KEY));
-    if (Array.isArray(l)) { // migrate the old stone-set example; other stone dungeons keep loading via the legacy pieces
+    if (Array.isArray(l)) { // ONE dungeon below: old multi-dungeon saves keep the first. Also migrate the old stone-set example; other stone dungeons keep loading via the legacy pieces
       let moved = false;
-      const out = l.filter(validShape).map(d => d.name === "Sunken Cellar" && d.terrainMap.flat().includes(DV("dng_wall")) ? (moved = true, sunkenCellar()) : d);
-      if (moved) saveDungeons(out);
-      return out;
+      const out = l.filter(validShape).slice(0, 1).map(d => d.name === "Sunken Cellar" && d.terrainMap.flat().includes(DV("dng_wall")) ? (moved = true, sunkenCellar()) : d);
+      if (moved || l.length > 1) saveDungeons(out);
+      if (out.length) return out;
     }
   } catch (e) {}
   const seed = [sunkenCellar()]; saveDungeons(seed); return seed; // first run: ship the example
@@ -4421,8 +4431,8 @@ function dungeonToMaze(d, boss) {
   return { start: findCells(d, STAIRS)[0], foes, room: { name: d.name, terrain: copyGrid(d.terrainMap), entity, terrainRot: copyGrid(d.terrainRot), entityRot: copyGrid(d.entityRot), overlay: copyGrid(d.overlayMap), overlayRot: copyGrid(d.overlayRot) } };
 }
 function pickDungeon(boss) {
-  const ok = loadDungeons().filter(d => !validateDungeon(d));
-  return ok.length ? dungeonToMaze(ok[Math.floor(Math.random() * ok.length)], boss) : null;
+  const d = loadDungeons()[0]; // the one dungeon below; invalid -> random maze fallback
+  return d && !validateDungeon(d) ? dungeonToMaze(d, boss) : null;
 }
 // ---- FACING LINT: each piece exactly as drawn in the asset palette (rotation 0) is 'true north'; metadata lists
 // its open/solid sides as drawn (N,E,S,W) and the placed cell rotation turns them clockwise ----
@@ -4462,9 +4472,6 @@ function lintGrids(g, withPath = true) {
 }
 function dgMsg(text, bad) { const m = document.getElementById("dg-msg"); m.textContent = text; m.classList.toggle("bad", !!bad); if (text) showToast(text, 2600); }
 function renderDungeonBar() {
-  const list = loadDungeons(), sel = document.getElementById("dg-list");
-  sel.innerHTML = list.map((d, i) => `<option value="${i}"></option>`).join("");
-  [...sel.options].forEach((o, i) => { o.textContent = list[i].name; if (dungeonEdit && list[i].name === dungeonEdit.name) o.selected = true; });
   document.getElementById("dg-name").value = dungeonEdit ? dungeonEdit.name : "";
 }
 function openDungeon(d) { setGrids(d); dungeonEdit.name = d.name; renderDungeonBar(); drawMap(); }
@@ -4473,7 +4480,7 @@ function enterDungeonMode() {
   dungeonEdit = { house: gridsNow(), name: "" };
   document.querySelectorAll('.browser-tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.category === 'all'));
   const list = loadDungeons();
-  if (dungeonDraft) { setGrids(dungeonDraft); dungeonEdit.name = dungeonDraft.name; } else if (list.length) { setGrids(list[0]); dungeonEdit.name = list[0].name; } else { setGrids(blankGrids()); dungeonEdit.name = "New Dungeon"; }
+  if (list.length) { /* always the actual single dungeon below */ setGrids(list[0]); dungeonEdit.name = list[0].name; } else { setGrids(blankGrids()); dungeonEdit.name = "New Dungeon"; }
   document.getElementById("dungeon-bar").hidden = false;
   document.getElementById("dungeon-mode-btn").lastChild.textContent = "House Mode";
   document.querySelector(".browser-tabs").style.display = "none";
@@ -4493,16 +4500,16 @@ function saveCurrentDungeon() {
   if (!name) return dgMsg("Give the dungeon a name first.", true), false;
   const err = validateDungeon(g), lint = lintGrids(g);
   if (err) return dgMsg("Not saved: " + err + (lint.length ? " " + lint.slice(0, 3).join(" ") : ""), true), false;
-  const list = loadDungeons().filter(d => d.name !== name);
-  list.push({ name, ...g }); saveDungeons(list);
+  saveDungeons([{ name, ...g }]); // replaces the one dungeon below
   dungeonEdit.name = name; renderDungeonBar();
-  dgMsg(`Saved "${name}". It can now appear when you are banished or Descend.` + (lint.length ? ` Warning (${lint.length}): ${lint.slice(0, 3).join(" ")}` : ""));
+  dgMsg(`Saved "${name}". Banishment and Descend now lead here.` + (lint.length ? ` Warning (${lint.length}): ${lint.slice(0, 3).join(" ")}` : ""));
   return true;
 }
-function deleteDungeon() {
-  const list = loadDungeons(), i = +document.getElementById("dg-list").value, d = list[i];
-  if (!d) return;
-  list.splice(i, 1); saveDungeons(list); renderDungeonBar(); dgMsg(`Deleted "${d.name}".`);
+function playDungeon() { // save, then drop the hero straight in: start on the ladder, foes and boss live (Ascend returns)
+  if (!saveCurrentDungeon()) return false;
+  const d = loadDungeons()[0], keys = Object.keys(BOSSES);
+  showScreen("play"); enterMaze(keys[Math.floor(Math.random() * keys.length)], false, d);
+  return true;
 }
 function exportDungeon() {
   const g = { name: document.getElementById("dg-name").value.trim() || "dungeon", ...gridsNow() };
@@ -4515,10 +4522,8 @@ function importDungeonText(text) {
   let data; try { data = JSON.parse(text); } catch (e) { return dgMsg("Import failed: not a JSON file.", true), false; }
   const items = (Array.isArray(data) ? data : [data]).filter(validShape);
   if (!items.length) return dgMsg("Import failed: no dungeon found in that file.", true), false;
-  const list = loadDungeons();
-  for (const d of items) { let n = d.name.slice(0, 30) || "Imported"; while (list.some(x => x.name === n)) n += " (2)"; list.push({ ...d, name: n }); }
-  saveDungeons(list); openDungeon(list[list.length - 1]);
-  dgMsg(`Imported ${items.length} dungeon${items.length > 1 ? "s" : ""}. Save it after checking it.`);
+  const d = items[0]; openDungeon({ ...d, name: d.name.slice(0, 30) || "Imported" }); // opens in the editor; Save makes it the dungeon below
+  dgMsg(`Imported "${dungeonEdit.name}". Save it to make it the dungeon below.`);
   return true;
 }
 
@@ -4534,8 +4539,8 @@ window.ddDebug = { // dev/test hooks (quest timers can be stubbed)
   lintHouse() { return lintGrids(dungeonEdit ? dungeonEdit.house : gridsNow(), false); }, // advisory only: house saves are never blocked check: () => checkCurse(), state: () => ({ ...daily, maze: maze && maze.boss })
 };
 
-function newMap() {
-  if (!confirm("Start a brand new dungeon?")) return;
+function newMap() { askYesNo("Start a brand new dungeon? Your current house map and progress will be wiped.", newMapNow); }
+function newMapNow() {
   terrainMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
   entityMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
   terrainRot = blankRotGrid();
@@ -4887,7 +4892,7 @@ document.getElementById('menu-btn').addEventListener('click', () => showScreen('
 document.getElementById('builder-menu-btn').addEventListener('click', () => showScreen('menu'));
 document.getElementById('builder-palette-btn').addEventListener('click', openAssetBrowser);
 document.getElementById('builder-chores-btn').addEventListener('click', openChoreLog);
-document.getElementById('builder-play-btn').addEventListener('click', () => maybeIntro(enterPlayMode));
+document.getElementById('builder-play-btn').addEventListener('click', () => { enterPlayMode(); maybeIntro(); });
 document.getElementById('browser-close').addEventListener('click', closeAssetBrowser);
 document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListener('click', () => {
   document.querySelectorAll('.browser-tabs .tab').forEach(t => t.classList.remove('active'));
@@ -4895,13 +4900,11 @@ document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListe
   loadAssetGrid();
 }));
 document.getElementById('palette-search').addEventListener('input', loadAssetGrid);
-document.getElementById('new-map-btn').addEventListener('click', () => maybeIntro(newMap));
+document.getElementById('new-map-btn').addEventListener('click', newMap);
 document.getElementById('descend-btn').addEventListener('click', toggleDescend);
 document.getElementById('dungeon-mode-btn').addEventListener('click', () => dungeonEdit ? exitDungeonMode() : enterDungeonMode());
-document.getElementById('dg-open').addEventListener('click', () => { const d = loadDungeons()[+document.getElementById('dg-list').value]; if (d) { openDungeon(d); dgMsg(`Opened "${d.name}".`); } });
 document.getElementById('dg-save').addEventListener('click', saveCurrentDungeon);
-document.getElementById('dg-new').addEventListener('click', () => { openDungeon({ name: "New Dungeon", ...blankGrids() }); dgMsg("New dungeon: place Stairs Up and a Boss Spot."); });
-document.getElementById('dg-delete').addEventListener('click', deleteDungeon);
+document.getElementById('dg-play').addEventListener('click', playDungeon);
 document.getElementById('dg-export').addEventListener('click', exportDungeon);
 document.getElementById('dg-import').addEventListener('click', () => document.getElementById('dg-file').click());
 document.getElementById('dg-file').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) f.text().then(importDungeonText); e.target.value = ''; });
@@ -4930,7 +4933,7 @@ document.addEventListener('keydown', (e) => {
   e.preventDefault(); e.stopImmediatePropagation(); dialogueNext();
 }, true);
 document.getElementById('edit-map-btn').addEventListener('click', enterEditMode);
-document.getElementById('play-map-btn').addEventListener('click', enterPlayMode);
+document.getElementById('play-map-btn').addEventListener('click', () => { enterPlayMode(); maybeIntro(); }); // intro plays right after Play (first time)
 document.getElementById('chore-log-btn').addEventListener('click', openChoreLog);
 document.getElementById('toggle-edit').addEventListener('click', enterEditMode);
 document.getElementById('battle-speed').addEventListener('click', toggleBattleSpeed); // the only button mid-battle
