@@ -3861,7 +3861,7 @@ function drawTitleArt() {
   { const W = coins.naturalWidth, H = coins.naturalHeight, hw = Math.round(W * 1.3), hh = Math.round(H * 1.55); /* 3 overlapped copies -> one bigger heap */
     heap.width = hw; heap.height = hh; heap.style.width = "26%"; heap.style.height = "auto"; /* sized to the banner, so it scales with the card */
     const hx = heap.getContext("2d"); hx.imageSmoothingEnabled = false;
-    [[0.62, W * 0.30, 0], [0.9, 0, hh - H * 0.9 - H * 0.1], [1.0, W * 0.3, hh - H]] /* small crown on top, two wide piles below */.forEach(([k, dx, dy]) => hx.drawImage(coins, Math.round(dx), Math.round(dy), Math.round(W * k), Math.round(H * k))); }
+    [[0.62, W * 0.30, H * 0.2], [0.9, 0, hh - H * 0.9 - H * 0.1], [1.0, W * 0.3, hh - H]] /* small crown on top (nudged ~8px down at 1280 card scale), two wide piles below */.forEach(([k, dx, dy]) => hx.drawImage(coins, Math.round(dx), Math.round(dy), Math.round(W * k), Math.round(H * k))); }
   heap.style.marginTop = "0"; // heap peeks out behind the title's lower edge (crest makes the h1 taller than the text)
   placeMenuCard();
 }
