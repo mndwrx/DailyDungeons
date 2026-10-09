@@ -3839,17 +3839,16 @@ function drawTitleArt() {
   const bbox = c => { const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
     for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (d[(y * c.width + x) * 4 + 3] > 0) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
     return [x0, y0, x1 - x0 + 1, y1 - y0 + 1]; };
-  const c1 = document.createElement("canvas"); c1.width = c1.height = 24;
-  let x = c1.getContext("2d"); x.imageSmoothingEnabled = false;
-  x.save(); x.translate(12, 12); x.rotate(-Math.PI / 4); x.drawImage(weaponSheet, 16, 0, 16, 16, -8, -8, 16, 16); x.restore(); // sword crossing behind
-  x.drawImage(ch, 38 * 17, 8 * 17, 16, 16, 0, 1, 16, 16);                        // teal heater shield (cell art sits at 8..16, 6..16)
-  n = cn; blit(crest, c1, ...bbox(c1));
-  const c2 = document.createElement("canvas"); c2.width = 46; c2.height = 48;
-  x = c2.getContext("2d"); x.imageSmoothingEnabled = false;
-  const P = (c, r, dx, dy) => x.drawImage(rpg, c * 17, r * 17, 16, 16, dx, dy + 12, 16, 16);
-  [[45, 11, 0, 2], [45, 11, 0, -5], [45, 11, 28, 4], [45, 11, 28, -3], [43, 11, 12, 0], [42, 11, 4, 10], [42, 11, 22, 10],
-   [43, 11, 12, 12]].forEach(a => P(...a)); // back stacks first, big pile in front
-  const hb = bbox(c2); n = hn; blit(heap, c2, ...hb);
+  const art = drawTitleArt.crest || (drawTitleArt.crest = Object.assign(new Image(), { src: "assets/ui/crest.png" })); /* crest art with a soft feathered alpha */
+  if (!art.complete || !art.naturalWidth) { crest.dataset.n = ""; if ((drawTitleArt.tries = (drawTitleArt.tries || 0) + 1) < 60) setTimeout(drawTitleArt, 200); return; }
+  { const ch2 = Math.round(cn * 22), cw2 = Math.round(ch2 * art.naturalWidth / art.naturalHeight); /* same height as the old cn-scaled 22px crest */
+    crest.width = cw2; crest.height = ch2; crest.style.width = cw2 / zoom + "px"; crest.style.height = ch2 / zoom + "px";
+    const cx = crest.getContext("2d"); cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = "high"; cx.drawImage(art, 0, 0, cw2, ch2); }
+  const coins = drawTitleArt.coins || (drawTitleArt.coins = Object.assign(new Image(), { src: "assets/ui/coin-pile.png" })); /* coin-pile art, already tight-cropped with real alpha */
+  if (!coins.complete || !coins.naturalWidth) { crest.dataset.n = ""; if ((drawTitleArt.tries = (drawTitleArt.tries || 0) + 1) < 60) setTimeout(drawTitleArt, 200); return; }
+  { const hw = 46 * hn, hh = Math.round(hw * coins.naturalHeight / coins.naturalWidth); /* old Kenney heap footprint: 46px at scale hn */
+    heap.width = hw; heap.height = hh; heap.style.width = hw / zoom + "px"; heap.style.height = hh / zoom + "px";
+    const hx = heap.getContext("2d"); hx.imageSmoothingEnabled = true; hx.imageSmoothingQuality = "high"; hx.drawImage(coins, 0, 0, hw, hh); }
   heap.style.marginTop = -Math.round(Math.max(0, crest.height - titlePx) / 2 + titlePx * (hn > 1 ? 0.6 : 0.4)) / zoom + "px"; // heap peeks out behind the title's lower edge (crest makes the h1 taller than the text)
   placeMenuCard();
 }
@@ -4201,7 +4200,7 @@ function loadGameData() {
 const ELDER = { body: [0, 0], pants: [3, 5], shoes: [4, 5], shirt: [14, 0], hairStyle: 3, hairColor: 4, hat: [30, 8], shield: null, weapon: [42, 0] };
 const PORTRAITS = { elder: () => ELDER, shopkeeper: () => SHOPKEEPER, hero: () => hero };
 const SPEAKERS = { elder: "Elder Wizard", shopkeeper: "Shopkeeper" };
-const INTRO_KEY = "dd_intro_seen";
+const INTRO_KEY = "dd_honor_v1"; /* new key per honor-code version: old dd_intro_seen flags must not skip it */
 const INTRO_LINES = [
   "Hearth Keeper! At last you wake.",
   "This humble house sits atop an ancient dungeon.",
