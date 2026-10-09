@@ -1745,7 +1745,7 @@
   .asset-item.selected { border-image-source: url("assets/9-Slice/Ancient/brown_inlay.png"); background: #8a6a3e; box-shadow: 0 0 0 2px #ffd700; }
   .asset-item.selected .label { color: var(--wood-text); }
   .asset-item .swatch, .builder-swatch { border-color: #6e4b2c; background-color: #2a1a0c; }
-  .asset-item, .asset-item.selected { border: 0; border-image: none; background: url("assets/ui/rune-tile.png") center / 100% 100% no-repeat; image-rendering: pixelated; }
+  .asset-item, .asset-item.selected { border: 0; border-image: none; background: rgba(0, 0, 0, .22); border-radius: 4px; image-rendering: pixelated; }
   .asset-item.selected { box-shadow: 0 0 0 2px #ffd700, 0 0 8px #ffd700; }
   .asset-item .swatch { background-color: transparent; border-color: transparent; }
   .asset-item .label, .asset-item.selected .label { color: #5a6cff; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000, 0 0 4px #5a6cff, 0 0 8px #5a6cff; }
@@ -1846,6 +1846,22 @@
   #dg-msg.bad { color: #ff8a7a; }
   #quest-board { position: fixed; inset: 0; z-index: 8500; display: none; align-items: center; justify-content: center; background: rgba(0, 0, 0, .55); }
   #quest-board.open { display: flex; }
+  #inv-board { position: fixed; inset: 0; z-index: 8500; display: none; align-items: center; justify-content: center; background: rgba(0, 0, 0, .55); }
+  #inv-board.open { display: flex; }
+  #inv-board .inv-grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .iv-slot { display: flex; align-items: center; gap: 6px; padding: 4px; background: #2a1a0c; border: 2px solid #d9b77a; box-shadow: inset 0 0 0 2px #000; font-size: 12px; color: #f3e6c8; }
+  .iv-slot .iv-ico { flex: none; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #140d08; border: 2px solid #8a6a3e; position: relative; }
+  .iv-slot .iv-n { position: absolute; right: 1px; bottom: 0; font-size: 10px; color: #ffd700; text-shadow: 1px 1px 0 #000; }
+  .iv-slot .iv-main { flex: 1; min-width: 0; } .iv-slot .iv-sub { color: #f0c860; font-size: 10px; }
+  .iv-slot button { font-size: 11px; padding: 1px 6px; }
+  .iv-slot.on { border-color: #ffd700; box-shadow: inset 0 0 0 2px #000, 0 0 6px #ffd700; }
+  #inv-equip { font-size: 12px; color: #f0c860; margin: 2px 0 8px; }
+  #quick-potion { display: inline-flex; align-items: center; gap: 4px; }
+  .fx-poof { position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; pointer-events: none; z-index: 30; border-radius: 50%; background: radial-gradient(circle, #fff 0 20%, #e8e0d0 21% 45%, transparent 46%); box-shadow: 14px -6px 0 -8px #f3e6c8, -14px 4px 0 -8px #f3e6c8, 2px 14px 0 -9px #ddd; animation: fx-poof .55s ease-out forwards; }
+  @keyframes fx-poof { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+  .fx-loot { position: absolute; transform: translateX(-50%); pointer-events: none; z-index: 31; white-space: nowrap; font-family: var(--fx-font); font-size: 10px; color: #ffd700; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; animation: fx-rise 1.8s ease-out forwards; }
+  .fx-loot.rare { color: #7dffb0; }
+  @keyframes fx-rise { 0% { opacity: 0; margin-top: 0; } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; margin-top: -34px; } }
   .qb-panel { width: min(720px, 94vw); max-height: 88vh; overflow: auto; box-sizing: border-box; padding: 8px 12px; border: 16px solid; border-image: url("assets/9-Slice/Ancient/brown_inlay.png") 12 fill / 16px; background: #4a3019; color: var(--wood-text); }
   .qb-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
   .qb-head h2 { margin: 0; flex: 1; font-family: var(--fx-font); color: #ffd700; font-size: 18px; text-shadow: 1px 1px 0 #000; }
@@ -2199,6 +2215,8 @@
       <button id="hud-hero-btn"><i class="ico ico-helmet"></i>Hero</button>
       <button id="shop-btn"><i class="ico ico-gold"></i>Shop</button>
       <button id="quests-btn"><i class="ico ico-book"></i>Quests</button>
+      <button id="inv-btn" title="Inventory (I)"><i class="ico ico-scroll"></i>Inventory</button>
+      <button id="quick-potion" title="Drink a Health Potion"></button>
       <button id="descend-btn"><i class="ico ico-pick"></i>Descend</button>
     </div>
   </div>
@@ -2232,6 +2250,7 @@
   <div id="qb-list"></div><div id="qb-editor" hidden></div>
   <input type="file" id="qb-photo" accept="image/*" capture="environment" hidden>
 </div></div>
+<div id="inv-board"><div class="qb-panel"><div class="qb-head"><h2>Inventory</h2><button class="hero-btn" id="inv-close">Close</button></div><div id="inv-equip"></div><div class="inv-grid2" id="inv-list"></div></div></div>
 <div id="dialogue"><div class="dlg-box" id="dlg-box"><canvas id="dlg-portrait" width="80" height="80"></canvas><div class="dlg-main"><div id="dlg-name"></div><div id="dlg-text"></div><div id="dlg-choices"></div></div><span id="dlg-arrow"></span></div></div>
 <div id="loot-popup"><div class="loot-box"><h2 class="loot-title">Loot!</h2><div class="loot-list" id="loot-list"></div><button class="hero-btn" id="loot-ok">Nice!</button></div></div>
 
@@ -3063,6 +3082,7 @@ function drawRoom() {
   }
   // Lurking chore monsters: badge on their trigger tile
   for (const m of monsters) {
+    if (fx && fx.m === m && fx.hide) continue; // hit flash during a map skirmish
     if (maze) { // dungeon foes stand on the floor as full sprites; the boss gets a purple aura
       if (m.boss) { roomCtx.fillStyle = "rgba(140, 80, 220, 0.45)"; roomCtx.fillRect(m.col * TILE_SIZE, m.row * TILE_SIZE, TILE_SIZE, TILE_SIZE); }
       drawIconCanvas(roomCtx, monsterIcon(m), m.col * TILE_SIZE + 4, m.row * TILE_SIZE + 4, TILE_SIZE - 8);
@@ -3087,7 +3107,7 @@ function drawRoom() {
     if (heroSheet) {
       // the player's own hero (layered from the Roguelike Characters sheet), pixel-crisp
       roomCtx.imageSmoothingEnabled = false;
-      roomCtx.drawImage(heroCanvas, player.x * TILE_SIZE + 2, player.y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+      roomCtx.drawImage(heroCanvas, player.x * TILE_SIZE + 2 + (fx ? fx.hx : 0), player.y * TILE_SIZE + 2 + (fx ? fx.hy : 0), TILE_SIZE - 4, TILE_SIZE - 4);
     }
   }
   drawGrid(roomCtx, roomCanvas);
@@ -3348,6 +3368,84 @@ function dailyChest() {
     { speaker: SPEAKERS.elder, portrait: "elder", text: "The grime recoils from the house! Rest well, Hearth Keeper." }]);
 }
 
+// ---- INVENTORY SCREEN (I): items with counts, Use for potions, Equip for gear ----
+function usePotion(kind) {
+  const st = heroStats();
+  if (kind === "wander") return useWanderlust();
+  if (!potions[kind]) return showToast("None left."), false;
+  if (kind === "health") { if (playerHp >= st.maxHp) return showToast("HP is already full."), false; potions.health--; playerHp = Math.min(st.maxHp, playerHp + 50 + 5 * (playerLevel - 1)); }
+  if (kind === "mana") { if (playerMp >= st.maxMp) return showToast("MP is already full."), false; potions.mana--; playerMp = Math.min(st.maxMp, playerMp + 40); }
+  updateGameHUD(); saveGameData(); renderInventory(); renderInvBoard(); return true;
+}
+function renderInvBoard() {
+  const list = document.getElementById("inv-list"); if (!list) return;
+  const qp = document.getElementById("quick-potion"); if (qp) { qp.replaceChildren(spriteSpan(POTION_ICONS.health, 1), `x${potions.health}`); qp.disabled = !potions.health; }
+  if (!document.getElementById("inv-board").classList.contains("open")) return;
+  const eq = hero.equip || {}, nm = id => (WEAPON_BY_ID[id] || {}).name || "none";
+  document.getElementById("inv-equip").textContent = `Equipped: Weapon ${nm(eq.weapon)} · Shield ${nm(eq.shield)} · Charms ${(hero.charms || []).map(id => CHARMS[id].name).join(", ") || "none"}`;
+  const row = (icon, name, sub, n, btn, act, on, tint) => { const d = document.createElement("div"); d.className = "iv-slot" + (on ? " on" : "");
+    const ic = document.createElement("div"); ic.className = "iv-ico"; const sp = spriteSpan(icon, 2); if (tint) sp.style.filter = tint; ic.append(sp); if (n !== null) ic.append(Object.assign(document.createElement("span"), { className: "iv-n", textContent: n }));
+    const main = document.createElement("div"); main.className = "iv-main"; main.append(name, Object.assign(document.createElement("div"), { className: "iv-sub", textContent: sub }));
+    d.append(ic, main); if (btn) { const b = document.createElement("button"); b.className = "hero-btn"; b.textContent = btn; b.dataset.act = act; b.disabled = act === "none"; d.append(b); } return d; };
+  const w = wanderActive() ? `Active: ${Math.ceil((potions.wanderUntil - Date.now()) / 60000)} min left` : "30 min idle roaming";
+  list.replaceChildren(row(POTION_ICONS.health, "Health Potion", `+${50 + 5 * (playerLevel - 1)} HP`, potions.health, "Use", "use:health"),
+    row(POTION_ICONS.mana, "Mana Potion", "+40 MP", potions.mana, "Use", "use:mana"),
+    row(POTION_ICONS.mana, "Wanderlust Potion", w, potions.wander || 0, wanderActive() ? "Active" : "Use", wanderActive() ? "none" : "use:wander", wanderActive(), "hue-rotate(110deg)"),
+    ...hero.owned.map(id => WEAPON_BY_ID[id]).filter(Boolean).map(g => row(g.kind === "shield" ? ["C", 34, 0] : ["C", 44, 6], g.name, `${g.kind} · power ${g.power}`, null, eq[g.kind] === g.id ? "Unequip" : "Equip", "equip:" + g.id, eq[g.kind] === g.id)),
+    ...(hero.charms || []).map(id => row(CHARMS[id].icon, CHARMS[id].name, "Charm: pick it in boss fights", null, null, null)));
+}
+function openInvBoard() { document.getElementById("inv-board").classList.add("open"); renderInvBoard(); }
+function closeInvBoard() { document.getElementById("inv-board").classList.remove("open"); }
+// ---- MAP SKIRMISH: regular foes fight right on the map (~3 s), poof, then loot text floats up ----
+let fx = null;
+function cellPx(col, row) {
+  const area = roomCanvas.parentElement.getBoundingClientRect(), rect = roomCanvas.getBoundingClientRect(), sc = roomCanvas.clientWidth / roomCanvas.width;
+  return [rect.left - area.left + roomCanvas.clientLeft + (col + 0.5) * TILE_SIZE * sc, rect.top - area.top + roomCanvas.clientTop + (row + 0.5) * TILE_SIZE * sc];
+}
+function fxAt(cls, col, row, text, delay = 0) {
+  const [x, y] = cellPx(col, row), d = document.createElement("div"); d.className = cls; if (text) d.textContent = text;
+  d.style.left = x + "px"; d.style.top = (y - (text ? 14 : 0)) + "px"; d.style.animationDelay = delay + "ms"; if (text) d.style.opacity = 0;
+  roomCanvas.parentElement.append(d); setTimeout(() => d.remove(), 2600 + delay); return d;
+}
+function simulateSkirmish(m) { // the auto-battle math, resolved instantly (auto-drinks a Health Potion below 30% HP)
+  const st = heroStats(), en = enemyStats(m); let used = false, pots = 0;
+  for (let t = 0; t < 80 && en.hp > 0 && playerHp > 0; t++) for (const w of st.spd >= en.spd ? "he" : "eh") {
+    if (en.hp <= 0 || playerHp <= 0) break;
+    if (w === "e") { playerHp = Math.max(0, playerHp - battleDamage(en.atk, st.def)); continue; }
+    if (playerHp < 0.3 * st.maxHp && potions.health > 0) { potions.health--; pots++; playerHp = Math.min(st.maxHp, playerHp + 50 + 5 * (playerLevel - 1)); continue; }
+    let mult = rng() < 0.1 ? 1.5 : 1; if (!used && playerMp >= 20) { used = true; playerMp -= 20; mult = 1.5; }
+    en.hp = Math.max(0, en.hp - battleDamage(st.atk, en.def, mult));
+  }
+  return { won: en.hp <= 0, pots, st };
+}
+function skirmish(m) {
+  stopWalking(); activeAmbush = m;
+  const r = simulateSkirmish(m), dx = Math.sign(m.col - player.x), dy = Math.sign(m.row - player.y);
+  let k = 0;
+  const iv = setInterval(() => {
+    k++; fx = { m, hx: k % 2 ? dx * 7 : 0, hy: k % 2 ? dy * 7 : 0, hide: k % 2 === 0 && k % 4 === 0 }; drawRoom();
+    if (k < 12) return;
+    clearInterval(iv); fx = null;
+    if (activeAmbush !== m) return drawRoom();
+    if (r.won) {
+      const roll = rng(), lines = [[`x${m.goldReward} Gold`], [`x${m.xpReward} XP`]];
+      if (roll < 0.04) { potions.wander = (potions.wander || 0) + 1; lines.push(["Wanderlust Potion!", 1]); }
+      else if (roll < 0.3) { potions.health++; lines.push(["x1 Healing Potion"]); }
+      lastBattle = { result: "win", potionsUsed: r.pots, lost: 0, monster: m.name };
+      fxAt("fx-poof", m.col, m.row);
+      lines.forEach(([t, rare], i) => fxAt("fx-loot" + (rare ? " rare" : ""), m.col, m.row, t, 350 + i * 330));
+      activeAmbush = null; resolveCombat(m);
+    } else {
+      const lost = Math.min(playerGold, Math.max(5, Math.round(playerGold * 0.1)));
+      lastBattle = { result: "faint", potionsUsed: r.pots, lost, monster: m.name };
+      playerGold -= lost; playerHp = r.st.maxHp; ambushSuppressed.add(m.type); player.x = prevPos.x; player.y = prevPos.y; activeAmbush = null;
+      fxAt("fx-loot", player.x, player.y, `Fainted! -${lost} Gold`);
+      showToast(`${hero.name} fainted and woke up healed. Do a chore to heal up!`, 3000);
+    }
+    updateHUD(); updateGameHUD(); saveGameData(); drawRoom(); renderInvBoard();
+  }, 250);
+}
+
 function enterRoom(col, row, direction) {
   currentRoom.x = col;
   currentRoom.y = row;
@@ -3439,7 +3537,7 @@ function triggerAmbush(monster) {
   activeAmbush = monster;
   placeSpawnMarker(monster.col, monster.row);
   if (monster.chore && (qToday()[monster.chore] || {}).start) { const c = qChores.find(c => c.id === monster.chore); if (c) return openChoreBattle(c); } // a started chore: back to its battle
-  if (monster.boss) startBossBattle(monster); else startBattle(monster);
+  if (monster.boss) startBossBattle(monster); else skirmish(monster); // regular foes fight on the map
 }
 
 function placeSpawnMarker(col, row) {
@@ -3806,6 +3904,7 @@ function updateHUD() {
 }
 
 function updateGameHUD() {
+  try { renderInvBoard(); } catch (e) {} // quick-use potion slot + open Inventory
   updateDailyHUD();
   document.getElementById("game-gold").textContent = playerGold;
   document.getElementById("game-xp").textContent = playerXp;
@@ -5068,6 +5167,12 @@ document.getElementById('new-map-btn').addEventListener('click', newMap);
 document.getElementById('descend-btn').addEventListener('click', toggleDescend);
 document.getElementById('dungeon-mode-btn').addEventListener('click', () => dungeonEdit ? exitDungeonMode() : enterDungeonMode());
 document.getElementById('dg-save').addEventListener('click', saveCurrentDungeon);
+document.getElementById('inv-btn').addEventListener('click', openInvBoard);
+document.getElementById('inv-close').addEventListener('click', closeInvBoard);
+document.getElementById('quick-potion').addEventListener('click', () => usePotion("health"));
+document.getElementById('inv-list').addEventListener('click', (e) => { const b = e.target.closest('button[data-act]'); if (!b) return; const [k, v] = b.dataset.act.split(':');
+  if (k === 'use') usePotion(v); if (k === 'equip') { equipWeapon(v); updateGameHUD(); } renderInventory(); renderInvBoard(); });
+document.addEventListener('keydown', (e) => { if ((e.key === 'i' || e.key === 'I') && currentScreen === 'play' && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && !battle) { const o = document.getElementById('inv-board').classList.contains('open'); o ? closeInvBoard() : openInvBoard(); } });
 document.getElementById('starter-house-btn').addEventListener('click', () => { if (dungeonEdit) return showToast("Switch to House Mode first."); askYesNo("Load the starter house? It replaces your current house map.", () => { setGrids(starterHouse()); doors = []; drawMap(); saveGameData(); showToast("Starter house loaded."); }); });
 document.getElementById('dg-play').addEventListener('click', playDungeon);
 document.getElementById('dg-export').addEventListener('click', exportDungeon);
