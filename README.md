@@ -7,3 +7,5 @@ DailyDungeons turns real chores into an idle 8-bit RPG. Pick a quest like dishes
 ## Model declaration
 
 Code was written with Grok Bot, an AI assistant, based on my design and direction. Pixel art comes from Kenney packs (CC0) and Quintino Pixels weapons (CC BY 4.0), plus custom monster, logo and background art I generated from my own prompts with Gemini and Grok Imagine. Backgrounds were removed with remove.bg, and Grok Bot cleaned up the edges, then resized and placed the art in the game.
+
+Music and sound effects are original, generated in code for this project.
