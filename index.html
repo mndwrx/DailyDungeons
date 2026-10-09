@@ -2624,7 +2624,8 @@ const SHEETS = {
   dungeon: { src: "assets/Spritesheet/roguelikeDungeon_transparent.png", stride: 17, w: 492, h: 305 }, // Roguelike dungeon
   fallback: { src: "assets/pixel_fallbacks.png", stride: 17, w: 33, h: 16 }, // hand-made pixel art where Kenney has no match (bathtub, dish slime)
   hydra: { src: "assets/monsters/laundry-hydra.png", stride: 48, w: 48, h: 48, cell: 48 },            // custom art (checker background keyed out)
-  wraith: { src: "assets/monsters/dust-wraith.png", stride: 48, w: 96, h: 48, cell: 48, frames: 2 }   // 2-frame idle
+  wraith: { src: "assets/monsters/dust-wraith.png", stride: 48, w: 96, h: 48, cell: 48, frames: 2 },  // 2-frame idle
+  trashking: { src: "assets/monsters/trash-king.png", stride: 96, w: 96, h: 96, cell: 96 }          // boss art (checker background keyed out)
 };
 
 // Palette id -> real tile value. layer "terrain" writes terrainMap, "entity" writes entityMap, "overlay" writes overlayMap (top).
@@ -2839,7 +2840,7 @@ function loadKenneySprites() {
   };
   img3.src = SHEETS.rpg_sheet.src;
 
-  for (const key of ["char", "dungeon", "fallback", "hydra", "wraith"]) {
+  for (const key of ["char", "dungeon", "fallback", "hydra", "wraith", "trashking"]) {
     const img = new Image();
     img.onload = () => { kenneySprites[key] = img; redraw(); };
     img.src = SHEETS[key].src;
@@ -2847,7 +2848,7 @@ function loadKenneySprites() {
 }
 
 // Pixel sprite icon (never an emoji): icon = [sheet letter, col, row]
-const SHEET_LETTER = { I: "rougelike", R: "rpg_sheet", U: "rpg_urban", C: "char", D: "dungeon", F: "fallback", H: "hydra", W: "wraith" };
+const SHEET_LETTER = { I: "rougelike", R: "rpg_sheet", U: "rpg_urban", C: "char", D: "dungeon", F: "fallback", H: "hydra", W: "wraith", K: "trashking" };
 const ICON_TINT = { boss: "sepia(.35) hue-rotate(55deg) saturate(.7) brightness(.85)" }; // icon[3]: Grime Hydra = green-gray Laundry Hydra
 function spriteSpan(icon, scale = 1) {
   const el = document.createElement("i");
@@ -4435,9 +4436,9 @@ setInterval(() => { if (currentScreen === "play") checkCurse(); else tickGrime()
 
 const elder = text => ({ speaker: SPEAKERS.elder, portrait: "elder", text });
 const BOSSES = {
-  trash_king: { name: "Trash King", icon: ["R", 38, 10], stats: [6, 14, 2, "Garbage Avalanche"], hp: 230,
+  trash_king: { name: "Trash King", icon: ["K", 0, 0], stats: [6, 14, 2, "Garbage Avalanche"], hp: 230,
     banish: [elder("A whole day without a single chore, Keeper..."), elder("The Trash King smells weakness. The floor gives way!")],
-    intro: [{ speaker: "Trash King", portrait: ["R", 38, 10], text: "I AM THE TRASH KING! Your neglect built my throne!" }, elder("He is tanky. Raise your DEF and bring Health Potions!")],
+    intro: [{ speaker: "Trash King", portrait: ["K", 0, 0], text: "I AM THE TRASH KING! Your neglect built my throne!" }, elder("He is tanky. Raise your DEF and bring Health Potions!")],
     win: "The Trash King crumbles into rubbish! Back upstairs, Keeper." },
   grime_hydra: { name: "Grime Hydra", icon: ["H", 0, 0, "boss"], stats: [5, 6, 5, "Hydra Bite"], hp: 330,
     banish: [elder("The grime has piled too high!"), elder("It feeds the Grime Hydra... and it drags you below!")],
