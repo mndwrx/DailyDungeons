@@ -1717,8 +1717,9 @@
   .ico-candle { background-image: url("assets/roguelike_transparent.png"); background-size: calc(var(--s) * 458px) calc(var(--s) * 305px); background-position: calc(var(--s) * -306px) calc(var(--s) * -102px); }
   .ico-crate { background-image: url("assets/Spritesheet/roguelikeDungeon_transparent.png"); background-size: calc(var(--s) * 492px) calc(var(--s) * 305px); background-position: calc(var(--s) * -85px) calc(var(--s) * -85px); }
   .ico-door { background-image: url("assets/Spritesheet/roguelikeDungeon_transparent.png"); background-size: calc(var(--s) * 492px) calc(var(--s) * 305px); background-position: calc(var(--s) * -357px) calc(var(--s) * -0px); }
-  .ico-sound { background-image: url("assets/ui/sound.png"); background-size: calc(var(--s) * 32px) calc(var(--s) * 16px); background-position: 0 0; }
-  #sound-btn.muted .ico-sound { background-position: calc(var(--s) * -16px) 0; }
+  /* menu/HUD button icons: one 16px atlas (Kenney CC0 sprites + matching hand-pixeled helm, scroll, chest, gear, speaker), tight and centered */
+  .ico-a { background-image: url("assets/ui/icons.png"); background-size: calc(var(--s) * 144px) calc(var(--s) * 16px); background-position: calc(var(--s) * -16px * var(--i, 0)) 0; }
+  .ico-hero { --i: 0; } .ico-quests { --i: 1; } .ico-shop { --i: 2; } .ico-inv { --i: 3; } .ico-options { --i: 4; } .ico-menu { --i: 5; } .ico-descend { --i: 6; } .ico-sound { --i: 7; } #sound-btn.muted .ico-sound { --i: 8; }
   .ico-shield { background-image: url("assets/Spritesheet/roguelikeChar_transparent.png"); background-size: calc(var(--s) * 918px) calc(var(--s) * 203px); background-position: calc(var(--s) * -578px) calc(var(--s) * -0px); }
   .ico-prev { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -237px -486px; width: 22px; height: 21px; }
   .ico-next { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -325px -486px; width: 22px; height: 21px; }
@@ -1999,6 +2000,49 @@
     84% { opacity: 0.8; transform: translate(-50%, -50%) scale(0.97); } }
   @media (prefers-reduced-motion: reduce) { .candle-glow { animation: none; opacity: 0.85; } }
   #stage #chore-log-btn { display: none !important; } /* v1: Quests covers chores; the Chore Log stays wired for code that opens it */
+
+  /* ---- Readable HUD at 1920x1080 (stage scale 1.5: 10px here = 15px on screen) + 2x button icons; phone layouts keep their own sizes ---- */
+  #start-page .start-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  #start-page .start-btn .ico { margin: 0; }
+  #start-page .start-btn .ico-a { --s: 2.5; }
+  #start-page .start-btn .ico-next { width: 33px; height: 31.5px; background-size: 768px 768px; background-position: -487.5px -729px; }
+  #start-page #start-options-btn { min-width: 0; padding: 0 14px; margin-top: 0; }
+  #start-page #start-options-btn .ico-a { --s: 2; }
+  #stage .game-hud { top: 4px; height: 117px; grid-template-columns: 200px 1fr auto; grid-template-rows: 1fr 38px; gap: 3px 12px; }
+  #stage .game-hud-top .room-name { font-size: 16px; }
+  #stage .game-hud-top .room-name .sub { font-size: 10px; }
+  #stage .game-hud-bars { gap: 8px; }
+  #stage .game-hud-bars .bar { grid-template-columns: auto 1fr; gap: 6px; }
+  #stage .game-hud-bars .bar .label { font-size: 11px; }
+  #stage .game-hud-bars .bar .track { height: 16px; }
+  #stage .game-hud-stats { grid-auto-columns: minmax(64px, auto); }
+  #stage .game-hud-stats .stat { padding: 1px 6px; }
+  #stage .game-hud-stats .stat .label { font-size: 10px; }
+  #stage .game-hud-stats .stat .value { font-size: 14px; }
+  #stage .game-hud-actions { height: 38px; display: flex; gap: 6px; }
+  #stage .game-hud-actions button { flex: 1 1 0; height: 36px; font-size: 12px; gap: 6px; }
+  #stage .game-hud-actions button .ico { margin: 0; }
+  #stage .game-hud-actions button .ico-a { --s: 1.3333; }
+  #stage .game-hud-actions #sound-btn { flex: 0 0 44px; }
+  #gameplay-overlay.portrait #stage .game-hud-actions button { height: 32px; font-size: 10px; }
+  #gameplay-overlay.portrait #stage .game-hud-actions button .ico-a { --s: 1.25; }
+  #gameplay-overlay.portrait #stage .game-hud-actions #sound-btn { width: 40px; }
+  #gameplay-overlay.portrait #stage .game-hud-stats .stat { padding: 1px 2px; }
+  #gameplay-overlay.landscape #stage .game-hud-actions button .ico-a { --s: 1.625; }
+  /* Options window */
+  #options-board { position: fixed; inset: 0; z-index: 9000; display: none; align-items: center; justify-content: center; background: rgba(0, 0, 0, .55); }
+  #options-board.open { display: flex; }
+  #options-board .opt-panel { width: min(640px, 94vw); }
+  #options-board .qb-head h2 { font-size: 22px; }
+  #options-board .qb-head h2 { display: flex; align-items: center; gap: 8px; }
+  #options-board .qb-head h2 .ico-a { --s: 2; margin: 0; }
+  .opt-row { display: grid; grid-template-columns: minmax(110px, 180px) 1fr 64px; align-items: center; gap: 12px; padding: 14px 6px; font-family: var(--fx-font); font-size: 18px; color: var(--wood-text); border-top: 2px solid #2a1a0c; cursor: pointer; }
+  .opt-row b { text-align: right; color: #ffd700; font-weight: normal; }
+  .opt-row input[type=range] { -webkit-appearance: none; appearance: none; height: 18px; background: #2a1a0c; border: 3px solid #8a6a3e; border-radius: 0; margin: 0; cursor: pointer; }
+  .opt-row input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 32px; background: #ffd24a; border: 3px solid #2a1408; box-shadow: inset -4px -4px 0 #c58a14; border-radius: 0; }
+  .opt-row input[type=range]::-moz-range-thumb { width: 14px; height: 22px; background: #ffd24a; border: 2px solid #2a1408; border-radius: 0; }
+  .opt-row input[type=checkbox] { -webkit-appearance: none; appearance: none; justify-self: start; width: 32px; height: 32px; margin: 0; background: #2a1a0c; border: 3px solid #8a6a3e; cursor: pointer; }
+  .opt-row input[type=checkbox]:checked { background: #ffd24a; box-shadow: inset 0 0 0 4px #2a1a0c; }
 </style>
 </head>
 <body>
@@ -2016,8 +2060,9 @@
   <button class="start-btn" id="new-map-btn"><i class="ico ico-map"></i>New Map</button>
   <button class="start-btn secondary" id="edit-map-btn"><i class="ico ico-pick"></i>Edit Dungeon</button>
   <button class="start-btn secondary" id="asset-palette-toggle"><i class="ico ico-book"></i>Asset Palette</button>
-  <div class="start-row"><button class="start-btn secondary" id="hero-btn"><i class="ico ico-helmet"></i>Hero</button><button class="start-btn secondary" id="start-quests-btn"><i class="ico ico-scroll"></i>Quests</button></div>
+  <div class="start-row"><button class="start-btn secondary" id="hero-btn"><i class="ico ico-a ico-hero"></i>Hero</button><button class="start-btn secondary" id="start-quests-btn"><i class="ico ico-a ico-quests"></i>Quests</button></div>
   <button class="start-btn" id="play-map-btn"><i class="ico ico-next"></i>Play</button>
+  <button class="start-btn secondary" id="start-options-btn"><i class="ico ico-a ico-options"></i>Options</button>
   <div class="start-stats">
     <div class="stat"><span>Gold</span><div class="value" id="menu-gold">0</div></div>
     <div class="stat"><span>XP</span><div class="value" id="menu-xp">0</div></div>
@@ -2307,16 +2352,17 @@
       </div>
     </div>
     <div class="game-hud-actions">
-      <button id="menu-btn"><i class="ico ico-door"></i>Menu</button>
-      <button id="sound-btn" title="Music and sound on/off"><i class="ico ico-sound"></i>Sound</button>
+      <button id="menu-btn"><i class="ico ico-a ico-menu"></i>Menu</button>
+      <button id="sound-btn" title="Mute all" aria-label="Mute all"><i class="ico ico-a ico-sound"></i></button>
       <button id="chore-log-btn"><i class="ico ico-scroll"></i>Chores</button>
       <button id="toggle-edit"><i class="ico ico-pick"></i>Edit Dungeon</button>
-      <button id="hud-hero-btn"><i class="ico ico-helmet"></i>Hero</button>
-      <button id="shop-btn"><i class="ico ico-gold"></i>Shop</button>
-      <button id="quests-btn"><i class="ico ico-book"></i>Quests</button>
-      <button id="inv-btn" title="Inventory (I)"><i class="ico ico-scroll"></i>Inventory</button>
+      <button id="hud-hero-btn"><i class="ico ico-a ico-hero"></i>Hero</button>
+      <button id="shop-btn"><i class="ico ico-a ico-shop"></i>Shop</button>
+      <button id="quests-btn"><i class="ico ico-a ico-quests"></i>Quests</button>
+      <button id="inv-btn" title="Inventory (I)"><i class="ico ico-a ico-inv"></i>Inventory</button>
       <button id="quick-potion" title="Drink a Health Potion"></button>
-      <button id="descend-btn"><i class="ico ico-pick"></i>Descend</button>
+      <button id="descend-btn"><i class="ico ico-a ico-descend"></i>Descend</button>
+      <button id="options-btn"><i class="ico ico-a ico-options"></i>Options</button>
     </div>
   </div>
   <div class="game-play-area">
@@ -2349,6 +2395,11 @@
 <div id="quest-board"><div class="qb-panel">
   <div class="qb-head"><h2><i class="ico ico-scroll"></i>Daily Quest Board</h2><button class="hero-btn" id="qb-edit-btn">Edit Chores</button><button class="panel-close" id="qb-close"><i class="ico ico-close"></i></button><span id="qb-date"></span></div>
   <div id="qb-list"></div><div id="qb-editor" hidden></div>
+</div></div>
+<div id="options-board"><div class="qb-panel opt-panel"><div class="qb-head"><h2><i class="ico ico-a ico-options"></i>Options</h2><button class="hero-btn" id="opt-close">Close</button></div>
+  <label class="opt-row"><span>Music</span><input type="range" id="opt-music" min="0" max="100" step="5"><b id="opt-music-val"></b></label>
+  <label class="opt-row"><span>Sound effects</span><input type="range" id="opt-sfx" min="0" max="100" step="5"><b id="opt-sfx-val"></b></label>
+  <label class="opt-row"><span>Mute all</span><input type="checkbox" id="opt-mute"><b></b></label>
 </div></div>
 <div id="inv-board"><div class="qb-panel"><div class="qb-head"><h2>Inventory</h2><button class="hero-btn" id="inv-close">Close</button></div><div id="inv-equip"></div><div class="inv-grid2" id="inv-list"></div></div></div>
 <div id="dialogue"><div class="dlg-box" id="dlg-box"><canvas id="dlg-portrait" width="80" height="80"></canvas><div class="dlg-main"><div id="dlg-name"></div><div id="dlg-text"></div><div id="dlg-choices"></div></div><span id="dlg-arrow"></span></div></div>
@@ -3488,7 +3539,7 @@ function usePotion(kind) {
 }
 function renderInvBoard() {
   const list = document.getElementById("inv-list"); if (!list) return;
-  const qp = document.getElementById("quick-potion"); if (qp) { qp.replaceChildren(spriteSpan(POTION_ICONS.health, 1), `x${potions.health}`); qp.disabled = !potions.health; }
+  const qp = document.getElementById("quick-potion"); if (qp) { qp.replaceChildren(spriteSpan(POTION_ICONS.health, 4 / 3), `x${potions.health}`); qp.disabled = !potions.health; }
   if (!document.getElementById("inv-board").classList.contains("open")) return;
   const eq = hero.equip || {}, nm = id => (WEAPON_BY_ID[id] || {}).name || "none";
   document.getElementById("inv-equip").textContent = `Equipped: Weapon ${nm(eq.weapon)} · Shield ${nm(eq.shield)} · Charms ${(hero.charms || []).map(id => CHARMS[id].name).join(", ") || "none"}`;
@@ -5273,68 +5324,114 @@ function openShop() {
   showScreen("shop");
 }
 
-// ---- AUDIO: original chiptune loops (seamless via Web Audio) + short SFX, one saved mute toggle ----
+// ---- AUDIO: original chiptune loops (seamless via Web Audio) + short SFX. One context, one music track at a time
+// (main -> boss -> victory -> main); screen changes never touch the music. Options: music/SFX volume + mute, saved. ----
 const SND = (() => {
-  const VOL = 0.5, KEY = "dd_muted", BEAT = 60 / 140, LOOP = { main: 32 * BEAT, boss: 16 * BEAT };
-  const NAMES = ["music-main", "music-boss", "music-victory", ...["coin", "hit", "swipe", "boss-hit", "slam", "boss-slam", "whoosh", "poof", "click", "level-up", "potion", "sad"].map(n => "sfx/" + n)];
-  let muted = false; try { muted = localStorage.getItem(KEY) === "1"; } catch (e) {}
+  const KEY = "dd_audio", BEAT = 60 / 140, LOOP = { main: 32 * BEAT, boss: 16 * BEAT };
+  const SFX = ["coin", "hit", "swipe", "boss-hit", "slam", "boss-slam", "whoosh", "poof", "click", "level-up", "potion", "sad"];
+  const NAMES = ["music-main", "music-boss", "music-victory", ...SFX.map(n => "sfx/" + n)];
+  const opt = { music: 0.5, sfx: 0.6, muted: false };
+  try { const o = JSON.parse(localStorage.getItem(KEY)); if (o) Object.assign(opt, o); else if (localStorage.getItem("dd_muted") === "1") opt.muted = true; } catch (e) {}
   let ext = "mp3"; try { if (new Audio().canPlayType('audio/ogg; codecs="vorbis"')) ext = "ogg"; } catch (e) {}
-  const url = n => `assets/audio/${n}.${ext}`;
-  let ctx = null, out = null, useEl = false, want = "main", cur = null;
-  const buf = {}, els = {};
-  function start(name) { // crossfade the current track out, the new one in (victory: one-shot, then back to main)
-    if (!ctx && !useEl) return;
-    const key = "music-" + name, fade = name === "victory" ? 0.25 : 1.2;
-    if (useEl) {
-      const a = els[key]; if (!a) return;
-      const old = cur; cur = { name, a };
-      if (old && old.a !== a) { const o = old.a, t0 = performance.now(); const iv = setInterval(() => { const k = Math.min(1, (performance.now() - t0) / (fade * 1000)); o.volume = VOL * (1 - k); if (k >= 1) { clearInterval(iv); o.pause(); } }, 50); }
-      a.loop = name !== "victory"; a.currentTime = 0; a.volume = VOL; a.muted = muted; a.play().catch(() => {});
-      a.onended = () => { if (cur && cur.a === a && name === "victory") music("main"); };
-      return;
-    }
-    if (!buf[key]) return; // not decoded yet: picked up when it arrives
-    const t = ctx.currentTime, g = ctx.createGain(), s = ctx.createBufferSource();
-    s.buffer = buf[key]; s.connect(g); g.connect(out.music);
-    if (LOOP[name]) { s.loop = true; s.loopStart = 0; s.loopEnd = Math.min(LOOP[name], s.buffer.duration); }
-    g.gain.setValueAtTime(name === "victory" ? 1 : 0, t); g.gain.linearRampToValueAtTime(1, t + (name === "victory" ? 0.01 : fade));
-    if (cur) { const o = cur; o.g.gain.cancelScheduledValues(t); o.g.gain.setValueAtTime(o.g.gain.value, t); o.g.gain.linearRampToValueAtTime(0, t + fade); o.s.stop(t + fade + 0.05); }
-    cur = { name, s, g };
-    if (name === "victory") s.onended = () => { if (cur && cur.s === s) music("main"); };
-    s.start(t);
+  const url = (n, e = ext) => `assets/audio/${n}.${e}`, alt = ext === "ogg" ? "mp3" : "ogg";
+  let ctx = null, out = null, unlocked = false, want = "main", cur = null, owner = true;
+  const buf = {}, els = {}, failed = {};
+  const tab = Math.random().toString(36).slice(2), bc = "BroadcastChannel" in window ? new BroadcastChannel("dd-audio") : null;
+  const musicVol = () => (opt.muted || !owner ? 0 : opt.music);
+  function el(n) { // HTMLAudio fallback (file://, or a file Web Audio could not decode)
+    if (!els[n]) { const a = new Audio(url(n, failed[n] ? "mp3" : ext)); a.preload = "auto"; els[n] = a; }
+    return els[n];
   }
-  function music(name) { want = name; if (cur && cur.name === name) return; start(name); }
+  function fadeEl(a, to, sec, then) {
+    const from = a.volume, t0 = performance.now(); clearInterval(a._fade);
+    a._fade = setInterval(() => { const k = Math.min(1, (performance.now() - t0) / (sec * 1000)); a.volume = Math.max(0, Math.min(1, from + (to - from) * k)); if (k >= 1) { clearInterval(a._fade); then && then(); } }, 40);
+  }
+  function stopCur(fade) {
+    const o = cur; cur = null; if (!o) return;
+    if (o.s) { const t = ctx.currentTime; o.g.gain.cancelScheduledValues(t); o.g.gain.setValueAtTime(o.g.gain.value, t); o.g.gain.linearRampToValueAtTime(0, t + fade); try { o.s.stop(t + fade + 0.05); } catch (e) {} }
+    if (o.a) fadeEl(o.a, 0, fade, () => o.a.pause());
+  }
+  function start(name) { // crossfade to a new track; the same track is never restarted
+    if (!unlocked || (cur && cur.name === name)) return;
+    const key = "music-" + name, fade = name === "victory" ? 0.25 : 1.2, loop = name !== "victory";
+    const done = () => { if (cur && cur.name === "victory" && want === "victory") { want = "main"; start("main"); } };
+    if (ctx && buf[key]) {
+      stopCur(fade);
+      const t = ctx.currentTime, g = ctx.createGain(), s = ctx.createBufferSource();
+      s.buffer = buf[key]; s.connect(g); g.connect(out.music);
+      if (loop) { s.loop = true; s.loopStart = 0; s.loopEnd = Math.min(LOOP[name], s.buffer.duration); }
+      g.gain.setValueAtTime(loop ? 0 : 1, t); g.gain.linearRampToValueAtTime(1, t + (loop ? fade : 0.01));
+      cur = { name, s, g }; if (!loop) s.onended = () => { if (cur && cur.s === s) done(); };
+      s.start(t); return;
+    }
+    if (!ctx || failed[key]) { // HTMLAudio path
+      stopCur(fade);
+      const a = el(key); a.loop = loop; a.currentTime = 0; a.volume = 0; cur = { name, a };
+      a.onended = () => { if (cur && cur.a === a) done(); };
+      a.play().then(() => fadeEl(a, musicVol(), loop ? fade : 0.05)).catch(() => {});
+    } // else: still decoding; picked up when it arrives
+  }
+  function music(name) { want = name; start(name); }
   function sfx(name, delay = 0) {
-    if (muted || (!ctx && !useEl)) return;
+    if (!unlocked || opt.muted || !owner || !opt.sfx) return;
     const play = () => {
-      if (useEl) { const a = els["sfx/" + name]; if (a) { const c = a.cloneNode(); c.volume = VOL; c.play().catch(() => {}); } return; }
-      const b = buf["sfx/" + name]; if (!b) return;
-      const s = ctx.createBufferSource(); s.buffer = b; s.connect(out.sfx); s.start();
+      const k = "sfx/" + name;
+      if (ctx && buf[k]) { const s = ctx.createBufferSource(); s.buffer = buf[k]; s.connect(out.sfx); s.start(); return; }
+      if (!ctx || failed[k]) { const a = el(k).cloneNode(); a.volume = opt.sfx; a.play().catch(() => {}); }
     };
     delay ? setTimeout(play, delay * 1000) : play();
   }
-  function setMuted(m) {
-    muted = m; try { localStorage.setItem(KEY, m ? "1" : "0"); } catch (e) {}
-    if (out) out.master.gain.setTargetAtTime(m ? 0 : VOL, ctx.currentTime, 0.03);
-    if (useEl) for (const a of Object.values(els)) a.muted = m;
-    const b = document.getElementById("sound-btn"); if (b) { b.classList.toggle("muted", m); b.title = m ? "Sound is off (tap to turn on)" : "Music and sound on/off"; }
+  function apply() { // push the current volumes to the graph / elements (smoothly, never a hard cut)
+    if (ctx) { const t = ctx.currentTime; out.music.gain.setTargetAtTime(musicVol(), t, 0.05); out.sfx.gain.setTargetAtTime(opt.muted || !owner ? 0 : opt.sfx, t, 0.05); }
+    if (cur && cur.a) fadeEl(cur.a, musicVol(), 0.15);
+    const b = document.getElementById("sound-btn"); if (b) { b.classList.toggle("muted", opt.muted); b.title = opt.muted ? "Sound is off (tap to turn on)" : "Mute all"; }
+    for (const [id, k] of [["opt-music", "music"], ["opt-sfx", "sfx"]]) { const s = document.getElementById(id); if (s) { s.value = Math.round(opt[k] * 100); const v = document.getElementById(id + "-val"); if (v) v.textContent = s.value + "%"; } }
+    const m = document.getElementById("opt-mute"); if (m) { m.checked = opt.muted; }
   }
-  function unlock() { // browsers only allow audio after a click or key press
-    if (ctx || useEl) return;
+  function set(k, v) { opt[k] = v; try { localStorage.setItem(KEY, JSON.stringify(opt)); } catch (e) {} apply(); }
+  function resume() { if (ctx && ctx.state !== "running" && ctx.state !== "closed" && !document.hidden) ctx.resume().catch(() => {}); }
+  function unlock() { // runs on every gesture: the first one creates the context, later ones resume it if the browser paused it
+    if (!owner) { owner = true; bc && bc.postMessage(tab); apply(); }
+    if (unlocked) return resume();
+    unlocked = true; bc && bc.postMessage(tab);
     const AC = window.AudioContext || window.webkitAudioContext;
-    const elMode = () => { useEl = true; for (const n of NAMES) { const a = new Audio(url(n)); a.preload = "auto"; a.muted = muted; els[n] = a; } start(want); };
-    if (!AC || location.protocol === "file:") return elMode(); // file:// cannot fetch: plain <audio> fallback
-    try { ctx = new AC(); if (ctx.state === "suspended") ctx.resume(); } catch (e) { return elMode(); }
-    out = { master: ctx.createGain(), music: ctx.createGain(), sfx: ctx.createGain() };
-    out.master.gain.value = muted ? 0 : VOL; out.music.gain.value = 0.8; out.music.connect(out.master); out.sfx.connect(out.master); out.master.connect(ctx.destination);
-    for (const n of NAMES) fetch(url(n)).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(a => ctx.decodeAudioData(a)).then(b => { buf[n] = b; if (n === "music-" + want && !cur) start(want); }).catch(() => {});
+    if (AC && location.protocol !== "file:") {
+      try { ctx = new AC({ latencyHint: "playback" }); } catch (e) { try { ctx = new AC(); } catch (e2) { ctx = null; } }
+    }
+    if (!ctx) { start(want); return apply(); } // file:// or no Web Audio: plain <audio>
+    out = { music: ctx.createGain(), sfx: ctx.createGain(), an: ctx.createAnalyser() };
+    out.music.connect(out.an); out.sfx.connect(out.an); out.an.connect(ctx.destination);
+    ctx.addEventListener("statechange", resume); resume(); apply();
+    const load = (n, e) => fetch(url(n, e)).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(a => ctx.decodeAudioData(a));
+    for (const n of NAMES) load(n, ext).catch(() => load(n, alt)) // the other format if one will not decode
+      .then(b => { buf[n] = b; if (n === "music-" + want && !cur) start(want); })
+      .catch(() => { failed[n] = true; if (n === "music-" + want && !cur) start(want); }); // then plain <audio> (MP3)
   }
   for (const ev of ["pointerdown", "keydown", "touchend"]) document.addEventListener(ev, unlock, { capture: true });
+  document.addEventListener("visibilitychange", resume);
+  if (bc) bc.onmessage = e => { if (e.data !== tab && owner) { owner = false; apply(); } }; // another game tab took over: this one goes quiet
   document.addEventListener("click", e => { if (e.target.closest && e.target.closest("button") && !e.target.closest("#sound-btn")) sfx("click"); }, true);
-  return { music, sfx, setMuted, toggle: () => setMuted(!muted), get muted() { return muted; }, get track() { return cur && cur.name; } };
+  function debug() {
+    let level = null;
+    if (out) { const d = new Float32Array(out.an.fftSize); out.an.getFloatTimeDomainData(d); let s = 0; for (const v of d) s += v * v; level = Math.sqrt(s / d.length); }
+    return { state: ctx ? ctx.state : unlocked ? "html-audio" : "locked", track: cur && cur.name, want, owner, level, opt: { ...opt }, decoded: Object.keys(buf).length, failed: Object.keys(failed) };
+  }
+  return { music, sfx, set, apply, debug, toggle: () => set("muted", !opt.muted), get muted() { return opt.muted; }, get track() { return cur && cur.name; } };
 })();
+// Options window (front menu + HUD): music / SFX volume and mute all, saved with the audio settings
+function openOptions() { document.getElementById("options-board").classList.add("open"); SND.apply(); }
+function closeOptions() { document.getElementById("options-board").classList.remove("open"); }
+document.getElementById("options-btn").addEventListener("click", openOptions);
+document.getElementById("start-options-btn").addEventListener("click", openOptions);
+document.getElementById("opt-close").addEventListener("click", closeOptions);
+document.addEventListener("keydown", e => { if (e.key === "Escape" && document.getElementById("options-board").classList.contains("open")) closeOptions(); });
+document.getElementById("options-board").addEventListener("click", e => { if (e.target.id === "options-board") closeOptions(); });
+document.getElementById("opt-music").addEventListener("input", e => SND.set("music", e.target.value / 100));
+document.getElementById("opt-sfx").addEventListener("input", e => SND.set("sfx", e.target.value / 100));
+document.getElementById("opt-sfx").addEventListener("change", () => SND.sfx("coin"));
+document.getElementById("opt-mute").addEventListener("change", e => SND.set("muted", e.target.checked));
 document.getElementById("sound-btn").addEventListener("click", () => { SND.toggle(); SND.sfx("click"); });
-SND.setMuted(SND.muted);
+SND.apply();
 
 // ---- BINDINGS ----
 document.getElementById('shop-btn').addEventListener('click', openShop);

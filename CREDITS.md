@@ -16,5 +16,8 @@ Monster, logo and background art (title banner, title background, crest, coin pi
 Laundry/Grime Hydra, Dust Wraith, Trash King) was AI-generated with Gemini and Grok Imagine.
 Backgrounds were removed with remove.bg.
 
+UI icons (`assets/ui/icons.png`): the helmet, scroll, chest, gear and speaker icons were hand-pixeled
+for this project; the coin, door and pickaxe icons are Kenney (CC0) sprites with an added outline.
+
 ## Music and sound effects
 Original chiptune soundtrack generated in code for this project.
