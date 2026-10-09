@@ -15,3 +15,6 @@ Changes: the weapons were restyled and recolored to a 16px look to match the Ken
 Monster, logo and background art (title banner, title background, crest, coin pile, war table,
 Laundry/Grime Hydra, Dust Wraith, Trash King) was AI-generated with Gemini and Grok Imagine.
 Backgrounds were removed with remove.bg.
+
+## Music and sound effects
+Original chiptune soundtrack generated in code for this project.

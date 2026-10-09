@@ -1717,6 +1717,8 @@
   .ico-candle { background-image: url("assets/roguelike_transparent.png"); background-size: calc(var(--s) * 458px) calc(var(--s) * 305px); background-position: calc(var(--s) * -306px) calc(var(--s) * -102px); }
   .ico-crate { background-image: url("assets/Spritesheet/roguelikeDungeon_transparent.png"); background-size: calc(var(--s) * 492px) calc(var(--s) * 305px); background-position: calc(var(--s) * -85px) calc(var(--s) * -85px); }
   .ico-door { background-image: url("assets/Spritesheet/roguelikeDungeon_transparent.png"); background-size: calc(var(--s) * 492px) calc(var(--s) * 305px); background-position: calc(var(--s) * -357px) calc(var(--s) * -0px); }
+  .ico-sound { background-image: url("assets/ui/sound.png"); background-size: calc(var(--s) * 32px) calc(var(--s) * 16px); background-position: 0 0; }
+  #sound-btn.muted .ico-sound { background-position: calc(var(--s) * -16px) 0; }
   .ico-shield { background-image: url("assets/Spritesheet/roguelikeChar_transparent.png"); background-size: calc(var(--s) * 918px) calc(var(--s) * 203px); background-position: calc(var(--s) * -578px) calc(var(--s) * -0px); }
   .ico-prev { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -237px -486px; width: 22px; height: 21px; }
   .ico-next { background-image: url("assets/Spritesheet/uipack_rpg_sheet.png"); background-size: 512px 512px; background-position: -325px -486px; width: 22px; height: 21px; }
@@ -2306,6 +2308,7 @@
     </div>
     <div class="game-hud-actions">
       <button id="menu-btn"><i class="ico ico-door"></i>Menu</button>
+      <button id="sound-btn" title="Music and sound on/off"><i class="ico ico-sound"></i>Sound</button>
       <button id="chore-log-btn"><i class="ico ico-scroll"></i>Chores</button>
       <button id="toggle-edit"><i class="ico ico-pick"></i>Edit Dungeon</button>
       <button id="hud-hero-btn"><i class="ico ico-helmet"></i>Hero</button>
@@ -3481,7 +3484,7 @@ function usePotion(kind) {
   if (!potions[kind]) return showToast("None left."), false;
   if (kind === "health") { if (playerHp >= st.maxHp) return showToast("HP is already full."), false; potions.health--; playerHp = Math.min(st.maxHp, playerHp + 50 + 5 * (playerLevel - 1)); }
   if (kind === "mana") { if (playerMp >= st.maxMp) return showToast("MP is already full."), false; potions.mana--; playerMp = Math.min(st.maxMp, playerMp + 40); }
-  updateGameHUD(); saveGameData(); renderInventory(); renderInvBoard(); return true;
+  SND.sfx("potion"); updateGameHUD(); saveGameData(); renderInventory(); renderInvBoard(); return true;
 }
 function renderInvBoard() {
   const list = document.getElementById("inv-list"); if (!list) return;
@@ -3529,7 +3532,7 @@ function skirmish(m) {
   const r = simulateSkirmish(m), dx = Math.sign(m.col - player.x), dy = Math.sign(m.row - player.y);
   let k = 0;
   const iv = setInterval(() => {
-    k++; fx = { m, hx: k % 2 ? dx * 7 : 0, hy: k % 2 ? dy * 7 : 0, hide: k % 2 === 0 && k % 4 === 0 }; drawRoom();
+    k++; if (k < 12) SND.sfx(k % 2 ? "swipe" : "hit"); fx = { m, hx: k % 2 ? dx * 7 : 0, hy: k % 2 ? dy * 7 : 0, hide: k % 2 === 0 && k % 4 === 0 }; drawRoom();
     if (k < 12) return;
     clearInterval(iv); fx = null;
     if (activeAmbush !== m) return drawRoom();
@@ -3538,7 +3541,7 @@ function skirmish(m) {
       if (roll < 0.04) { potions.wander = (potions.wander || 0) + 1; lines.push(["Wanderlust Potion!", 1]); }
       else if (roll < 0.3) { potions.health++; lines.push(["x1 Healing Potion"]); }
       lastBattle = { result: "win", potionsUsed: r.pots, lost: 0, monster: m.name };
-      fxAt("fx-poof", m.col, m.row);
+      fxAt("fx-poof", m.col, m.row); SND.sfx("poof");
       lines.forEach(([t, rare], i) => fxAt("fx-loot" + (rare ? " rare" : ""), m.col, m.row, t, 350 + i * 330));
       activeAmbush = null; resolveCombat(m);
     } else {
@@ -3574,6 +3577,7 @@ function enterRoom(col, row, direction) {
 function addRewards(gold, xp) {
   playerGold += gold;
   playerXp += xp;
+  if (gold > 0) SND.sfx("coin");
   let leveled = false;
   const was = heroStats();
   while (playerXp >= 100) {
@@ -3585,6 +3589,7 @@ function addRewards(gold, xp) {
     const now = heroStats();
     playerHp = now.maxHp;
     playerMp = now.maxMp;
+    SND.sfx("level-up", 1.2);
     setTimeout(() => showToast(`Level up! You are now level ${playerLevel}. HP ${now.maxHp}, ATK ${now.atk} (+${now.atk - was.atk}), DEF ${now.def} (+${now.def - was.def}), SPD ${now.spd}`, 3200), 1200);
   }
   if (isPlayMode) {
@@ -3627,7 +3632,7 @@ function checkAmbush() {
     const m = monsters.find(m => Math.abs(m.col - player.x) + Math.abs(m.row - player.y) <= 1);
     if (!m) { ambushSuppressed.clear(); return; }
     if (ambushSuppressed.has(m.type)) return;
-    if (m.boss && !m.met) { m.met = true; stopWalking(); activeAmbush = m; showDialogue(BOSSES[m.boss].intro, () => { activeAmbush = null; triggerAmbush(m); }); return; }
+    if (m.boss && !m.met) { m.met = true; stopWalking(); activeAmbush = m; SND.sfx("boss-slam"); showDialogue(BOSSES[m.boss].intro, () => { activeAmbush = null; triggerAmbush(m); }); return; }
     return triggerAmbush(m);
   }
   const spots = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => [player.x + dx, player.y + dy]);
@@ -3670,6 +3675,7 @@ const monsterIcon = m => m && (m.icon || (CHORES[m.type] || {}).icon);
 // Closing the battle screen (also used on every screen change) stops its timers
 function closeAmbush() {
   if (battle) clearTimeout(battle.timer);
+  if (battle && battle.bs && !battle.result) SND.music("main"); // boss fight left unfinished
   battle = null;
   document.getElementById("ambush-overlay").classList.remove("open", "boss-mode", "chore-mode");
   activeAmbush = null;
@@ -3700,6 +3706,7 @@ function battleSay(line, line2) {
 function battleAnim(id, cls, ms) {
   const el = document.getElementById(id);
   el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  SND.sfx(cls === "b-hit" ? (id === "b-hero-sprite" && battle && battle.bs ? "boss-hit" : "hit") : "swipe");
   setTimeout(() => el.classList.remove(cls), ms / battleSpeed);
 }
 function battleWait(ms, fn) { if (battle) battle.timer = setTimeout(fn, ms / battleSpeed); }
@@ -3747,7 +3754,7 @@ function battleStep() {
 function heroTurn(b) {
   const name = hero.name;
   if (playerHp < 0.3 * b.st.maxHp && potions.health > 0) {
-    potions.health--;
+    potions.health--; SND.sfx("potion");
     const heal = Math.min(b.st.maxHp - playerHp, 50 + 5 * (playerLevel - 1));
     playerHp += heal;
     b.potionsUsed = (b.potionsUsed || 0) + 1;
@@ -3788,7 +3795,8 @@ function battleEnd(won) {
   if (!battle) return;
   const b = battle, m = b.monster;
   if (won) {
-    document.getElementById("b-enemy-sprite").className = "b-faint";
+    document.getElementById("b-enemy-sprite").className = "b-faint"; SND.sfx("poof");
+    if (b.bs) SND.music("victory");
     const roll = rng(), loot = roll < 0.04 ? "Wanderlust Potion" : roll < 0.3 ? "Health Potion" : ""; // Wanderlust: rare, never sold
     if (loot === "Health Potion") potions.health++;
     if (loot === "Wanderlust Potion") potions.wander = (potions.wander || 0) + 1;
@@ -3796,6 +3804,7 @@ function battleEnd(won) {
     battleSay(`${b.en.name} fainted!`, `Won ${m.xpReward} XP and ${m.goldReward} Gold!${loot ? " Found a " + loot + "!" : ""}`);
   } else {
     document.getElementById("b-hero-sprite").className = "b-faint";
+    if (b.bs) SND.music("main");
     const lost = Math.min(playerGold, Math.max(5, Math.round(playerGold * 0.1)));
     b.result = "faint"; b.lost = lost;
     battleSay(`${hero.name} fainted!`, `Dropped ${lost} Gold... Do a chore to heal up!`);
@@ -3850,6 +3859,7 @@ function closeOverlays() {
 }
 
 function showScreen(name) { if (name === "play") setTimeout(fitStage); /* candle glow needs the shown play area size */
+  SND.sfx("whoosh");
   if (dungeonEdit && name !== "build") exitDungeonMode();
   if (maze && !["play", "shop", "hero"].includes(name)) leaveMaze(); // the dungeon only lives in play (banishment returns on the next Play)
   currentScreen = name;
@@ -4454,7 +4464,7 @@ const BOSSES = {
     win: "The Dust Wraith scatters like a sneeze. Your streak lives on!" }
 };
 for (const [k, b] of Object.entries(BOSSES)) ENEMY_STATS[k] = b.stats;
-function banish(boss) { showDialogue(BOSSES[boss].banish, () => enterMaze(boss, true)); }
+function banish(boss) { SND.sfx("sad"); showDialogue(BOSSES[boss].banish, () => enterMaze(boss, true)); }
 
 // ---- MAZE DUNGEON BELOW ----
 // Reuses the play screen: currentRoomData() points at maze.room, monsters at the maze foes; the upstairs room is stashed.
@@ -4558,7 +4568,7 @@ function buyCharm(id) {
 }
 const SKILLS = [["power", "Power Strike", 15], ["fire", "Fire Slash", 12], ["wind", "Second Wind", 10]];
 function startBossBattle(m) {
-  startBattle(m);
+  startBattle(m); SND.music("boss"); SND.sfx("slam");
   clearTimeout(battle.timer);
   battle.bs = { turn: 0, heads: 1, defend: false, burned: false, on: [] }; // on = charms the player invoked this fight
   document.getElementById("ambush-overlay").classList.add("boss-mode");
@@ -4605,6 +4615,7 @@ function bossAct(kind) {
     else if (fire) line2 = "The enchantment blazes!";
   }
   if (kind === "wind") { const h = Math.min(b.st.maxHp - playerHp, Math.round(b.st.maxHp * 0.35)); playerHp += h; line = `${name} used Second Wind!`; line2 = `Recovered ${h} HP.`; }
+  if (kind === "hpot" || kind === "mpot") SND.sfx("potion");
   if (kind === "hpot") { potions.health--; const h = Math.min(b.st.maxHp - playerHp, 50 + 5 * (playerLevel - 1)); playerHp += h; line = `${name} drank a Health Potion!`; line2 = `Recovered ${h} HP.`; }
   if (kind === "mpot") { potions.mana--; const g = Math.min(b.st.maxMp - playerMp, 40); playerMp += g; line = `${name} drank a Mana Potion!`; line2 = `Recovered ${g} MP.`; }
   if (kind.startsWith("charm:")) { const id = kind.slice(6); b.bs.on.push(id); line = `${name} invokes the ${CHARMS[id].name}!`; line2 = CHARMS[id].desc + "."; }
@@ -5261,6 +5272,69 @@ function openShop() {
   shopSay(`Welcome, ${hero.name}! Finest steel in the house.`);
   showScreen("shop");
 }
+
+// ---- AUDIO: original chiptune loops (seamless via Web Audio) + short SFX, one saved mute toggle ----
+const SND = (() => {
+  const VOL = 0.5, KEY = "dd_muted", BEAT = 60 / 140, LOOP = { main: 32 * BEAT, boss: 16 * BEAT };
+  const NAMES = ["music-main", "music-boss", "music-victory", ...["coin", "hit", "swipe", "boss-hit", "slam", "boss-slam", "whoosh", "poof", "click", "level-up", "potion", "sad"].map(n => "sfx/" + n)];
+  let muted = false; try { muted = localStorage.getItem(KEY) === "1"; } catch (e) {}
+  let ext = "mp3"; try { if (new Audio().canPlayType('audio/ogg; codecs="vorbis"')) ext = "ogg"; } catch (e) {}
+  const url = n => `assets/audio/${n}.${ext}`;
+  let ctx = null, out = null, useEl = false, want = "main", cur = null;
+  const buf = {}, els = {};
+  function start(name) { // crossfade the current track out, the new one in (victory: one-shot, then back to main)
+    if (!ctx && !useEl) return;
+    const key = "music-" + name, fade = name === "victory" ? 0.25 : 1.2;
+    if (useEl) {
+      const a = els[key]; if (!a) return;
+      const old = cur; cur = { name, a };
+      if (old && old.a !== a) { const o = old.a, t0 = performance.now(); const iv = setInterval(() => { const k = Math.min(1, (performance.now() - t0) / (fade * 1000)); o.volume = VOL * (1 - k); if (k >= 1) { clearInterval(iv); o.pause(); } }, 50); }
+      a.loop = name !== "victory"; a.currentTime = 0; a.volume = VOL; a.muted = muted; a.play().catch(() => {});
+      a.onended = () => { if (cur && cur.a === a && name === "victory") music("main"); };
+      return;
+    }
+    if (!buf[key]) return; // not decoded yet: picked up when it arrives
+    const t = ctx.currentTime, g = ctx.createGain(), s = ctx.createBufferSource();
+    s.buffer = buf[key]; s.connect(g); g.connect(out.music);
+    if (LOOP[name]) { s.loop = true; s.loopStart = 0; s.loopEnd = Math.min(LOOP[name], s.buffer.duration); }
+    g.gain.setValueAtTime(name === "victory" ? 1 : 0, t); g.gain.linearRampToValueAtTime(1, t + (name === "victory" ? 0.01 : fade));
+    if (cur) { const o = cur; o.g.gain.cancelScheduledValues(t); o.g.gain.setValueAtTime(o.g.gain.value, t); o.g.gain.linearRampToValueAtTime(0, t + fade); o.s.stop(t + fade + 0.05); }
+    cur = { name, s, g };
+    if (name === "victory") s.onended = () => { if (cur && cur.s === s) music("main"); };
+    s.start(t);
+  }
+  function music(name) { want = name; if (cur && cur.name === name) return; start(name); }
+  function sfx(name, delay = 0) {
+    if (muted || (!ctx && !useEl)) return;
+    const play = () => {
+      if (useEl) { const a = els["sfx/" + name]; if (a) { const c = a.cloneNode(); c.volume = VOL; c.play().catch(() => {}); } return; }
+      const b = buf["sfx/" + name]; if (!b) return;
+      const s = ctx.createBufferSource(); s.buffer = b; s.connect(out.sfx); s.start();
+    };
+    delay ? setTimeout(play, delay * 1000) : play();
+  }
+  function setMuted(m) {
+    muted = m; try { localStorage.setItem(KEY, m ? "1" : "0"); } catch (e) {}
+    if (out) out.master.gain.setTargetAtTime(m ? 0 : VOL, ctx.currentTime, 0.03);
+    if (useEl) for (const a of Object.values(els)) a.muted = m;
+    const b = document.getElementById("sound-btn"); if (b) { b.classList.toggle("muted", m); b.title = m ? "Sound is off (tap to turn on)" : "Music and sound on/off"; }
+  }
+  function unlock() { // browsers only allow audio after a click or key press
+    if (ctx || useEl) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const elMode = () => { useEl = true; for (const n of NAMES) { const a = new Audio(url(n)); a.preload = "auto"; a.muted = muted; els[n] = a; } start(want); };
+    if (!AC || location.protocol === "file:") return elMode(); // file:// cannot fetch: plain <audio> fallback
+    try { ctx = new AC(); if (ctx.state === "suspended") ctx.resume(); } catch (e) { return elMode(); }
+    out = { master: ctx.createGain(), music: ctx.createGain(), sfx: ctx.createGain() };
+    out.master.gain.value = muted ? 0 : VOL; out.music.gain.value = 0.8; out.music.connect(out.master); out.sfx.connect(out.master); out.master.connect(ctx.destination);
+    for (const n of NAMES) fetch(url(n)).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(a => ctx.decodeAudioData(a)).then(b => { buf[n] = b; if (n === "music-" + want && !cur) start(want); }).catch(() => {});
+  }
+  for (const ev of ["pointerdown", "keydown", "touchend"]) document.addEventListener(ev, unlock, { capture: true });
+  document.addEventListener("click", e => { if (e.target.closest && e.target.closest("button") && !e.target.closest("#sound-btn")) sfx("click"); }, true);
+  return { music, sfx, setMuted, toggle: () => setMuted(!muted), get muted() { return muted; }, get track() { return cur && cur.name; } };
+})();
+document.getElementById("sound-btn").addEventListener("click", () => { SND.toggle(); SND.sfx("click"); });
+SND.setMuted(SND.muted);
 
 // ---- BINDINGS ----
 document.getElementById('shop-btn').addEventListener('click', openShop);
