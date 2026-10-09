@@ -2458,7 +2458,7 @@ const CHORES = {
   laundry: {
     id: "laundry",
     name: "Laundry Hydra",
-    icon: ["I", 17, 2],
+    icon: ["H", 0, 0],
     type: "monster",
     hp: 60,
     maxHp: 60,
@@ -2528,7 +2528,9 @@ const SHEETS = {
   rpg_sheet: { src: "assets/Spritesheet/roguelikeSheet_transparent.png", stride: 17, w: 968, h: 526 }, // Roguelike RPG pack (yard, doors, windows, decor)
   char: { src: "assets/Spritesheet/roguelikeChar_transparent.png", stride: 17, w: 918, h: 203 },     // Roguelike characters
   dungeon: { src: "assets/Spritesheet/roguelikeDungeon_transparent.png", stride: 17, w: 492, h: 305 }, // Roguelike dungeon
-  fallback: { src: "assets/pixel_fallbacks.png", stride: 17, w: 33, h: 16 } // hand-made pixel art where Kenney has no match (bathtub, dish slime)
+  fallback: { src: "assets/pixel_fallbacks.png", stride: 17, w: 33, h: 16 }, // hand-made pixel art where Kenney has no match (bathtub, dish slime)
+  hydra: { src: "assets/monsters/laundry-hydra.png", stride: 48, w: 48, h: 48, cell: 48 },            // custom art (checker background keyed out)
+  wraith: { src: "assets/monsters/dust-wraith.png", stride: 48, w: 96, h: 48, cell: 48, frames: 2 }   // 2-frame idle
 };
 
 // Palette id -> real tile value. layer "terrain" writes terrainMap, "entity" writes entityMap, "overlay" writes overlayMap (top).
@@ -2743,7 +2745,7 @@ function loadKenneySprites() {
   };
   img3.src = SHEETS.rpg_sheet.src;
 
-  for (const key of ["char", "dungeon", "fallback"]) {
+  for (const key of ["char", "dungeon", "fallback", "hydra", "wraith"]) {
     const img = new Image();
     img.onload = () => { kenneySprites[key] = img; redraw(); };
     img.src = SHEETS[key].src;
@@ -2751,19 +2753,24 @@ function loadKenneySprites() {
 }
 
 // Pixel sprite icon (never an emoji): icon = [sheet letter, col, row]
-const SHEET_LETTER = { I: "rougelike", R: "rpg_sheet", U: "rpg_urban", C: "char", D: "dungeon", F: "fallback" };
+const SHEET_LETTER = { I: "rougelike", R: "rpg_sheet", U: "rpg_urban", C: "char", D: "dungeon", F: "fallback", H: "hydra", W: "wraith" };
+const ICON_TINT = { boss: "sepia(.35) hue-rotate(55deg) saturate(.7) brightness(.85)" }; // icon[3]: Grime Hydra = green-gray Laundry Hydra
 function spriteSpan(icon, scale = 1) {
   const el = document.createElement("i");
   el.className = "ico";
   const s = icon && SHEETS[SHEET_LETTER[icon[0]]];
-  if (s) el.style.cssText = `width:${16 * scale}px;height:${16 * scale}px;background-image:url('${s.src}');background-size:${s.w * scale}px ${s.h * scale}px;background-position:-${icon[1] * s.stride * scale}px -${icon[2] * s.stride * scale}px`;
+  const f = s ? 16 / (s.cell || 16) : 1;
+  if (s) el.style.cssText = `width:${16 * scale}px;height:${16 * scale}px;background-image:url('${s.src}');background-size:${s.w * scale * f}px ${s.h * scale * f}px;background-position:-${icon[1] * s.stride * scale * f}px -${icon[2] * s.stride * scale * f}px${icon[3] ? `;filter:${ICON_TINT[icon[3]]}` : ""}`;
   return el;
 }
 function drawIconCanvas(ctx, icon, x, y, size) {
   const key = icon && SHEET_LETTER[icon[0]], img = key && kenneySprites[key];
   if (!img) return;
+  const S = SHEETS[key], n = S.cell || 16, fr = S.frames ? Math.floor(performance.now() / 450) % S.frames : 0;
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(img, icon[1] * SHEETS[key].stride, icon[2] * SHEETS[key].stride, 16, 16, x, y, size, size);
+  if (icon[3]) { ctx.save(); ctx.filter = ICON_TINT[icon[3]]; }
+  ctx.drawImage(img, (icon[1] + fr) * S.stride, icon[2] * S.stride, n, n, x, y, size, size);
+  if (icon[3]) ctx.restore();
 }
 
 // ---- MANIFEST PARSING ----
@@ -3085,7 +3092,8 @@ function drawRoom() {
     if (fx && fx.m === m && fx.hide) continue; // hit flash during a map skirmish
     if (maze) { // dungeon foes stand on the floor as full sprites; the boss gets a purple aura
       if (m.boss) { roomCtx.fillStyle = "rgba(140, 80, 220, 0.45)"; roomCtx.fillRect(m.col * TILE_SIZE, m.row * TILE_SIZE, TILE_SIZE, TILE_SIZE); }
-      drawIconCanvas(roomCtx, monsterIcon(m), m.col * TILE_SIZE + 4, m.row * TILE_SIZE + 4, TILE_SIZE - 8);
+      if (m.boss) drawIconCanvas(roomCtx, monsterIcon(m), m.col * TILE_SIZE - 6, m.row * TILE_SIZE - 10, TILE_SIZE + 12); // bosses loom larger
+      else drawIconCanvas(roomCtx, monsterIcon(m), m.col * TILE_SIZE + 4, m.row * TILE_SIZE + 4, TILE_SIZE - 8);
       continue;
     }
     const cx = m.col * TILE_SIZE + TILE_SIZE - 10;
@@ -3445,6 +3453,12 @@ function skirmish(m) {
     updateHUD(); updateGameHUD(); saveGameData(); drawRoom(); renderInvBoard();
   }, 250);
 }
+
+setInterval(() => { // 2-frame idle for animated monster sheets (Dust Wraith) on the map and in the battle window
+  const anim = m => { const ic = monsterIcon(m); return ic && SHEETS[SHEET_LETTER[ic[0]]] && SHEETS[SHEET_LETTER[ic[0]]].frames; };
+  if (currentScreen === "play" && !fx && monsters.some(anim)) drawRoom();
+  if (battle && anim(battle.monster)) { const x = document.getElementById("b-enemy-sprite").getContext("2d"); x.clearRect(0, 0, 96, 96); drawIconCanvas(x, monsterIcon(battle.monster), 0, 0, 96); }
+}, 450);
 
 function enterRoom(col, row, direction) {
   currentRoom.x = col;
@@ -4310,11 +4324,11 @@ const BOSSES = {
     banish: [elder("A whole day without a single chore, Keeper..."), elder("The Trash King smells weakness. The floor gives way!")],
     intro: [{ speaker: "Trash King", portrait: ["R", 38, 10], text: "I AM THE TRASH KING! Your neglect built my throne!" }, elder("He is tanky. Raise your DEF and bring Health Potions!")],
     win: "The Trash King crumbles into rubbish! Back upstairs, Keeper." },
-  grime_hydra: { name: "Grime Hydra", icon: ["I", 17, 2], stats: [5, 6, 5, "Hydra Bite"], hp: 330,
+  grime_hydra: { name: "Grime Hydra", icon: ["H", 0, 0, "boss"], stats: [5, 6, 5, "Hydra Bite"], hp: 330,
     banish: [elder("The grime has piled too high!"), elder("It feeds the Grime Hydra... and it drags you below!")],
     intro: [{ speaker: "Grime Hydra", portrait: ["I", 17, 2], text: "Cut one head and two more grow! Hssss!" }, elder("It grows a head every turn. Strike fast: burst ATK or fire enchantments!")],
     win: "The Hydra dissolves into suds. The house breathes again." },
-  dust_wraith: { name: "Dust Wraith", icon: ["R", 53, 16], stats: [6, 5, 12, "Dust Drain"], hp: 220,
+  dust_wraith: { name: "Dust Wraith", icon: ["W", 0, 0], stats: [6, 5, 12, "Dust Drain"], hp: 220,
     banish: [elder("Your streak is broken, Keeper..."), elder("From the dust of forgotten days rises the Wraith. Down you go!")],
     intro: [{ speaker: "Dust Wraith", portrait: ["R", 53, 16], text: "Ssso many dusty days... your magic is mine." }, elder("It dodges and drains MP. Bring SPD, talismans and Mana Potions!")],
     win: "The Dust Wraith scatters like a sneeze. Your streak lives on!" }
