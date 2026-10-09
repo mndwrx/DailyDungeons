@@ -1958,23 +1958,27 @@
   #gameplay-overlay.portrait #stage .game-play-area { position: relative; left: 0; top: 0; width: auto; height: auto; flex: 1; min-height: 0; padding: 6px;
     background: url("assets/ui/war-table.jpg") center / cover no-repeat !important; image-rendering: pixelated; } /* parchment is the image center, so cover keeps it behind the map */
 
-  /* phone landscape (short + wide): real-pixel slim HUD row, map fills the rest on the war table */
-  #gameplay-overlay.landscape #stage { left: 0; top: 0; width: 100%; height: 100%; transform: none; display: flex; flex-direction: column; background: none; box-shadow: none; }
-  #gameplay-overlay.landscape #stage .game-hud { position: relative; left: 0; right: 0; top: 0; height: 46px; margin: 0; padding: 0 4px; border-width: 4px; border-image-width: 4px;
-    grid-template-columns: 170px auto 1fr; grid-template-rows: 1fr; gap: 6px; }
-  #gameplay-overlay.landscape #stage .game-hud-top .room-name, #gameplay-overlay.landscape #stage .game-hud-bars .bar:nth-child(2),
-  #gameplay-overlay.landscape #stage .game-hud-stats .stat:is(:nth-child(2), :nth-child(4), :nth-child(5), :nth-child(7)) { display: none; }
-  #gameplay-overlay.landscape #stage .game-hud-bars { grid-column: 1; grid-row: 1; grid-template-columns: 1fr; gap: 3px; }
-  #gameplay-overlay.landscape #stage .game-hud-bars .bar { grid-template-columns: 40px 1fr; gap: 3px; }
-  #gameplay-overlay.landscape #stage .game-hud-bars .bar .label { font-size: 11px; }
-  #gameplay-overlay.landscape #stage .game-hud-bars .bar .track { height: 10px; min-height: 0; }
-  #gameplay-overlay.landscape #stage .game-hud-stats { grid-column: 2; grid-row: 1; grid-auto-columns: auto; gap: 3px; }
-  #gameplay-overlay.landscape #stage .game-hud-stats .stat { flex-direction: row; gap: 4px; padding: 0 4px; min-height: 26px; }
-  #gameplay-overlay.landscape #stage .game-hud-stats .stat .label { font-size: 11px; }
-  #gameplay-overlay.landscape #stage .game-hud-stats .stat .value { font-size: 12px; }
-  #gameplay-overlay.landscape #stage .game-hud-actions { grid-column: 3; grid-row: 1; height: auto; display: flex; justify-content: flex-end; gap: 3px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-  #gameplay-overlay.landscape #stage .game-hud-actions button { flex: none; width: 38px; height: 38px; padding: 0; font-size: 0; gap: 0; } /* icon-only touch targets; labels stay as title/aria */
-  #gameplay-overlay.landscape #stage .game-play-area { position: relative; left: 0; top: 0; width: auto; height: auto; flex: 1; min-height: 0; padding: 4px; overflow: hidden;
+  /* phone landscape (coarse pointer, short + wide): side rails in real pixels; left = vitals + chips, right = icon buttons, map in the middle */
+  #gameplay-overlay.landscape #stage { left: 0; top: 0; width: 100%; height: 100%; transform: none; box-sizing: border-box; background: none; box-shadow: none;
+    padding: 4px max(4px, env(safe-area-inset-right)) 4px max(4px, env(safe-area-inset-left)); /* notch-safe */
+    display: grid; grid-template-columns: 80px 1fr 56px; grid-template-rows: auto auto 1fr; column-gap: 6px; }
+  #gameplay-overlay.landscape #stage::before { content: ""; grid-column: 1; grid-row: 1 / -1; border: 6px solid; border-image: url("assets/9-Slice/Ancient/brown.png") 16 fill / 6px; background: #6e4b2c; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); }
+  #gameplay-overlay.landscape #stage .game-hud, #gameplay-overlay.landscape #stage .game-hud-top { display: contents; }
+  #gameplay-overlay.landscape #stage .game-hud-top .room-name { grid-column: 1; grid-row: 1; z-index: 1; padding: 8px 8px 2px; font-size: 10px; line-height: 1.15; white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  #gameplay-overlay.landscape #stage .game-hud-top .room-name .sub { display: none; }
+  #gameplay-overlay.landscape #stage .game-hud-bars { grid-column: 1; grid-row: 2; z-index: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 8px 4px; }
+  #gameplay-overlay.landscape #stage .game-hud-bars .bar { display: flex; flex-direction: column; align-items: stretch; gap: 1px; }
+  #gameplay-overlay.landscape #stage .game-hud-bars .bar .label { font-size: 9px; text-align: left; }
+  #gameplay-overlay.landscape #stage .game-hud-bars .bar .track { height: 8px; min-height: 0; }
+  #gameplay-overlay.landscape #stage .game-hud-stats { grid-column: 1; grid-row: 3; z-index: 1; align-self: start; display: flex; flex-direction: column; gap: 2px; padding: 0 6px 8px; overflow-y: auto; scrollbar-width: none; max-height: 100%; }
+  #gameplay-overlay.landscape #stage .game-hud-stats .stat:nth-child(5) { display: none; } /* ATK/DEF/SPD lives on the Hero screen */
+  #gameplay-overlay.landscape #stage .game-hud-stats .stat { flex-direction: column; align-items: center; gap: 0; padding: 0 2px; line-height: 1.1; }
+  #gameplay-overlay.landscape #stage .game-hud-stats .stat .label { font-size: 8px; }
+  #gameplay-overlay.landscape #stage .game-hud-stats .stat .value { font-size: 10px; white-space: nowrap; }
+  #gameplay-overlay.landscape #stage .game-hud-actions { grid-column: 3; grid-row: 1 / -1; height: auto; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 2px 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none;
+    border: 6px solid; border-image: url("assets/9-Slice/Ancient/brown.png") 16 fill / 6px; background: #6e4b2c; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); }
+  #gameplay-overlay.landscape #stage .game-hud-actions button { flex: none; width: 42px; height: 42px; padding: 0; font-size: 0; gap: 0; } /* icon-only touch targets */
+  #gameplay-overlay.landscape #stage .game-play-area { grid-column: 2; grid-row: 1 / -1; position: relative; left: 0; top: 0; width: auto; height: auto; min-height: 0; min-width: 0; padding: 2px; overflow: hidden;
     background: url("assets/ui/war-table.jpg") center / cover no-repeat !important; image-rendering: pixelated; }
   #gameplay-overlay.portrait #stage .game-play-area { overflow: hidden; }
   /* candle flicker: additive warm glow over the war table's candle (source ~x75 y215 of 1024x572), stepped for a pixel feel */
@@ -3958,7 +3962,7 @@ window.addEventListener("resize", () => { drawTitleArt(); placeMenuCard(); });
 /* Play stage: 16:9 logical 1280x720, scaled uniformly; phone portrait gets the compact layout at scale 1 */
 function fitStage() {
   const ov = document.getElementById("gameplay-overlay"), st = document.getElementById("stage"); if (!ov || !st) return;
-  const portrait = innerHeight > innerWidth && innerWidth <= 700, landscape = !portrait && innerHeight < 500 && innerWidth > innerHeight;
+  const portrait = innerHeight > innerWidth && innerWidth <= 700, landscape = !portrait && innerHeight < 500 && matchMedia("(pointer: coarse) and (orientation: landscape)").matches; /* touch phones on their side */
   ov.classList.toggle("portrait", portrait); ov.classList.toggle("landscape", landscape);
   const s = portrait || landscape ? 1 : Math.min(innerWidth / 1280, innerHeight / 720);
   window.ddStageScale = s; st.style.setProperty("--ss", s);
