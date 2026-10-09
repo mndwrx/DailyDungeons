@@ -1835,6 +1835,12 @@
   /* ---- Daily Quest Board ---- */
   .start-row { display: flex; gap: 4px; justify-content: center; }
   #start-page .scroll-card .start-row .start-btn { min-width: 0; flex: 1; padding-left: 8px; padding-right: 8px; }
+  #dungeon-bar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 4px 6px; font-size: 12px; }
+  #dungeon-bar[hidden] { display: none; }
+  #dungeon-bar input, #dungeon-bar select { font: inherit; background: #f3e6c8; color: var(--ink); border: 2px solid #6e4b2c; padding: 2px 4px; }
+  #dungeon-bar button { font-size: 12px; padding: 2px 8px; }
+  #dg-msg { color: #f0c860; text-shadow: 1px 1px 0 #000; }
+  #dg-msg.bad { color: #ff8a7a; }
   #quest-board { position: fixed; inset: 0; z-index: 8500; display: none; align-items: center; justify-content: center; background: rgba(0, 0, 0, .55); }
   #quest-board.open { display: flex; }
   .qb-panel { width: min(720px, 94vw); max-height: 88vh; overflow: auto; box-sizing: border-box; padding: 8px 12px; border: 16px solid; border-image: url("assets/9-Slice/Ancient/brown_inlay.png") 12 fill / 16px; background: #4a3019; color: var(--wood-text); }
@@ -1956,11 +1962,19 @@
     <div class="game-hud-actions builder-actions">
       <button id="builder-menu-btn"><i class="ico ico-door"></i>Menu</button>
       <button id="builder-palette-btn"><i class="ico ico-book"></i>Asset Palette</button>
+      <button id="dungeon-mode-btn" class="builder-tool-btn"><i class="ico ico-door"></i>Dungeon Mode</button>
       <button id="builder-chores-btn"><i class="ico ico-scroll"></i>Chores</button>
       <button id="builder-play-btn"><i class="ico ico-next"></i>Play</button>
       <span class="builder-selected-wrap">Tile: <span id="builder-swatch" class="builder-swatch" aria-hidden="true"></span> <b id="builder-selected">Floor</b></span>
       <button id="builder-rotate-btn" class="builder-tool-btn" title="Rotate clockwise (R) / counter-clockwise (Shift+R)">Rotate 0°</button>
       <button id="builder-eraser-btn" class="builder-tool-btn" title="Eraser (E)"><i class="ico ico-broom"></i>Erase</button>
+    </div>
+    <div id="dungeon-bar" hidden>
+      <input id="dg-name" maxlength="30" placeholder="Dungeon name" aria-label="Dungeon name">
+      <select id="dg-list" aria-label="Saved dungeons"></select>
+      <button id="dg-open" class="hero-btn">Open</button><button id="dg-save" class="hero-btn primary">Save</button><button id="dg-new" class="hero-btn">New</button><button id="dg-delete" class="hero-btn">Delete</button>
+      <button id="dg-export" class="hero-btn">Export</button><button id="dg-import" class="hero-btn">Import</button><input type="file" id="dg-file" accept=".json,application/json" hidden>
+      <span id="dg-msg"></span>
     </div>
     <div class="stats-row">
       <div class="keystat">
@@ -2365,7 +2379,7 @@ let currentRoomName = "Living Room";
 let activeRooms = {};
 let doors = [];
 let monsters = [];
-let maze = null, lastBoss = null; // Stage 2 dungeon below (see MAZE DUNGEON BELOW)
+let maze = null, lastBoss = null; let dungeonEdit = null, dungeonDraft = null; // Phase B builder Dungeon mode // Stage 2 dungeon below (see MAZE DUNGEON BELOW)
 let dailyChores = [];
 let chores = [];
 let chaosMeter = 0;
@@ -2623,7 +2637,23 @@ function houseDefs() {
     ["curtains_teal",   126, O, "decor",   "Teal Curtains",       "R", 56, 0, { wall: 1, walk: 1 }],
     ["teapot",          127, O, "decor",   "Teapot",              "R", 55, 15],
     ["cuckoo_clock",    128, O, "decor",   "Cuckoo Clock",        "R", 26, 8, { wall: 1, walk: 1 }],
-    ["produce_crate",   130, E, "decor",   "Produce Crate",       "R", 14, 7]
+    ["produce_crate",   130, E, "decor",   "Produce Crate",       "R", 14, 7],
+    // Dungeon mode set (only shown in the builder's Dungeon mode); markers are hidden in play
+    ["dng_floor",       200, T, "dungeon", "Sandstone Floor",     "D", 16, 14],
+    ["dng_flagstones",  201, T, "dungeon", "Flagstones",          "D", 16, 11],
+    ["dng_wall",        202, T, "dungeon", "Stone Wall",          "D", 17, 0, { block: 1 }],
+    ["dng_door",        203, E, "dungeon", "Dungeon Door",        "D", 22, 0, { door: 1 }],
+    ["dng_gate",        204, E, "dungeon", "Iron Gate",           "D", 24, 10, { door: 1 }],
+    ["dng_stairs",      205, E, "dungeon", "Stairs Up (Start)",   "D", 11, 16, { walk: 1 }],
+    ["dng_brazier",     206, E, "dungeon", "Brazier",             "D", 14, 17],
+    ["dng_torch",       207, E, "dungeon", "Fire Bowl",           "D", 15, 17],
+    ["dng_pillar",      208, E, "dungeon", "Pillar",              "D", 0, 5],
+    ["dng_crate",       209, E, "dungeon", "Crate",               "D", 6, 5],
+    ["dng_skull",       210, E, "dungeon", "Skull",               "D", 0, 2, { walk: 1 }],
+    ["dng_bones",       211, E, "dungeon", "Bones",               "D", 1, 2, { walk: 1 }],
+    ["dng_mushrooms",   212, E, "dungeon", "Mushrooms",           "D", 1, 3, { walk: 1 }],
+    ["dng_spawn",       213, E, "dungeon", "Enemy Spawn",         "D", 3, 2, { walk: 1 }],
+    ["dng_boss",        214, E, "dungeon", "Boss Spot",           "R", 38, 10, { walk: 1 }]
   ];
   const out = {};
   for (const [id, value, layer, cat, label, sheet, col, row, flags = {}] of rows) {
@@ -3010,7 +3040,7 @@ function drawRoom() {
   if (!room) return;
   drawTiles(roomCtx, room.terrain, room.entity, room.terrainRot, room.entityRot, room.overlay, room.overlayRot);
 
-  if (maze) { // dungeon shading: walls sink into darkness so the corridors read clearly
+  if (maze && !maze.custom) { // generated-maze shading: walls sink into darkness so the corridors read clearly
     for (let c = 0; c < GRID_SIZE; c++) for (let r = 0; r < GRID_SIZE; r++) {
       roomCtx.fillStyle = room.terrain[c][r] === 22 ? "rgba(40, 24, 60, 0.25)" : "rgba(8, 6, 16, 0.78)";
       roomCtx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -3474,6 +3504,7 @@ function closeOverlays() {
 }
 
 function showScreen(name) {
+  if (dungeonEdit && name !== "build") exitDungeonMode();
   if (maze && !["play", "shop", "hero"].includes(name)) leaveMaze(); // the dungeon only lives in play (banishment returns on the next Play)
   currentScreen = name;
   closeOverlays();
@@ -3674,8 +3705,9 @@ function loadAssetGrid() {
   const activeCategory = document.querySelector('.tab.active').dataset.category;
   const query = (document.getElementById('palette-search').value || '').trim().toLowerCase();
   for (const [tileId, def] of Object.entries(TILE_DEFS)) {
+    if (dungeonEdit ? def.cat !== "dungeon" && tileId !== "eraser" : def.cat === "dungeon") continue; // House / Dungeon piece sets
     if (query) { if (!def.label.toLowerCase().includes(query)) continue; } // search spans all tabs
-    else if (activeCategory !== "all" && def.cat !== activeCategory && tileId !== "eraser") continue;
+    else if (!dungeonEdit && activeCategory !== "all" && def.cat !== activeCategory && tileId !== "eraser") continue;
     const cell = document.createElement('div');
     cell.className = 'asset-item';
     cell.dataset.tile = tileId;
@@ -3858,12 +3890,7 @@ function renderInventory() {
 function saveGameData() {
   const payload = {
     schemaVersion: 1,
-    terrainMap,
-    entityMap,
-    terrainRot,
-    entityRot,
-    overlayMap,
-    overlayRot,
+    ...(dungeonEdit ? dungeonEdit.house : { terrainMap, entityMap, terrainRot, entityRot, overlayMap, overlayRot }), // the dungeon being built is saved separately
     player: maze ? maze.stash.player : player,
     currentRoom,
     monsters: maze ? maze.stash.monsters : monsters,
@@ -4079,12 +4106,13 @@ function genMaze(boss) {
 }
 function enterMaze(boss, banished) {
   closeDialogue(); stopWalking();
-  const g = genMaze(boss);
-  maze = { boss, banished, room: g.room, stash: { player: { ...player }, monsters, prevPos } };
-  monsters = g.foes; player.x = 1; player.y = 1; prevPos = { x: 1, y: 1 }; ambushSuppressed = new Set();
+  const g = pickDungeon(boss) || genMaze(boss); // a valid hand-built dungeon at random, else the random maze
+  maze = { boss, banished, room: g.room, custom: !!g.start, stash: { player: { ...player }, monsters, prevPos } };
+  const [sx, sy] = g.start || [1, 1];
+  monsters = g.foes; player.x = sx; player.y = sy; prevPos = { x: sx, y: sy }; ambushSuppressed = new Set();
   if (currentScreen !== "play") showScreen("play");
   document.getElementById("gameplay-overlay").classList.add("in-maze");
-  document.getElementById("game-room-name").textContent = "The Dungeon Below";
+  document.getElementById("game-room-name").textContent = g.room.name;
   document.getElementById("descend-btn").lastChild.textContent = "Ascend";
   drawRoom(); updateGameHUD();
 }
@@ -4325,6 +4353,121 @@ function editQuest(id, field, value) {
 }
 function addQuest(name = "New chore") { const c = { id: "c" + Date.now().toString(36) + Math.floor(Math.random() * 1e4), name, freq: "daily", day: new Date().getDay(), monster: "dishes", mins: 2 }; qChores.push(c); saveQuests(); return c; }
 function deleteQuest(id) { qChores = qChores.filter(c => c.id !== id); saveQuests(); }
+
+// ---- PREMADE DUNGEONS (Phase B): built in the builder's Dungeon mode, saved by name, used for banishment/Descend ----
+const DUNGEONS_KEY = "dd_dungeons", DV = id => TILE_DEFS[id].value;
+const copyGrid = g => g.map(r => [...r]);
+const GRIDS = ["terrainMap", "entityMap", "terrainRot", "entityRot", "overlayMap", "overlayRot"];
+function gridsNow() { return { terrainMap: copyGrid(terrainMap), entityMap: copyGrid(entityMap), terrainRot: copyGrid(terrainRot), entityRot: copyGrid(entityRot), overlayMap: copyGrid(overlayMap), overlayRot: copyGrid(overlayRot) }; }
+function setGrids(g) { terrainMap = copyGrid(g.terrainMap); entityMap = copyGrid(g.entityMap); terrainRot = copyGrid(g.terrainRot); entityRot = copyGrid(g.entityRot); overlayMap = copyGrid(g.overlayMap); overlayRot = copyGrid(g.overlayRot); }
+const blankGrids = () => ({ terrainMap: blankRotGrid(), entityMap: blankRotGrid(), terrainRot: blankRotGrid(), entityRot: blankRotGrid(), overlayMap: blankRotGrid(), overlayRot: blankRotGrid() });
+function sunkenCellar() { // the shipped example, built from the same pieces
+  const g = blankGrids(), F = DV("dng_floor"), W = DV("dng_wall");
+  for (let c = 0; c < GRID_SIZE; c++) for (let r = 0; r < GRID_SIZE; r++) g.terrainMap[c][r] = W;
+  const carve = (c0, r0, c1, r1, t = F) => { for (let c = c0; c <= c1; c++) for (let r = r0; r <= r1; r++) g.terrainMap[c][r] = t; };
+  carve(1, 1, 4, 4); carve(5, 3, 8, 3); carve(8, 3, 8, 5); carve(6, 5, 9, 9); carve(10, 7, 12, 7); carve(12, 7, 12, 9); carve(11, 9, 14, 14); carve(3, 5, 3, 10); carve(1, 10, 4, 14);
+  const put = (id, c, r) => { g.entityMap[c][r] = DV(id); };
+  put("dng_stairs", 2, 2); put("dng_brazier", 1, 1); put("dng_brazier", 4, 1); put("dng_door", 5, 3); put("dng_gate", 12, 8);
+  put("dng_spawn", 8, 7); put("dng_spawn", 2, 12); put("dng_spawn", 11, 7); put("dng_boss", 13, 12);
+  put("dng_skull", 7, 6); put("dng_bones", 1, 14); put("dng_mushrooms", 4, 13); put("dng_pillar", 11, 10); put("dng_pillar", 14, 10); put("dng_torch", 11, 14); put("dng_torch", 14, 14); put("dng_crate", 9, 9);
+  return { name: "Sunken Cellar", ...g };
+}
+function loadDungeons() {
+  try { const l = JSON.parse(localStorage.getItem(DUNGEONS_KEY)); if (Array.isArray(l)) return l.filter(validShape); } catch (e) {}
+  const seed = [sunkenCellar()]; saveDungeons(seed); return seed; // first run: ship the example
+}
+function saveDungeons(list) { try { localStorage.setItem(DUNGEONS_KEY, JSON.stringify(list)); } catch (e) { showToast("Storage is full: dungeon not saved."); } }
+const validShape = d => d && typeof d.name === "string" && GRIDS.every(k => Array.isArray(d[k]) && d[k].length === GRID_SIZE && d[k].every(r => Array.isArray(r) && r.length === GRID_SIZE));
+function cellWalk(g, c, r) {
+  if (c < 0 || r < 0 || c >= GRID_SIZE || r >= GRID_SIZE) return false;
+  const e = g.entityMap[c][r], piece = ENTITY_DEFS[e], t = g.terrainMap[c][r];
+  if (piece && piece.door) return true;
+  if (!t) return !!(e && piece && piece.walk);
+  return !BLOCKING_TERRAIN.includes(t) && (e === 0 || !!(piece && piece.walk));
+}
+function findCells(g, id) { const out = []; for (let c = 0; c < GRID_SIZE; c++) for (let r = 0; r < GRID_SIZE; r++) if (g.entityMap[c][r] === DV(id)) out.push([c, r]); return out; }
+function validateDungeon(g) { // 1 stairs, 1 boss spot, and a walkable path between them
+  const st = findCells(g, "dng_stairs"), bs = findCells(g, "dng_boss");
+  if (st.length !== 1) return `Needs exactly 1 Stairs Up (found ${st.length}).`;
+  if (bs.length !== 1) return `Needs exactly 1 Boss Spot (found ${bs.length}).`;
+  const seen = new Set([st[0].join()]), q = [st[0]];
+  while (q.length) {
+    const [c, r] = q.shift();
+    if (c === bs[0][0] && r === bs[0][1]) return null;
+    for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = [c + dc, r + dr]; if (!seen.has(k.join()) && cellWalk(g, k[0], k[1])) { seen.add(k.join()); q.push(k); } }
+  }
+  return "No walkable path from the Stairs Up to the Boss Spot.";
+}
+function dungeonToMaze(d, boss) {
+  const B = BOSSES[boss], [bc, br] = findCells(d, "dng_boss")[0], types = ["dishes", "laundry", "trash"];
+  const foes = [{ col: bc, row: br, type: boss, boss, name: B.name, icon: B.icon, hp: B.hp, maxHp: B.hp, xpReward: 150, goldReward: 300 }];
+  findCells(d, "dng_spawn").forEach(([c, r], i) => { const ch = CHORES[types[i % 3]]; foes.push({ col: c, row: r, type: ch.id, name: ch.name, icon: ch.icon, hp: ch.maxHp, maxHp: ch.maxHp, xpReward: ch.xpReward, goldReward: ch.goldReward * 2 }); });
+  const entity = copyGrid(d.entityMap).map(col => col.map(v => v === DV("dng_spawn") || v === DV("dng_boss") ? 0 : v)); // markers vanish in play
+  return { start: findCells(d, "dng_stairs")[0], foes, room: { name: d.name, terrain: copyGrid(d.terrainMap), entity, terrainRot: copyGrid(d.terrainRot), entityRot: copyGrid(d.entityRot), overlay: copyGrid(d.overlayMap), overlayRot: copyGrid(d.overlayRot) } };
+}
+function pickDungeon(boss) {
+  const ok = loadDungeons().filter(d => !validateDungeon(d));
+  return ok.length ? dungeonToMaze(ok[Math.floor(Math.random() * ok.length)], boss) : null;
+}
+function dgMsg(text, bad) { const m = document.getElementById("dg-msg"); m.textContent = text; m.classList.toggle("bad", !!bad); if (text) showToast(text, 2600); }
+function renderDungeonBar() {
+  const list = loadDungeons(), sel = document.getElementById("dg-list");
+  sel.innerHTML = list.map((d, i) => `<option value="${i}"></option>`).join("");
+  [...sel.options].forEach((o, i) => { o.textContent = list[i].name; if (dungeonEdit && list[i].name === dungeonEdit.name) o.selected = true; });
+  document.getElementById("dg-name").value = dungeonEdit ? dungeonEdit.name : "";
+}
+function openDungeon(d) { setGrids(d); dungeonEdit.name = d.name; renderDungeonBar(); drawMap(); }
+function enterDungeonMode() {
+  if (dungeonEdit) return;
+  dungeonEdit = { house: gridsNow(), name: "" };
+  const list = loadDungeons();
+  if (dungeonDraft) { setGrids(dungeonDraft); dungeonEdit.name = dungeonDraft.name; } else if (list.length) { setGrids(list[0]); dungeonEdit.name = list[0].name; } else { setGrids(blankGrids()); dungeonEdit.name = "New Dungeon"; }
+  document.getElementById("dungeon-bar").hidden = false;
+  document.getElementById("dungeon-mode-btn").lastChild.textContent = "House Mode";
+  document.querySelector(".browser-tabs").style.display = "none";
+  selectTile("dng_floor"); renderDungeonBar(); dgMsg(""); loadAssetGrid(); drawMap();
+}
+function exitDungeonMode() {
+  if (!dungeonEdit) return;
+  dungeonDraft = { ...gridsNow(), name: document.getElementById("dg-name").value.trim() || dungeonEdit.name };
+  setGrids(dungeonEdit.house); dungeonEdit = null;
+  document.getElementById("dungeon-bar").hidden = true;
+  document.getElementById("dungeon-mode-btn").lastChild.textContent = "Dungeon Mode";
+  document.querySelector(".browser-tabs").style.display = "";
+  selectTile("floor"); loadAssetGrid(); drawMap(); saveGameData();
+}
+function saveCurrentDungeon() {
+  const name = document.getElementById("dg-name").value.trim().slice(0, 30), g = gridsNow();
+  if (!name) return dgMsg("Give the dungeon a name first.", true), false;
+  const err = validateDungeon(g);
+  if (err) return dgMsg("Not saved: " + err, true), false;
+  const list = loadDungeons().filter(d => d.name !== name);
+  list.push({ name, ...g }); saveDungeons(list);
+  dungeonEdit.name = name; renderDungeonBar(); dgMsg(`Saved "${name}". It can now appear when you are banished or Descend.`);
+  return true;
+}
+function deleteDungeon() {
+  const list = loadDungeons(), i = +document.getElementById("dg-list").value, d = list[i];
+  if (!d) return;
+  list.splice(i, 1); saveDungeons(list); renderDungeonBar(); dgMsg(`Deleted "${d.name}".`);
+}
+function exportDungeon() {
+  const g = { name: document.getElementById("dg-name").value.trim() || "dungeon", ...gridsNow() };
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(g)], { type: "application/json" }));
+  a.download = g.name.replace(/[^a-z0-9]+/gi, "_") + ".json"; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  dgMsg(`Exported "${g.name}".`);
+}
+function importDungeonText(text) {
+  let data; try { data = JSON.parse(text); } catch (e) { return dgMsg("Import failed: not a JSON file.", true), false; }
+  const items = (Array.isArray(data) ? data : [data]).filter(validShape);
+  if (!items.length) return dgMsg("Import failed: no dungeon found in that file.", true), false;
+  const list = loadDungeons();
+  for (const d of items) { let n = d.name.slice(0, 30) || "Imported"; while (list.some(x => x.name === n)) n += " (2)"; list.push({ ...d, name: n }); }
+  saveDungeons(list); openDungeon(list[list.length - 1]);
+  dgMsg(`Imported ${items.length} dungeon${items.length > 1 ? "s" : ""}. Save it after checking it.`);
+  return true;
+}
 
 window.ddDebug = { // dev/test hooks (quest timers can be stubbed)
   skipTimers(on = true) { qSkipTimers = on; },
@@ -4699,6 +4842,14 @@ document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListe
 document.getElementById('palette-search').addEventListener('input', loadAssetGrid);
 document.getElementById('new-map-btn').addEventListener('click', () => maybeIntro(newMap));
 document.getElementById('descend-btn').addEventListener('click', toggleDescend);
+document.getElementById('dungeon-mode-btn').addEventListener('click', () => dungeonEdit ? exitDungeonMode() : enterDungeonMode());
+document.getElementById('dg-open').addEventListener('click', () => { const d = loadDungeons()[+document.getElementById('dg-list').value]; if (d) { openDungeon(d); dgMsg(`Opened "${d.name}".`); } });
+document.getElementById('dg-save').addEventListener('click', saveCurrentDungeon);
+document.getElementById('dg-new').addEventListener('click', () => { openDungeon({ name: "New Dungeon", ...blankGrids() }); dgMsg("New dungeon: place Stairs Up and a Boss Spot."); });
+document.getElementById('dg-delete').addEventListener('click', deleteDungeon);
+document.getElementById('dg-export').addEventListener('click', exportDungeon);
+document.getElementById('dg-import').addEventListener('click', () => document.getElementById('dg-file').click());
+document.getElementById('dg-file').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) f.text().then(importDungeonText); e.target.value = ''; });
 for (const id of ['quests-btn', 'start-quests-btn']) document.getElementById(id).addEventListener('click', openQuestBoard);
 document.getElementById('qb-close').addEventListener('click', closeQuestBoard);
 document.getElementById('qb-edit-btn').addEventListener('click', () => { qbEditing = !qbEditing; renderQuestBoard(); });

@@ -60,7 +60,7 @@ new Set(tileVals).size === tileVals.length ? pass(`All ${tileVals.length} tile v
 const cats = ['all', 'floors', 'kitchen', 'bath', 'bedroom', 'living', 'laundry', 'yard', 'decor', 'monsters'];
 const missingTabs = cats.filter(c => !html.includes(`data-category="${c}"`));
 missingTabs.length ? fail('Missing palette tabs: ' + missingTabs.join(', ')) : pass(`${cats.length} palette tabs present`);
-const badCat = houseRows.filter(m => !cats.includes(m[3])).map(m => m[1]);
+const badCat = houseRows.filter(m => !cats.includes(m[3]) && m[3] !== 'dungeon') // dungeon set: builder Dungeon mode.map(m => m[1]);
 badCat.length ? fail('Pieces with unknown tab: ' + badCat.join(', ')) : pass('Every piece belongs to a palette tab');
 ids.has('palette-search') ? pass('Palette search box present') : fail('Palette search box missing');
 const sheetSrcs = [...script.matchAll(/src:\s*"(assets\/[^"]+\.png)"/g)].map(m => m[1]);
@@ -104,7 +104,7 @@ const layerRows = Object.fromEntries(houseRows.map(m => [m[1], m[0]]));
 /if \(!t\) return !!\(e && piece && piece\.walk\)/.test(script) ? pass('A lone piece on empty ground walks by its own rule') : fail('Walkability for pieces without ground missing');
 ['curtains_orange', 'curtains_teal', 'landscape_art', 'sunset_art', 'photo_frames', 'cuckoo_clock', 'wall_mirror', 'round_mirror', 'chandelier', 'candle_stand', 'candelabra', 'potted_plant', 'small_plant', 'teapot', 'toilet_paper'].every(id => layerRows[id] && /,\s*O,/.test(layerRows[id]))
   ? pass('Hang-on + tabletop decor (curtains, paintings, mirrors, clock, chandelier, candles, plants, teapot, toilet paper) is on the top overlay layer') : fail('Hang-on decor not on the overlay layer');
-/payload = \{[\s\S]*?overlayMap,[\s\S]*?overlayRot,/.test(script) && /overlayMap = validTileGrid\(data\.overlayMap\)/.test(script) && /migrateOverlay\(\);/.test(script)
+/payload = \{[\s\S]*?overlayMap, overlayRot \}/.test(script) && /overlayMap = validTileGrid\(data\.overlayMap\)/.test(script) && /migrateOverlay\(\);/.test(script)
   ? pass('Overlay layer saved + loaded (old saves: empty overlay, decor lifted off the entity layer)') : fail('Overlay layer not persisted');
 /if \(overlayMap\[col\]\[row\]\) \{ overlayMap\[col\]\[row\] = 0[\s\S]*?if \(entityMap\[col\]\[row\]\) \{ entityMap[\s\S]*?if \(terrainMap\[col\]\[row\]\)/.test(script)
   ? pass('Eraser peels top-down: overlay, entity, terrain') : fail('Eraser order wrong');
