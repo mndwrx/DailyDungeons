@@ -1823,6 +1823,8 @@
     background: linear-gradient(#f3e2b8 0 58%, #e2c98f 58% 100%); image-rendering: pixelated; }
   .b-mon { position: absolute; width: 30%; aspect-ratio: 1; display: flex; align-items: flex-end; justify-content: center; }
   .b-enemy { right: 7%; top: 6%; }
+  .b-enemy.b-big { width: 34%; right: 6%; top: 0; } /* Trash King: ~1.4x, still clear of the hero plate and the window edge */
+  .b-enemy.b-big canvas { width: 100%; margin-bottom: 0; }
   .b-hero { left: 6%; bottom: 4%; }
   .b-pad { position: absolute; left: -12%; right: -12%; bottom: 0; height: 26%; border-radius: 50%; background: #b7925a; box-shadow: inset 0 -4px 0 #8a6a3e; }
   .b-mon canvas { position: relative; width: 82%; height: auto; aspect-ratio: 1; image-rendering: pixelated; margin-bottom: 6%; transition: transform 0.15s; }
@@ -3708,6 +3710,7 @@ function updateBattleHero() {
 }
 
 function startBattle(monster) {
+  document.querySelector(".b-enemy").classList.toggle("b-big", monster.boss === "trash_king"); /* boss art drawn bigger */
   const st = heroStats(), en = enemyStats(monster);
   if (battle) clearTimeout(battle.timer);
   battle = { monster, st, en, queue: [], usedSkill: false, timer: null };
