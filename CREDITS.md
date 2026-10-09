@@ -21,3 +21,5 @@ for this project; the coin, door and pickaxe icons are Kenney (CC0) sprites with
 
 ## Music and sound effects
 Original chiptune soundtrack generated in code for this project.
+This includes `music-explore` (calm exploring theme on the house and dungeon map) and `music-battle`
+(chore battle theme), both original compositions made for this project.

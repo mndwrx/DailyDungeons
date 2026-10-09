@@ -3648,7 +3648,7 @@ function simulateSkirmish(m) { // the auto-battle math, resolved instantly (auto
   return { won: en.hp <= 0, pots, st };
 }
 function skirmish(m) {
-  stopWalking(); activeAmbush = m;
+  stopWalking(); activeAmbush = m; SND.sfx("whoosh"); // quick sting; the explore music keeps playing
   const r = simulateSkirmish(m), dx = Math.sign(m.col - player.x), dy = Math.sign(m.row - player.y);
   let k = 0;
   const iv = setInterval(() => {
@@ -3795,7 +3795,6 @@ const monsterIcon = m => m && (m.icon || (CHORES[m.type] || {}).icon);
 // Closing the battle screen (also used on every screen change) stops its timers
 function closeAmbush() {
   if (battle) clearTimeout(battle.timer);
-  if (battle && battle.bs && !battle.result) SND.music("main"); // boss fight left unfinished
   battle = null;
   document.getElementById("ambush-overlay").classList.remove("open", "boss-mode", "chore-mode");
   activeAmbush = null;
@@ -3924,7 +3923,6 @@ function battleEnd(won) {
     battleSay(`${b.en.name} fainted!`, `Won ${m.xpReward} XP and ${m.goldReward} Gold!${loot ? " Found a " + loot + "!" : ""}`);
   } else {
     document.getElementById("b-hero-sprite").className = "b-faint";
-    if (b.bs) SND.music("main");
     const lost = Math.min(playerGold, Math.max(5, Math.round(playerGold * 0.1)));
     b.result = "faint"; b.lost = lost;
     battleSay(`${hero.name} fainted!`, `Dropped ${lost} Gold... Do a chore to heal up!`);
@@ -5405,9 +5403,9 @@ function openShop() {
 // ---- AUDIO: original chiptune loops (seamless via Web Audio) + short SFX. One context, one music track at a time
 // (main -> boss -> victory -> main); screen changes never touch the music. Options: music/SFX volume + mute, saved. ----
 const SND = (() => {
-  const KEY = "dd_audio", BEAT = 60 / 140, LOOP = { main: 32 * BEAT, boss: 16 * BEAT };
+  const KEY = "dd_audio", BEAT = 60 / 140, LOOP = { main: 32 * BEAT, boss: 16 * BEAT, explore: 32 * 60 / 90, battle: 32 * 60 / 156 };
   const SFX = ["coin", "hit", "swipe", "boss-hit", "slam", "boss-slam", "whoosh", "poof", "click", "level-up", "potion", "sad"];
-  const NAMES = ["music-main", "music-boss", "music-victory", ...SFX.map(n => "sfx/" + n)];
+  const NAMES = ["music-main", "music-explore", "music-battle", "music-boss", "music-victory", ...SFX.map(n => "sfx/" + n)];
   const opt = { music: 0.5, sfx: 0.6, muted: false };
   try { const o = JSON.parse(localStorage.getItem(KEY)); if (o) Object.assign(opt, o); else if (localStorage.getItem("dd_muted") === "1") opt.muted = true; } catch (e) {}
   let ext = "mp3"; try { if (new Audio().canPlayType('audio/ogg; codecs="vorbis"')) ext = "ogg"; } catch (e) {}
@@ -5431,8 +5429,8 @@ const SND = (() => {
   }
   function start(name) { // crossfade to a new track; the same track is never restarted
     if (!unlocked || (cur && cur.name === name)) return;
-    const key = "music-" + name, fade = name === "victory" ? 0.25 : 1.2, loop = name !== "victory";
-    const done = () => { if (cur && cur.name === "victory" && want === "victory") { want = "main"; start("main"); } };
+    const key = "music-" + name, fade = name === "victory" ? 0.25 : 1.0, loop = name !== "victory";
+    const done = () => { if (cur && cur.name === "victory" && want === "victory") { want = typeof musicScene === "function" ? musicScene() : "main"; start(want); } };
     if (ctx && buf[key]) {
       stopCur(fade);
       const t = ctx.currentTime, g = ctx.createGain(), s = ctx.createBufferSource();
@@ -5494,9 +5492,18 @@ const SND = (() => {
     if (out) { const d = new Float32Array(out.an.fftSize); out.an.getFloatTimeDomainData(d); let s = 0; for (const v of d) s += v * v; level = Math.sqrt(s / d.length); }
     return { state: ctx ? ctx.state : unlocked ? "html-audio" : "locked", track: cur && cur.name, want, owner, level, opt: { ...opt }, decoded: Object.keys(buf).length, failed: Object.keys(failed) };
   }
-  return { music, sfx, set, apply, debug, toggle: () => set("muted", !opt.muted), get muted() { return opt.muted; }, get track() { return cur && cur.name; } };
+  return { music, sfx, set, apply, debug, toggle: () => set("muted", !opt.muted), get muted() { return opt.muted; }, get track() { return cur && cur.name; }, get wanted() { return want; } };
 })();
 // Options window (front menu + HUD): music / SFX volume and mute all, saved with the audio settings
+// Music follows the game state: menus/intro = main, house + dungeon map = explore, chore battle = battle, boss = boss
+// (victory plays out first). SND.music never restarts the track already playing; changes crossfade over 1s.
+function musicScene() {
+  const open = id => document.getElementById(id).classList.contains("open");
+  if (battle && battle.bs && !battle.result) return "boss";
+  if (battle && battle.chore) return "battle";
+  return currentScreen === "play" && !open("options-board") && !open("quest-board") && !open("intro-scroll") ? "explore" : "main";
+}
+setInterval(() => { if (SND.wanted !== "victory") SND.music(musicScene()); }, 250);
 function openOptions() { document.getElementById("options-board").classList.add("open"); SND.apply(); }
 function closeOptions() { document.getElementById("options-board").classList.remove("open"); }
 document.getElementById("options-btn").addEventListener("click", openOptions);
