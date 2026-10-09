@@ -1966,6 +1966,7 @@
       <button id="builder-menu-btn"><i class="ico ico-door"></i>Menu</button>
       <button id="builder-palette-btn"><i class="ico ico-book"></i>Asset Palette</button>
       <button id="dungeon-mode-btn" class="builder-tool-btn"><i class="ico ico-door"></i>Dungeon Mode</button>
+      <button id="starter-house-btn" class="builder-tool-btn"><i class="ico ico-map"></i>Starter House</button>
       <button id="builder-chores-btn"><i class="ico ico-scroll"></i>Chores</button>
       <button id="builder-play-btn"><i class="ico ico-next"></i>Play</button>
       <span class="builder-selected-wrap">Tile: <span id="builder-swatch" class="builder-swatch" aria-hidden="true"></span> <b id="builder-selected">Floor</b></span>
@@ -2347,7 +2348,8 @@ function init() {
 }
 
 // Starter room shell (walls around a floor) so a fresh map is visible and playable
-function seedStarterRoom() {
+function seedStarterRoom() { setGrids(starterHouse()); }
+function seedBlankRoom() {
   for (let col = 0; col < GRID_SIZE; col++) {
     for (let row = 0; row < GRID_SIZE; row++) {
       const edge = col === 0 || row === 0 || col === GRID_SIZE - 1 || row === GRID_SIZE - 1;
@@ -4465,6 +4467,29 @@ function sunkenCellar() { // the shipped example, built from the house's urban/i
   put("produce_crate", 9, 9); put("small_plant", 6, 5); put("chandelier", 12, 11); put("candelabra", 11, 13); put("candelabra", 14, 13);
   return { name: "Sunken Cellar", ...g };
 }
+function starterHouse() { // premade upstairs: kitchen, laundry nook, bath (top); living room, bedroom (bottom); porch path. Lints clean.
+  const g = blankGrids(), N = GRID_SIZE;
+  const put = (id, c, r, rot = 0) => { const d = TILE_DEFS[id]; const [m, rm] = d.layer === "overlay" ? [g.overlayMap, g.overlayRot] : (d.layer === "entity" ? [g.entityMap, g.entityRot] : [g.terrainMap, g.terrainRot]); m[c][r] = d.value; rm[c][r] = rot; };
+  const fill = (id, c0, r0, c1, r1, rot = 0) => { for (let c = c0; c <= c1; c++) for (let r = r0; r <= r1; r++) put(id, c, r, rot); };
+  fill("cream_tile", 1, 1, 5, 5); fill("stone_tile", 7, 1, 9, 5); fill("white_tile", 11, 1, 14, 5); fill("oak_planks", 1, 7, 9, 13); fill("green_carpet", 11, 7, 14, 13); fill("gravel_path", 0, 15, N - 1, 15);
+  fill("plaster_wall", 0, 0, N - 1, 0); fill("plaster_wall", 0, 14, N - 1, 14, 2); fill("plaster_wall", 0, 1, 0, 13, 3); fill("plaster_wall", N - 1, 1, N - 1, 13, 1);
+  fill("wood_wall", 1, 6, 14, 6); fill("wood_wall", 6, 1, 6, 5); fill("wood_wall", 10, 1, 10, 5); fill("wood_wall", 10, 7, 10, 13);
+  put("door_wood", 3, 6); put("door_wood", 8, 6); put("door_teal", 12, 6); put("door_wood", 6, 3, 1); put("door_wood", 10, 10, 1); put("door_double", 5, 14);
+  // kitchen
+  put("cabinet_counter", 1, 1); put("farm_sink", 2, 1); put("dish_rack", 3, 1); put("stove", 4, 1); put("fridge", 5, 1); put("kitchen_table", 3, 3); put("kitchen_chair", 2, 3); put("recycling_bin", 1, 5); put("teapot", 3, 3); put("candelabra", 1, 1);
+  // laundry nook + bathroom
+  put("washer", 7, 1); put("laundry_basket", 9, 1); put("drying_line", 9, 4, 1); put("small_plant", 7, 5);
+  put("toilet", 11, 1); put("vanity_cabinet", 12, 1); put("bathtub", 14, 1); put("bath_mat", 13, 3); put("wall_mirror", 12, 0); put("toilet_paper", 11, 2);
+  // living room
+  put("bookshelf", 1, 7); put("tv", 5, 7); put("orange_rug", 4, 9); put("orange_rug", 5, 9); put("sofa", 5, 11, 2); put("armchair_orange", 3, 10, 1); put("brick_fireplace", 1, 10, 3); put("piano", 9, 13);
+  put("potted_plant", 1, 13); put("chandelier", 5, 9); put("landscape_art", 2, 6); put("cuckoo_clock", 7, 6);
+  // bedroom
+  put("wardrobe", 11, 7); put("dresser", 13, 7); put("quilt_bed", 14, 9); put("nightstand", 14, 11); put("teal_rug", 12, 10); put("laundry_basket", 11, 13); put("candle_stand", 14, 13);
+  // windows + curtains, porch
+  for (const [c, r] of [[3, 0], [8, 0], [13, 0], [2, 14], [8, 14], [12, 14]]) { put("window_wood", c, r, r ? 2 : 0); put("curtains_orange", c, r, r ? 2 : 0); }
+  put("mailbox", 3, 15); put("red_flowers", 7, 15); put("bush", 10, 15);
+  return g;
+}
 function loadDungeons() {
   try {
     const l = JSON.parse(localStorage.getItem(DUNGEONS_KEY));
@@ -4985,6 +5010,7 @@ document.getElementById('new-map-btn').addEventListener('click', newMap);
 document.getElementById('descend-btn').addEventListener('click', toggleDescend);
 document.getElementById('dungeon-mode-btn').addEventListener('click', () => dungeonEdit ? exitDungeonMode() : enterDungeonMode());
 document.getElementById('dg-save').addEventListener('click', saveCurrentDungeon);
+document.getElementById('starter-house-btn').addEventListener('click', () => { if (dungeonEdit) return showToast("Switch to House Mode first."); askYesNo("Load the starter house? It replaces your current house map.", () => { setGrids(starterHouse()); doors = []; drawMap(); saveGameData(); showToast("Starter house loaded."); }); });
 document.getElementById('dg-play').addEventListener('click', playDungeon);
 document.getElementById('dg-export').addEventListener('click', exportDungeon);
 document.getElementById('dg-import').addEventListener('click', () => document.getElementById('dg-file').click());
