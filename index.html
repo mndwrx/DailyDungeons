@@ -1730,6 +1730,19 @@
   #dialogue.open { display: block; }
   #dialogue.compact { background: none; pointer-events: none; }
   #dialogue.intro { background: #000; } /* first-Play lore intro: full black screen */
+  /* first-Play intro: one parchment scroll (lore + honor pledge) unrolling on black */
+  #intro-scroll { position: fixed; inset: 0; z-index: 9100; display: none; align-items: center; justify-content: center; background: #000; }
+  #intro-scroll.open { display: flex; }
+  #intro-scroll .intro-sheet { width: min(720px, 92vw); max-height: 88vh; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 16px 22px;
+    border-style: solid; border-width: 14px; border-image: url("assets/9-Slice/Ancient/tan.png") 16 fill / 14px; background: #d9c193; color: var(--ink);
+    animation: intro-unroll .8s steps(16) both; }
+  @keyframes intro-unroll { from { clip-path: inset(0 0 calc(100% - 28px) 0); } to { clip-path: inset(0 0 0 0); } }
+  #intro-scroll .intro-body { overflow-y: auto; min-height: 0; font-family: var(--fx-font); font-size: 16px; line-height: 1.55; padding-right: 6px; }
+  #intro-scroll .intro-body p { margin: 0 0 8px; }
+  #intro-scroll .intro-divider { border: 0; border-top: 3px double #8a5a0a; width: 40%; margin: 12px auto; }
+  #intro-scroll #intro-begin { align-self: center; min-width: 0; }
+  @media (min-width: 1400px) and (min-height: 860px) { #intro-scroll .intro-sheet { width: 900px; } #intro-scroll .intro-body { font-size: 20px; } }
+  @media (max-width: 700px) { #intro-scroll .intro-body { font-size: 14px; } #intro-scroll .intro-sheet { padding: 10px 12px; } }
   .dlg-box { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(780px, 94vw); min-height: 112px; display: flex; gap: 14px; align-items: flex-start; padding: 10px 14px 14px; box-sizing: border-box; background: #140d08; border: 12px solid; border-image: url("assets/9-Slice/Ancient/brown_inlay.png") 12 / 12px; box-shadow: 0 6px 24px rgba(0,0,0,.7); cursor: pointer; pointer-events: auto; user-select: none; }
   #dialogue.compact .dlg-box { top: 10px; bottom: auto; width: min(560px, 92vw); min-height: 0; padding: 6px 10px 10px; }
   #dlg-portrait { flex: none; width: 80px; height: 80px; background: #2a1a0c; border: 3px solid #d9b77a; box-shadow: inset 0 0 0 2px #000; image-rendering: pixelated; }
@@ -2440,6 +2453,7 @@
   <div class="opt-reset"><button class="hero-btn" id="opt-reset">Reset progress</button></div>
 </div></div>
 <div id="inv-board"><div class="qb-panel"><div class="qb-head"><h2>Inventory</h2><button class="hero-btn" id="inv-close">Close</button></div><div id="inv-equip"></div><div class="inv-grid2" id="inv-list"></div></div></div>
+<div id="intro-scroll" role="dialog" aria-label="Intro"><div class="intro-sheet"><div class="intro-body" id="intro-body"></div><button class="start-btn" id="intro-begin">I swear it - Begin</button></div></div>
 <div id="dialogue"><div class="dlg-box" id="dlg-box"><canvas id="dlg-portrait" width="80" height="80"></canvas><div class="dlg-main"><div id="dlg-name"></div><div id="dlg-text"></div><div id="dlg-choices"></div></div><span id="dlg-arrow"></span></div></div>
 <div id="loot-popup"><div class="loot-box"><h2 class="loot-title">Loot!</h2><div class="loot-list" id="loot-list"></div><button class="hero-btn" id="loot-ok">Nice!</button></div></div>
 
@@ -4508,7 +4522,14 @@ function maybeIntro(next = () => {}) {
   let seen = false; try { seen = !!localStorage.getItem(INTRO_KEY); localStorage.setItem(INTRO_KEY, "1"); } catch (e) {}
   if (seen) next(); else playIntro(next);
 }
-function playIntro(next = null) { showDialogue([...INTRO_LINES, ...HONOR_LINES], next, { intro: true }); } // lore, then the honor code, on black
+let introNext = null;
+function playIntro(next = null) { // lore + honor pledge as one parchment scroll on black; the button starts the game
+  const body = document.getElementById("intro-body"), para = l => { const e = document.createElement("p"); e.textContent = l.text; return e; };
+  body.replaceChildren(...INTRO_LINES.map(para), Object.assign(document.createElement("hr"), { className: "intro-divider" }), ...HONOR_LINES.map(para));
+  body.scrollTop = 0; introNext = next; stopWalking(); if (document.activeElement) document.activeElement.blur();
+  const el = document.getElementById("intro-scroll"); el.classList.remove("open"); void el.offsetWidth; el.classList.add("open");
+}
+function closeIntro() { const el = document.getElementById("intro-scroll"); if (!el.classList.contains("open")) return; el.classList.remove("open"); const n = introNext; introNext = null; if (n) n(); }
 function questLine(type, phase) {
   const set = (QUEST_LINES[type] || QUEST_LINES.Custom)[phase], text = set[Math.floor(Math.random() * set.length)];
   showDialogue([{ speaker: SPEAKERS.elder, portrait: "elder", text }], null, { compact: true });
@@ -5549,6 +5570,11 @@ document.getElementById('b-cmds').addEventListener('click', (e) => { const b = e
 document.getElementById('shop-charms').addEventListener('click', (e) => { const b = e.target.closest('.shop-buy'); if (b) buyCharm(b.closest('.charm-card').dataset.charm); });
 document.addEventListener('keydown', (e) => { if (battle && battle.awaiting && /^[1-4]$/.test(e.key) && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) { e.preventDefault(); bossPick(+e.key - 1); } });
 document.getElementById('replay-intro').addEventListener('click', () => playIntro());
+document.getElementById('intro-begin').addEventListener('click', closeIntro);
+document.addEventListener('keydown', (e) => { // the intro scroll owns the keyboard while open; Enter/Space = Begin
+  if (!document.getElementById('intro-scroll').classList.contains('open') || e.key === 'Tab' || /^Arrow|^Page|^Home$|^End$/.test(e.key)) return;
+  e.preventDefault(); e.stopImmediatePropagation(); if (e.code === 'Space' || e.key === 'Enter') closeIntro();
+}, true);
 document.getElementById('dialogue').addEventListener('click', (e) => { if (!dlg || (dlg.compact && !e.target.closest('.dlg-box'))) return; e.stopPropagation(); dialogueNext(); });
 document.addEventListener('keydown', (e) => {
   if (!dlg || e.code !== 'Space' || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
