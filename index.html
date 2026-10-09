@@ -1832,6 +1832,26 @@
   .battle-text { position: relative; min-height: 96px; padding: 12px 16px; border: 10px solid; border-image: url("assets/9-Slice/Ancient/tan.png") 16 fill / 10px; background: #f3e2b8;
     font: 16px/1.5 var(--fx-font); color: var(--ink); }
   .battle-text p { margin: 0; white-space: pre-line; padding-right: 110px; }
+  /* ---- Daily Quest Board ---- */
+  .start-row { display: flex; gap: 4px; justify-content: center; }
+  #start-page .scroll-card .start-row .start-btn { min-width: 0; flex: 1; padding-left: 8px; padding-right: 8px; }
+  #quest-board { position: fixed; inset: 0; z-index: 8500; display: none; align-items: center; justify-content: center; background: rgba(0, 0, 0, .55); }
+  #quest-board.open { display: flex; }
+  .qb-panel { width: min(720px, 94vw); max-height: 88vh; overflow: auto; box-sizing: border-box; padding: 8px 12px; border: 16px solid; border-image: url("assets/9-Slice/Ancient/brown_inlay.png") 12 fill / 16px; background: #4a3019; color: var(--wood-text); }
+  .qb-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .qb-head h2 { margin: 0; flex: 1; font-family: var(--fx-font); color: #ffd700; font-size: 18px; text-shadow: 1px 1px 0 #000; }
+  #qb-date { font-size: 12px; color: #f0c860; width: 100%; order: 3; }
+  .qb-row { display: grid; grid-template-columns: 36px 1fr auto; gap: 8px; align-items: center; margin: 6px 0; padding: 2px 6px; border: 8px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 8px; background: #e8d3a3; color: var(--ink); }
+  .qb-row.done { background: #c9d9a3; }
+  .qb-name { font-family: var(--fx-font); font-size: 14px; }
+  .qb-sub { font-size: 12px; color: #6e4b2c; }
+  .qb-acts { display: flex; gap: 4px; align-items: center; }
+  .qb-acts .hero-btn, .qb-edit .hero-btn, #qb-add { font-size: 12px; padding: 3px 8px; }
+  .qb-thumb { width: 32px; height: 32px; object-fit: cover; border: 2px solid #6e4b2c; }
+  .qb-edit { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 6px 0; padding: 4px 6px; border: 8px solid; border-image: url("assets/9-Slice/Ancient/tan_inlay.png") 12 fill / 8px; background: #e8d3a3; color: var(--ink); font-size: 12px; }
+  .qb-edit input, .qb-edit select { font: inherit; background: #f3e6c8; color: var(--ink); border: 2px solid #6e4b2c; padding: 2px 4px; }
+  .qb-edit input[data-f="name"] { flex: 1; min-width: 120px; }
+  .qb-edit input[data-f="mins"] { width: 44px; }
   #b-cmds { position: absolute; right: 8px; top: 8px; bottom: 8px; width: 50%; display: none; grid-template-columns: 1fr 1fr; gap: 4px; }
   #ambush-overlay.boss-mode #b-cmds { display: grid; }
   #ambush-overlay.boss-mode #battle-speed { display: none; }
@@ -1874,7 +1894,7 @@
   <button class="start-btn" id="new-map-btn"><i class="ico ico-map"></i>New Map</button>
   <button class="start-btn secondary" id="edit-map-btn"><i class="ico ico-pick"></i>Edit Dungeon</button>
   <button class="start-btn secondary" id="asset-palette-toggle"><i class="ico ico-book"></i>Asset Palette</button>
-  <button class="start-btn secondary" id="hero-btn"><i class="ico ico-helmet"></i>Create Hero</button>
+  <div class="start-row"><button class="start-btn secondary" id="hero-btn"><i class="ico ico-helmet"></i>Hero</button><button class="start-btn secondary" id="start-quests-btn"><i class="ico ico-scroll"></i>Quests</button></div>
   <button class="start-btn" id="play-map-btn"><i class="ico ico-next"></i>Play</button>
   <div class="start-stats">
     <div class="stat"><span>Gold</span><div class="value" id="menu-gold">0</div></div>
@@ -2159,6 +2179,7 @@
       <button id="toggle-edit"><i class="ico ico-pick"></i>Edit Dungeon</button>
       <button id="hud-hero-btn"><i class="ico ico-helmet"></i>Hero</button>
       <button id="shop-btn"><i class="ico ico-gold"></i>Shop</button>
+      <button id="quests-btn"><i class="ico ico-book"></i>Quests</button>
       <button id="descend-btn"><i class="ico ico-pick"></i>Descend</button>
     </div>
   </div>
@@ -2187,6 +2208,11 @@
 </div>
 
 <!-- ===== CHORE LOOT POPUP ===== -->
+<div id="quest-board"><div class="qb-panel">
+  <div class="qb-head"><h2><i class="ico ico-scroll"></i>Daily Quest Board</h2><button class="hero-btn" id="qb-edit-btn">Edit Chores</button><button class="panel-close" id="qb-close"><i class="ico ico-close"></i></button><span id="qb-date"></span></div>
+  <div id="qb-list"></div><div id="qb-editor" hidden></div>
+  <input type="file" id="qb-photo" accept="image/*" capture="environment" hidden>
+</div></div>
 <div id="dialogue"><div class="dlg-box" id="dlg-box"><canvas id="dlg-portrait" width="80" height="80"></canvas><div class="dlg-main"><div id="dlg-name"></div><div id="dlg-text"></div></div><span id="dlg-arrow"></span></div></div>
 <div id="loot-popup"><div class="loot-box"><h2 class="loot-title">Loot!</h2><div class="loot-list" id="loot-list"></div><button class="hero-btn" id="loot-ok">Nice!</button></div></div>
 
@@ -3442,6 +3468,7 @@ let currentScreen = "menu";
 function closeOverlays() {
   closeAssetBrowser();
   closeChoreLog();
+  closeQuestBoard();
   closeAmbush();
   hideLevelClear();
 }
@@ -3736,7 +3763,7 @@ function renderChoreLog() {
 }
 
 // A REAL chore earns gold + XP (once), restores HP/MP, and banishes that chore's monster in the current room
-function completeChore(type, customText) {
+function completeChore(type, customText, label) {
   const key = type.toLowerCase();
   const chore = CHORES[key];
   const text = (customText || "").trim();
@@ -3753,7 +3780,7 @@ function completeChore(type, customText) {
 
   const now = new Date();
   const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-  chores.unshift({ time, type, label: type === "Custom" ? text : (chore ? `${type}: ${chore.chore}` : type), gold, xp, timed });
+  chores.unshift({ time, type, label: label || (type === "Custom" ? text : (chore ? `${type}: ${chore.chore}` : type)), gold, xp, timed });
   chores = chores.slice(0, 30);
 
   const stats = heroStats();
@@ -3981,15 +4008,15 @@ function updateDailyHUD() {
   if (st) st.textContent = `${daily.streak} day${daily.streak === 1 ? "" : "s"}`;
   if (gf) gf.style.width = Math.round(daily.grime) + "%";
 }
-function tickGrime() { // +2 per hour, +1 more per hour for each lurking chore monster upstairs
-  const now = Date.now(), lurking = (maze ? maze.stash.monsters : monsters).length;
+function tickGrime() { // +2 per hour, +1 more per hour for each unfinished chore due today (Quest Board)
+  const now = Date.now(), lurking = dueToday().filter(c => !(qToday()[c.id] || {}).done).length; // unfinished due chores
   daily.grime = Math.min(100, daily.grime + Math.max(0, now - daily.tick) / 36e5 * (2 + lurking));
   daily.tick = now; saveDaily(); updateDailyHUD();
 }
 function choreDone() {
   tickGrime();
   const t = dayKey();
-  if (daily.lastDay !== t) { daily.streak = daily.lastDay === dayKey(-1) ? daily.streak + 1 : 1; daily.lastDay = t; }
+  if (daily.lastDay !== t && allDueDone()) { daily.streak = daily.lastDay === dayKey(-1) ? daily.streak + 1 : 1; daily.lastDay = t; }
   daily.grime = Math.max(0, daily.grime - 25);
   saveDaily(); updateDailyHUD();
 }
@@ -4210,7 +4237,98 @@ function bossTurn(b) {
   battleWait(1500, () => bossPrompt());
 }
 
-window.ddDebug = { // dev/test hooks
+// ---- REAL CHORE LOOP: editable chore list + Daily Quest Board (Phase A) ----
+// A day counts for the streak (and against missed-day banishment) once every chore due today is checked in.
+const QCHORES_KEY = "dd_chores", QSTATE_KEY = "dd_quests", WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DEFAULT_QCHORES = [["dishes", "Dishes", "daily", 0, "dishes"], ["laundry", "Laundry", "weekly", 6, "laundry"], ["trash", "Take out trash", "weekly", 4, "trash"],
+  ["sweep", "Sweep / vacuum", "weekly", 3, "trash"], ["counters", "Wipe counters", "daily", 0, "dishes"], ["bed", "Make bed", "daily", 0, "laundry"]]
+  .map(([id, name, freq, day, monster]) => ({ id, name, freq, day, monster, mins: 2 }));
+let qChores = (() => { try { const l = JSON.parse(localStorage.getItem(QCHORES_KEY)); if (Array.isArray(l)) return l.filter(c => c && c.id && c.name); } catch (e) {} return DEFAULT_QCHORES.map(c => ({ ...c })); })();
+let qState = (() => { let q = null; try { q = JSON.parse(localStorage.getItem(QSTATE_KEY)); } catch (e) {} return q && q.status ? q : { day: dayKey(), status: {} }; })();
+let qSkipTimers = false, qbTimer = null, qbEditing = false, qbPhotoId = null;
+function saveQuests() { try { localStorage.setItem(QCHORES_KEY, JSON.stringify(qChores)); localStorage.setItem(QSTATE_KEY, JSON.stringify(qState)); } catch (e) { showToast("Storage is full: the photo was not saved."); } }
+function qToday() { if (qState.day !== dayKey()) qState = { day: dayKey(), status: {} }; return qState.status; }
+const isDue = (c, d = new Date()) => c.freq !== "weekly" || +c.day === d.getDay();
+const dueToday = () => qChores.filter(c => isDue(c));
+const questSt = id => qToday()[id] || (qToday()[id] = {});
+const questMins = c => Number.isFinite(+c.mins) && c.mins !== "" ? +c.mins : 2;
+const questLeft = c => { const q = qToday()[c.id]; return !q || !q.start ? null : qSkipTimers ? 0 : Math.max(0, q.start + questMins(c) * 60000 - Date.now()); };
+const allDueDone = () => dueToday().every(c => (qToday()[c.id] || {}).done);
+const capType = c => c.monster.charAt(0).toUpperCase() + c.monster.slice(1); // "dishes" -> "Dishes" (CHORES rewards + quest lines)
+function startQuest(id) {
+  const c = qChores.find(c => c.id === id); if (!c) return;
+  const q = questSt(id); if (q.done || q.start) return;
+  q.start = Date.now(); saveQuests(); questLine(capType(c), "start"); renderQuestBoard();
+}
+function finishQuest(id) {
+  const c = qChores.find(c => c.id === id), q = c && qToday()[id];
+  if (!q || q.done || questLeft(c) !== 0) return false;
+  q.done = true; saveQuests();
+  completeChore(capType(c), "", c.name);
+  if (q.photo && !q.photoPaid) photoBonus(q);
+  saveQuests(); renderQuestBoard();
+  return true;
+}
+function photoBonus(q) { q.photoPaid = true; addRewards(10, 5); setTimeout(() => showToast("Photo proof bonus: +10 Gold, +5 XP", 2600), 1800); }
+function attachPhoto(id, file) { // downscaled ~96px JPEG thumbnail keeps localStorage small
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.onload = () => {
+    const k = Math.min(1, 96 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+    setQuestPhoto(id, c.toDataURL("image/jpeg", 0.6));
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); showToast("That photo could not be read."); };
+  img.src = url;
+}
+function setQuestPhoto(id, data) { const q = questSt(id); q.photo = data; if (q.done && !q.photoPaid) photoBonus(q); saveQuests(); renderQuestBoard(); }
+function openQuestBoard() {
+  qbEditing = false;
+  document.getElementById("quest-board").classList.add("open");
+  renderQuestBoard();
+  clearInterval(qbTimer); qbTimer = setInterval(() => { if (!qbEditing) renderQuestBoard(); }, 1000); // countdown from timestamps: leaving the tab is fine
+}
+function closeQuestBoard() { document.getElementById("quest-board").classList.remove("open"); clearInterval(qbTimer); }
+function renderQuestBoard() {
+  const list = document.getElementById("qb-list"), ed = document.getElementById("qb-editor");
+  document.getElementById("qb-date").textContent = `${WEEKDAYS[new Date().getDay()]} · Streak ${daily.streak} · Grime ${Math.round(daily.grime)}% · Unfinished chores feed the curse`;
+  list.hidden = qbEditing; ed.hidden = !qbEditing;
+  document.getElementById("qb-edit-btn").textContent = qbEditing ? "Done Editing" : "Edit Chores";
+  if (qbEditing) return renderQuestEditor();
+  const due = dueToday();
+  list.innerHTML = due.length ? "" : '<div class="log-empty">No chores due today. Rest up, Keeper!</div>';
+  for (const c of due) {
+    const q = qToday()[c.id] || {}, left = questLeft(c), row = document.createElement("div");
+    const status = q.done ? "Done" : left === null ? "Not started" : left > 0 ? `In progress ${formatMMSS(Math.ceil(left / 1000))}` : "Ready to check in";
+    row.className = "qb-row" + (q.done ? " done" : ""); row.dataset.id = c.id;
+    row.innerHTML = `<span class="qb-ico"></span><div><div class="qb-name"></div><div class="qb-sub">${c.freq === "weekly" ? "Weekly, " + WEEKDAYS[c.day] : "Daily"} · ${(CHORES[c.monster] || {}).name || "Monster"} · <b class="qb-status">${status}</b></div></div>
+      <div class="qb-acts">${q.photo ? '<img class="qb-thumb" alt="Photo proof">' : ""}<button class="hero-btn" data-act="photo">Photo</button>${q.done ? "" : left === null ? '<button class="hero-btn primary" data-act="start">Start Quest</button>' : `<button class="hero-btn primary" data-act="done"${left > 0 ? " disabled" : ""}>I did it</button>`}</div>`;
+    row.querySelector(".qb-name").textContent = c.name;
+    if (q.photo) row.querySelector(".qb-thumb").src = q.photo;
+    row.querySelector(".qb-ico").append(spriteSpan((CHORES[c.monster] || CHORES.dishes).icon, 2));
+    list.appendChild(row);
+  }
+}
+function renderQuestEditor() {
+  const ed = document.getElementById("qb-editor"), mon = ["dishes", "laundry", "trash", "mow", "yard_trash"].filter(k => CHORES[k]).map(k => `<option value="${k}">${CHORES[k].name}</option>`).join("");
+  ed.innerHTML = qChores.map(c => `<div class="qb-edit" data-id="${c.id}"><input data-f="name" maxlength="40" aria-label="Chore name"><select data-f="freq"><option value="daily">Daily</option><option value="weekly">Weekly</option></select><select data-f="day">${WEEKDAYS.map((d, i) => `<option value="${i}">${d}</option>`).join("")}</select><select data-f="monster">${mon}</select><label>Min <input data-f="mins" type="number" min="0" max="120"></label><button class="hero-btn" data-act="del">Delete</button></div>`).join("") + '<button class="hero-btn primary" id="qb-add">Add Chore</button>';
+  for (const row of ed.querySelectorAll(".qb-edit")) {
+    const c = qChores.find(c => c.id === row.dataset.id);
+    for (const el of row.querySelectorAll("[data-f]")) el.value = c[el.dataset.f] ?? (el.dataset.f === "mins" ? 2 : "");
+    row.querySelector('[data-f="day"]').disabled = c.freq !== "weekly";
+  }
+}
+function editQuest(id, field, value) {
+  const c = qChores.find(c => c.id === id); if (!c) return;
+  c[field] = field === "day" || field === "mins" ? Math.max(0, Math.min(field === "day" ? 6 : 120, Math.round(+value) || 0)) : field === "name" ? (String(value).trim().slice(0, 40) || c.name) : value;
+  saveQuests();
+}
+function addQuest(name = "New chore") { const c = { id: "c" + Date.now().toString(36) + Math.floor(Math.random() * 1e4), name, freq: "daily", day: new Date().getDay(), monster: "dishes", mins: 2 }; qChores.push(c); saveQuests(); return c; }
+function deleteQuest(id) { qChores = qChores.filter(c => c.id !== id); saveQuests(); }
+
+window.ddDebug = { // dev/test hooks (quest timers can be stubbed)
+  skipTimers(on = true) { qSkipTimers = on; },
+  resetQuests() { qState = { day: dayKey(), status: {} }; saveQuests(); },
   missDay() { daily.lastDay = dayKey(-3); daily.streak = 1; saveDaily(); },
   breakStreak() { daily.lastDay = dayKey(-3); daily.streak = 5; saveDaily(); },
   fillGrime() { daily.grime = 100; saveDaily(); updateDailyHUD(); },
@@ -4581,6 +4699,21 @@ document.querySelectorAll('.browser-tabs .tab').forEach(tab => tab.addEventListe
 document.getElementById('palette-search').addEventListener('input', loadAssetGrid);
 document.getElementById('new-map-btn').addEventListener('click', () => maybeIntro(newMap));
 document.getElementById('descend-btn').addEventListener('click', toggleDescend);
+for (const id of ['quests-btn', 'start-quests-btn']) document.getElementById(id).addEventListener('click', openQuestBoard);
+document.getElementById('qb-close').addEventListener('click', closeQuestBoard);
+document.getElementById('qb-edit-btn').addEventListener('click', () => { qbEditing = !qbEditing; renderQuestBoard(); });
+document.getElementById('qb-list').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]'), id = b && b.closest('.qb-row').dataset.id; if (!id || b.disabled) return;
+  if (b.dataset.act === 'start') startQuest(id);
+  else if (b.dataset.act === 'done') finishQuest(id);
+  else { qbPhotoId = id; document.getElementById('qb-photo').click(); }
+});
+document.getElementById('qb-photo').addEventListener('change', (e) => { const f = e.target.files[0]; if (f && qbPhotoId) attachPhoto(qbPhotoId, f); e.target.value = ''; });
+document.getElementById('qb-editor').addEventListener('change', (e) => { const el = e.target.closest('[data-f]'); if (!el) return; editQuest(el.closest('.qb-edit').dataset.id, el.dataset.f, el.value); if (el.dataset.f === 'freq') renderQuestEditor(); });
+document.getElementById('qb-editor').addEventListener('click', (e) => {
+  if (e.target.closest('#qb-add')) { addQuest(); renderQuestEditor(); }
+  else if (e.target.closest('[data-act="del"]')) { deleteQuest(e.target.closest('.qb-edit').dataset.id); renderQuestEditor(); }
+});
 document.getElementById('b-cmds').addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (b) bossPick(+b.dataset.i); });
 document.getElementById('shop-charms').addEventListener('click', (e) => { const b = e.target.closest('.shop-buy'); if (b) buyCharm(b.closest('.charm-card').dataset.charm); });
 document.addEventListener('keydown', (e) => { if (battle && battle.awaiting && /^[1-4]$/.test(e.key) && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) { e.preventDefault(); bossPick(+e.key - 1); } });
