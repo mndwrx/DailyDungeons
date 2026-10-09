@@ -1729,6 +1729,7 @@
   #dialogue { position: fixed; inset: 0; z-index: 9000; display: none; background: rgba(0,0,0,.28); }
   #dialogue.open { display: block; }
   #dialogue.compact { background: none; pointer-events: none; }
+  #dialogue.intro { background: #000; } /* first-Play lore intro: full black screen */
   .dlg-box { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(780px, 94vw); min-height: 112px; display: flex; gap: 14px; align-items: flex-start; padding: 10px 14px 14px; box-sizing: border-box; background: #140d08; border: 12px solid; border-image: url("assets/9-Slice/Ancient/brown_inlay.png") 12 / 12px; box-shadow: 0 6px 24px rgba(0,0,0,.7); cursor: pointer; pointer-events: auto; user-select: none; }
   #dialogue.compact .dlg-box { top: 10px; bottom: auto; width: min(560px, 92vw); min-height: 0; padding: 6px 10px 10px; }
   #dlg-portrait { flex: none; width: 80px; height: 80px; background: #2a1a0c; border: 3px solid #d9b77a; box-shadow: inset 0 0 0 2px #000; image-rendering: pixelated; }
@@ -2038,6 +2039,7 @@
   #options-board .qb-head h2 { display: flex; align-items: center; gap: 8px; }
   #options-board .qb-head h2 .ico-a { --s: 2; margin: 0; }
   .opt-row { display: grid; grid-template-columns: minmax(110px, 180px) 1fr 64px; align-items: center; gap: 12px; padding: 14px 6px; font-family: var(--fx-font); font-size: 18px; color: var(--wood-text); border-top: 2px solid #2a1a0c; cursor: pointer; }
+  .opt-reset { display: flex; justify-content: flex-end; padding: 14px 6px 4px; border-top: 2px solid #2a1a0c; }
   .opt-row b { text-align: right; color: #ffd700; font-weight: normal; }
   .opt-row input[type=range] { -webkit-appearance: none; appearance: none; height: 18px; background: #2a1a0c; border: 3px solid #8a6a3e; border-radius: 0; margin: 0; cursor: pointer; }
   .opt-row input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 32px; background: #ffd24a; border: 3px solid #2a1408; box-shadow: inset -4px -4px 0 #c58a14; border-radius: 0; }
@@ -2435,6 +2437,7 @@
   <label class="opt-row"><span>Music</span><input type="range" id="opt-music" min="0" max="100" step="5"><b id="opt-music-val"></b></label>
   <label class="opt-row"><span>Sound effects</span><input type="range" id="opt-sfx" min="0" max="100" step="5"><b id="opt-sfx-val"></b></label>
   <label class="opt-row"><span>Mute all</span><input type="checkbox" id="opt-mute"><b></b></label>
+  <div class="opt-reset"><button class="hero-btn" id="opt-reset">Reset progress</button></div>
 </div></div>
 <div id="inv-board"><div class="qb-panel"><div class="qb-head"><h2>Inventory</h2><button class="hero-btn" id="inv-close">Close</button></div><div id="inv-equip"></div><div class="inv-grid2" id="inv-list"></div></div></div>
 <div id="dialogue"><div class="dlg-box" id="dlg-box"><canvas id="dlg-portrait" width="80" height="80"></canvas><div class="dlg-main"><div id="dlg-name"></div><div id="dlg-text"></div><div id="dlg-choices"></div></div><span id="dlg-arrow"></span></div></div>
@@ -4437,7 +4440,7 @@ function loadGameData() {
 const ELDER = { body: [0, 0], pants: [3, 5], shoes: [4, 5], shirt: [14, 0], hairStyle: 3, hairColor: 4, hat: [30, 8], shield: null, weapon: [42, 0] };
 const PORTRAITS = { elder: () => ELDER, shopkeeper: () => SHOPKEEPER, hero: () => hero };
 const SPEAKERS = { elder: "Elder Wizard", shopkeeper: "Shopkeeper" };
-const INTRO_KEY = "dd_honor_v1"; /* new key per honor-code version: old dd_intro_seen flags must not skip it */
+const INTRO_KEY = "dd_intro_v2"; /* new key per intro version (lore + honor code): older flags must not skip it */
 const INTRO_LINES = [
   "Hearth Keeper! At last you wake.",
   "This humble house sits atop an ancient dungeon.",
@@ -4463,7 +4466,7 @@ function showDialogue(lines, cb, opts = {}) {
   dlg = { lines, i: -1, cb, compact: !!opts.compact, full: true, choices: opts.choices };
   document.getElementById("dlg-choices").innerHTML = "";
   const el = document.getElementById("dialogue");
-  el.classList.add("open"); el.classList.toggle("compact", dlg.compact);
+  el.classList.add("open"); el.classList.toggle("compact", dlg.compact); el.classList.toggle("intro", !!opts.intro);
   if (!dlg.compact) { stopWalking(); if (document.activeElement) document.activeElement.blur(); }
   dialogueNext();
 }
@@ -4496,15 +4499,16 @@ function dialogueTyped() {
 function closeDialogue() {
   if (!dlg) return;
   clearInterval(dlg.timer); clearTimeout(dlg.auto);
-  document.getElementById("dialogue").classList.remove("open", "compact"); document.getElementById("dlg-choices").innerHTML = "";
+  document.getElementById("dialogue").classList.remove("open", "compact", "intro"); document.getElementById("dlg-choices").innerHTML = "";
   const cb = dlg.cb; dlg = null;
   if (cb) cb();
 }
 function askYesNo(text, yes, no) { showDialogue([{ speaker: SPEAKERS.elder, portrait: "elder", text }], null, { choices: [["Yes", yes], ["No", no]] }); }
 function maybeIntro(next = () => {}) {
   let seen = false; try { seen = !!localStorage.getItem(INTRO_KEY); localStorage.setItem(INTRO_KEY, "1"); } catch (e) {}
-  if (seen) next(); else showDialogue(HONOR_LINES, next);
+  if (seen) next(); else playIntro(next);
 }
+function playIntro(next = null) { showDialogue([...INTRO_LINES, ...HONOR_LINES], next, { intro: true }); } // lore, then the honor code, on black
 function questLine(type, phase) {
   const set = (QUEST_LINES[type] || QUEST_LINES.Custom)[phase], text = set[Math.floor(Math.random() * set.length)];
   showDialogue([{ speaker: SPEAKERS.elder, portrait: "elder", text }], null, { compact: true });
@@ -5477,6 +5481,10 @@ function closeOptions() { document.getElementById("options-board").classList.rem
 document.getElementById("options-btn").addEventListener("click", openOptions);
 document.getElementById("start-options-btn").addEventListener("click", openOptions);
 document.getElementById("opt-close").addEventListener("click", closeOptions);
+document.getElementById("opt-reset").addEventListener("click", () => askYesNo("Reset all progress? Your hero, quests, gold and dungeons will be lost. This cannot be undone.", () => {
+  try { Object.keys(localStorage).filter(k => /^(dd_|daily_dungeons_)/.test(k) && k !== "dd_audio" && k !== "dd_muted").forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  window.removeEventListener("pagehide", markSeen); location.reload(); // back to the start screen; the intro plays again on the next Play
+}, () => {}));
 document.addEventListener("keydown", e => { if (e.key === "Escape" && document.getElementById("options-board").classList.contains("open")) closeOptions(); });
 document.getElementById("options-board").addEventListener("click", e => { if (e.target.id === "options-board") closeOptions(); });
 document.getElementById("opt-music").addEventListener("input", e => SND.set("music", e.target.value / 100));
@@ -5540,7 +5548,7 @@ document.getElementById('qb-editor').addEventListener('click', (e) => {
 document.getElementById('b-cmds').addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (b) bossPick(+b.dataset.i); const k = e.target.closest('button[data-chore]'); if (k) choreBattleCmd(k.dataset.chore); });
 document.getElementById('shop-charms').addEventListener('click', (e) => { const b = e.target.closest('.shop-buy'); if (b) buyCharm(b.closest('.charm-card').dataset.charm); });
 document.addEventListener('keydown', (e) => { if (battle && battle.awaiting && /^[1-4]$/.test(e.key) && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) { e.preventDefault(); bossPick(+e.key - 1); } });
-document.getElementById('replay-intro').addEventListener('click', () => showDialogue(HONOR_LINES));
+document.getElementById('replay-intro').addEventListener('click', () => playIntro());
 document.getElementById('dialogue').addEventListener('click', (e) => { if (!dlg || (dlg.compact && !e.target.closest('.dlg-box'))) return; e.stopPropagation(); dialogueNext(); });
 document.addEventListener('keydown', (e) => {
   if (!dlg || e.code !== 'Space' || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
